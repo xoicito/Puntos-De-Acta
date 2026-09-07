@@ -1,10 +1,9 @@
 import json, re
 from pathlib import Path
-from config import ACTA_BOARD_ID, ACTA_OUTPUT_DIR, ACTA_PDF_COLUMN_ID, ACTA_STATUS_COLUMN_ID, ACTA_TEMPLATE, ACTA_XLSX_COLUMN_ID
+from config import ACTA_BOARD_ID, ACTA_OUTPUT_DIR, ACTA_STATUS_COLUMN_ID, ACTA_TEMPLATE, ACTA_XLSX_COLUMN_ID
 from utils.monday_client import get_item, change_status, upload_file
 from utils.acta_builder import item_data, build_blocks, pct, display_date
 from utils.excel_writer import render_excel
-from utils.pdf_converter import convert_excel_to_pdf
 
 def _clean(value): return re.sub(r"[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ._-]+","_",str(value or "")).strip("_")
 def generate_acta(item_id):
@@ -25,12 +24,31 @@ def generate_acta(item_id):
         if missing: raise ValueError("Campos obligatorios vacíos: "+", ".join(missing))
         stem=_clean(f"PA-{data['no_contrato']}-{data['rubro']}-{data['proyecto']}")[:140]
         out=Path(ACTA_OUTPUT_DIR); out.mkdir(parents=True,exist_ok=True)
-        xlsx=str(out/(stem+".xlsx")); pdf=str(out/(stem+".pdf"))
-        render_excel(base/ACTA_TEMPLATE,xlsx,replacements)
-        pdf=convert_excel_to_pdf(xlsx,out)
-        upload_file(item_id,ACTA_XLSX_COLUMN_ID,xlsx); upload_file(item_id,ACTA_PDF_COLUMN_ID,pdf)
-        change_status(item_id,board_id,ACTA_STATUS_COLUMN_ID,"Generado")
-        return {"xlsx":xlsx,"pdf":pdf,"name":stem}
+                xlsx = str(out / (stem + ".xlsx"))
+
+        render_excel(
+            base / ACTA_TEMPLATE,
+            xlsx,
+            replacements,
+        )
+
+        upload_file(
+            item_id,
+            ACTA_XLSX_COLUMN_ID,
+            xlsx,
+        )
+
+        change_status(
+            item_id,
+            board_id,
+            ACTA_STATUS_COLUMN_ID,
+            "Generado",
+        )
+
+        return {
+            "xlsx": xlsx,
+            "name": stem,
+        }
     except Exception:
         try: change_status(item_id,board_id,ACTA_STATUS_COLUMN_ID,"Error")
         finally: raise
