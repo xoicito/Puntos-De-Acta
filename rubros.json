@@ -1,0 +1,310 @@
+{
+  "101": {
+    "nombre": "VENTANERIA",
+    "puntos_revision": [
+      "Medidas instaladas conforme a lo cotizado",
+      "Marcos nivelados y plomados correctamente",
+      "Fijación y anclaje realizados al soporte estructural",
+      "Vidrios instalados sin daños, rayones ni burbujas",
+      "Material instalado concuerda con lo cotizado",
+      "Mecanismos de apertura y cierre funcionando correctamente",
+      "Burletes y sellado perimetral instalados correctamente",
+      "Herrajes y accesorios colocados según especificación",
+      "Instalación limpia, sin residuos de sellador ni adhesivos",
+      "Alineación correcta con otras ventanas del proyecto",
+      "Integración adecuada con acabados contiguos (pintura, yeso)",
+      "Perfiles sin deformaciones visibles por instalación"
+    ]
+  },
+  "102": {
+    "nombre": "ELECTRICIDAD",
+    "puntos_revision": [
+      "Instalación realizada según planos eléctricos y normativa",
+      "Canalizaciones y cajas ubicadas conforme a diseño",
+      "Cableado instalado con el calibre y tipo especificado",
+      "Conexiones y empalmes revisados en tableros y cajas",
+      "Continuidad y resistencia eléctrica verificadas",
+      "Pruebas de carga y amperaje realizadas con éxito",
+      "Luminarias instaladas y funcionando correctamente",
+      "Polaridad verificada en tomacorrientes y conexiones",
+      "Puesta a tierra instalada en equipos y tableros",
+      "Circuitos eléctricos rotulados y documentados correctamente",
+      "Conductores con aislamiento verificado en pruebas de resistencia",
+      "Bandejas y canalizaciones correctamente fijadas",
+      "Interruptores diferenciales presentes en tableros",
+      "Caída de tensión dentro de rangos aceptables",
+      "Protecciones contra sobretensiones instalad",
+      "Compatibilidad entre conductores y térmicos verificada",
+      "Iluminación de emergencia funcional y conforme a diseño",
+      "Dispositivos de control energético instalados correctamente",
+      "Ductos eléctricos con integridad estructural confirmada",
+      "Fases correctamente conectadas en sistemas trifásicos"
+    ]
+  },
+  "103": {
+    "nombre": "TABLA YESO",
+    "puntos_revision": [
+      "Paneles alineados y nivelados según diseño",
+      "Estructura soporte instalada correctamente (montantes y canales)",
+      "Fijaciones realizadas con separación y cantidad adecuada",
+      "Juntas tratadas con cinta y masilla en todas las uniones",
+      "Acabado superficial sin fisuras ni imperfecciones",
+      "Refuerzos colocados en puntos críticos según requerimientos",
+      "Cortes limpios realizados en esquinas, puertas y ventanas",
+      "Limpieza completa de polvo y residuos previo a acabado final",
+      "Resistencia estructural del panel comprobada",
+      "Nivelación verificada con láser en grandes superficies",
+      "Materiales empleados cumplen con especificaciones de proyecto",
+      "Insonorización adecuada en paredes divisorias",
+      "Paneles en techos suspendidos presentan estabilidad",
+      "Integración adecuada con molduras, pisos y otros acabados"
+    ]
+  },
+  "104": {
+    "nombre": "PINTURA",
+    "puntos_revision": [
+      "Tipo y color de pintura aplicados según especificaciones",
+      "Aplicación uniforme y con buen acabado",
+      "Superficie sin escurrimientos, burbujas ni manchas",
+      "Adherencia comprobada satisfactoriamente",
+      "Esquinas, uniones y bordes bien detallados",
+      "Zonas no deseadas libres de residuos de pintura",
+      "Imprimantes y selladores aplicados correctamente",
+      "Textura y acabado final conforme a lo especificado (mate, satinado, brillante)",
+      "Compatibilidad de pintura con material base verificada",
+      "Retoques realizados tras instalación de otros elementos",
+      "Compatibilidad entre diferentes pinturas comprobada"
+    ]
+  },
+  "105": {
+    "nombre": "CORTINAS METÁLICAS",
+    "puntos_revision": [
+      "Medidas y ajuste correcto en el vano",
+      "Estructura y mecanismo de apertura/cierre funcional",
+      "Motor y controles verificados (si aplica)",
+      "Guías y rieles sin obstrucciones",
+      "Fijaciones y anclajes firmes y seguros",
+      "Elementos de seguridad revisados y operativos (freno, bloqueo)",
+      "Mecanismos móviles lubricados",
+      "Maniobra manual y automática probada exitosamente",
+      "Área limpia, sin residuos de instalación",
+      "Balanceo y tensión de resortes ajustados",
+      "Cables y conexiones eléctricas en buen estado (si aplica)",
+      "Sellos y burletes en buen estado (si aplica)",
+      "Operación con nivel de ruido aceptable",
+      "Sensores y fotoceldas funcionales (si aplica)",
+      "Controles remotos o sistemas de activación operativos (si aplica)",
+      "Poleas y ejes sin desgaste",
+      "Frenos electromagnéticos ajustados correctamente (si aplica)",
+      "Láminas sin corrosión ni daños visibles"
+    ]
+  },
+  "106": {
+    "nombre": "ENLAMINADO",
+    "puntos_revision": [
+      "Alineación y fijación adecuadas",
+      "Solapes y sellados correctamente ejecutados",
+      "Recubrimientos y acabados en buen estado",
+      "Sin daños mecánicos ni deformaciones",
+      "Láminas del calibre y tipo especificado",
+      "Fijaciones correctamente colocadas y ajustadas",
+      "Drenaje funcional con pendiente adecuada",
+      "Protección anticorrosiva aplicada en uniones (si aplica)",
+      "Área limpia y sin residuos metálicos",
+      "Superficie nivelada y plana",
+      "Juntas y uniones con buena hermeticidad",
+      "Bordes y cortes seguros, sin desprendimientos",
+      "Buena adherencia y compatibilidad con la estructura base",
+      "Sistemas de fijación correctamente instalados"
+    ]
+  },
+  "107": {
+    "nombre": "CANAL Y FLASHING",
+    "puntos_revision": [
+      "Canaletas y bajantes instalados correctamente",
+      "Pendientes adecuadas para buen flujo de agua",
+      "Uniones y sellados sin filtraciones",
+      "Fijaciones y anclajes seguros",
+      "Material y calibre conforme a especificaciones",
+      "Solapes y traslapes ejecutados correctamente",
+      "Sin deformaciones ni daños en instalación",
+      "Libre de residuos o acumulaciones",
+      "Anclajes y soportes firmemente instalados",
+      "Bajantes sin obstrucciones visibles",
+      "Tornillería y uniones correctamente selladas"
+    ]
+  },
+  "108": {
+    "nombre": "HERRERÍA",
+    "puntos_revision": [
+      "Dimensiones y alineación conforme a planos",
+      "Soldaduras y uniones estructurales revisadas",
+      "Material utilizado según especificaciones",
+      "Tratamientos anticorrosivos aplicados (galvanizado, pintura)",
+      "Mecanismos móviles funcionales (bisagras, cerraduras, ruedas)",
+      "Fijaciones y anclajes seguros",
+      "Acabados bien ejecutados (lijado, pulido, pintura)",
+      "Barandales y puertas nivelados y aplomados",
+      "Limpieza final realizada, sin residuos metálicos",
+      "Pruebas de carga exitosas en elementos críticos",
+      "Bordes sin filos peligrosos",
+      "Tornillos y remaches de seguridad instalados correctamente",
+      "Drenaje funcional en piezas expuestas",
+      "Buena integración con otros elementos estructurales",
+      "Pintura o esmalte aplicado correctamente",
+      "Estado final documentado y registrado"
+    ]
+  },
+  "109": {
+    "nombre": "ACABADOS CEMENTICIOS",
+    "puntos_revision": [
+      "Nivelación y espesores verificados según especificaciones",
+      "Superficie sin fisuras, grietas ni defectos visibles",
+      "Buena adherencia del acabado sobre la base comprobada",
+      "Juntas de dilatación correctamente aplicadas",
+      "Curado adecuado realizado para evitar contracción",
+      "Textura y tonalidad uniformes en toda la superficie",
+      "Impermeabilización aplicada en zonas húmedas",
+      "Superficie limpia y debidamente protegida",
+      "Bordes y esquinas bien definidos",
+      "Selladores correctamente aplicados",
+      "Sin eflorescencias ni manchas visibles",
+      "Registro fotográfico del estado final completo"
+    ]
+  },
+  "110": {
+    "nombre": "ACM",
+    "puntos_revision": [
+      "Dimensiones y cortes precisos verificados",
+      "Paneles alineados y nivelados correctamente",
+      "Sistemas de fijación y anclajes seguros",
+      "Uniones y sellados entre paneles correctamente ejecutados",
+      "Superficies sin rayones, golpes ni deformaciones",
+      "Ventilación y dilatación adecuadas instaladas",
+      "Zona de instalación limpia, sin residuos",
+      "Bordes y uniones sin deformaciones",
+      "Accesibilidad futura para mantenimiento asegurada",
+      "Acabado final conforme a diseño (mate o brillante)"
+    ]
+  },
+  "111": {
+    "nombre": "ALQUILER DE GRUA + OPERADOR",
+    "puntos_revision": [
+      "Documentación y certificación del operador verificadas",
+      "Mantenimiento vigente de grúa dentro de los últimos 3 meses",
+      "Seguros actualizados del equipo y operador comprobados",
+      "Revisión del estado físico y mecánico de la grúa completado: i. Grúa limpia y sin residuos comprometedores ii. Carga máxima y distribución de peso verificados iii. Contrapesos y estabilizadores en buen estado iv. Neumáticos y chasis inspeccionados v. Sistema hidráulico sin fugas vi. Elementos de izaje en óptimas condiciones vii. Iluminación funcional para trabajos nocturnos",
+      "Pruebas previas a maniobras completadas: i. Controles de mando y respuesta verificados ii. Frenos y sistemas de seguridad funcionales",
+      "Autorización de Seguridad Industrial otorgada: i. Uso correcto de equipo de protección ii. Área de trabajo debidamente señalizada y delimitada iii. Método de comunicación operador–tierra definida iv. Lista de cumplimiento firmada y entregada",
+      "Operación realizada bajo condiciones climáticas seguras"
+    ]
+  },
+  "112": {
+    "nombre": "BOMBA Y COLOCACIÓN DE CONCRETO",
+    "puntos_revision": [
+      "Bomba inspeccionada y con mantenimiento vigente",
+      "Capacidad de bombeo conforme a los requerimientos",
+      "Mangueras y conexiones sin fugas ni desgaste",
+      "Pruebas de funcionamiento satisfactorias",
+      "Concreto entregado conforme a especificaciones técnicas",
+      "Nivelación y distribución del concreto correctamente ejecutadas",
+      "Juntas de dilatación y construcción instaladas",
+      "Acabado final del concreto cumple con calidad requerida",
+      "Limpieza de equipo y área de trabajo realizada",
+      "Equipo instalado con al menos 1 hora de anticipación de instalación de tuberías"
+    ]
+  },
+  "113": {
+    "nombre": "IMPERMEABILIZANTES",
+    "puntos_revision": [
+      "No se evidencian grietas, burbujas ni desprendimientos en la capa impermeabilizante.",
+      "No se presentan filtraciones de agua en las áreas tratadas.",
+      "Material expuesto al clima mantiene sus propiedades sin deterioro visible.",
+      "Sellos en bordes y uniones sin signos de desgaste ni separación.",
+      "Espesor de la capa impermeabilizante cumple con especificaciones del sistema aplicado.",
+      "Aplicación uniforme verificada en toda la superficie.",
+      "Adherencia adecuada en esquinas y juntas críticas.",
+      "Refuerzos correctamente colocados en puntos de mayor desgaste."
+    ]
+  },
+  "114": {
+    "nombre": "PUERTAS DE MADERA",
+    "puntos_revision": [
+      "Medidas y ajuste en marco confirmados según planos.",
+      "Bisagras, cerraduras y herrajes correctamente instalados y funcionales.",
+      "Acabado superficial y barniz aplicados sin imperfecciones ni manchas.",
+      "Funcionamiento correcto y alineación de la hoja respecto al marco.",
+      "Sellado perimetral instalado y funcional contra ruidos y filtraciones.",
+      "Cierre suave y ajuste en marcos verificado.",
+      "Fijaciones y anclajes estables, especialmente en puertas pesadas.",
+      "Limpieza final realizada y sin residuos de instalación.",
+      "Puerta presenta estabilidad estructural adecuada.",
+      "Holguras y separación con el marco dentro de tolerancias aceptables.",
+      "Sin deformaciones visibles por humedad o temperatura.",
+      "Estética y uniformidad del color según diseño aprobado."
+    ]
+  },
+  "115": {
+    "nombre": "ELEVADORES",
+    "puntos_revision": [
+      "Instalación ejecutada conforme a planos y normativa aplicable.",
+      "Pruebas de funcionamiento satisfactorias en todos los niveles y con carga máxima.",
+      "Acabados en cabina y accesos sin defectos.",
+      "Sistemas de emergencia y alarmas operativos.",
+      "Nivelación precisa en cada piso sin desniveles.",
+      "Cables, poleas y sistemas de tracción inspeccionados y sin fallas.",
+      "Botoneras y señalización instaladas y funcionales.",
+      "Puertas y sensores de seguridad operativos.",
+      "Documentación técnica y certificaciones entregadas.",
+      "Protocolos de mantenimiento disponibles y acordes al equipo.",
+      "Arranque y frenado con carga sin anomalías.",
+      "Iluminación interior y exterior operativa.",
+      "Cabina con ventilación funcional y temperatura controlada.",
+      "Consumo energético dentro de parámetros eficientes.",
+      "Protección contra sobrecargas eléctricas instalada.",
+      "Rieles y guías inspeccionadas, sin obstrucciones ni defectos.",
+      "Tiempos de respuesta y velocidad adecuados según especificación.",
+      "Ruido y vibraciones en operación dentro de rangos normales.",
+      "Acceso a componentes para mantenimiento sin restricciones.",
+      "Bitácora de pruebas operativas completada y archivada"
+    ]
+  },
+  "116": {
+    "nombre": "POZO MECÁNICO",
+    "puntos_revision": [
+      "Profundidad y diámetro del pozo conforme a planos aprobados.",
+      "Entubado y sellados adecuados garantizan integridad del pozo.",
+      "Pruebas de caudal y flujo realizadas satisfactoriamente.",
+      "Paredes estables y revestimiento sin colapsos ni desplazamientos.",
+      "Sistema de drenaje funcional y evacuación de agua efectiva.",
+      "Pruebas de bombeo realizadas si aplica, con parámetros dentro de norma.",
+      "Sellos contra contaminación externa instalados y verificados.",
+      "Documentación técnica y certificación de obra entregada.",
+      "Materiales de perforación verificados según especificaciones.",
+      "Calidad del agua extraída evaluada cuando corresponde.",
+      "Flujo de agua libre de sedimentos y partículas.",
+      "Sistema de filtración eficiente y en funcionamiento.",
+      "Sellado superior del pozo instalado correctamente."
+    ]
+  },
+  "117": {
+    "nombre": "PILOTES + NAILING",
+    "puntos_revision": [
+      "Ubicación y profundidad de pilotes verificadas según planos estructurales.",
+      "Refuerzo y concreto correctamente instalados en cada pilote.",
+      "Taludes estables y drenaje operativo en el área intervenida.",
+      "Tensores y anclajes de sistema de contención correctamente instalados.",
+      "Pilotes sin fisuras ni desplazamientos tras fundición.",
+      "Concreto utilizado cumple estándares de calidad establecidos.",
+      "Contacto adecuado entre cimentación y subestructura verificado.",
+      "Pilotes verticales y alineados según especificaciones.",
+      "Recubrimiento de acero de refuerzo conforme a diseño.",
+      "Suelo circundante compactado adecuadamente.",
+      "Proceso de perforación ejecutado con limpieza de escombros.",
+      "Sin asentamientos diferenciales en zona estructural.",
+      "Sistema de contención sin filtraciones ni humedad.",
+      "Anclajes activos tensados y supervisados en pre y post.",
+      "Uniones entre pilotes y estructura superior selladas."
+    ]
+  }
+}
