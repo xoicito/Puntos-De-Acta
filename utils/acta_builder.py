@@ -117,5 +117,10 @@ def build_blocks(data,rubrics):
       "{{TRABAJOS_PREVIOS}}": numbered(split_lines(data.get("trabajos_previos"))) or "No aplica",
       "{{SERVICIOS_BASICOS}}": build_services(data),
       "{{PUNTOS_REVISION}}": numbered(spec+IMMUTABLE_POINTS),
-      "{{CONDICIONES_ESPECIALES}}": ("CONDICIONES ESPECIALES\n"+numbered(split_lines(data.get("condiciones_especiales")))) if split_lines(data.get("condiciones_especiales")) else "",
+      "{{CONDICIONES_ESPECIALES}}":
+      numbered(
+          split_lines(
+              data.get("condiciones_especiales")
+          )
+      )
     }
