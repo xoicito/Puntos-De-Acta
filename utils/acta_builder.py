@@ -35,15 +35,76 @@ def rubric_code(rubro):
     import re
     m=re.search(r"\b(1\d{2})\b",rubro or ""); return m.group(1) if m else "100"
 def build_programacion(subitems):
-    rows=[]
+
+    rows = []
+
     for s in subitems:
-        v={c["id"]:(c.get("text") or "").strip() for c in s.get("column_values",[])}
-        area=(s.get("name") or "").strip(); ini=display_date(v.get(SUBITEM_COLUMNS["fecha_inicio"],"")); fin=display_date(v.get(SUBITEM_COLUMNS["fecha_fin"],"")); obs=v.get(SUBITEM_COLUMNS["observaciones"],"")
-        dias=""
-        try: dias=str((datetime.strptime(fin,"%d/%m/%Y")-datetime.strptime(ini,"%d/%m/%Y")).days+1)
-        except Exception: pass
-        if any((area,ini,fin,obs)): rows.append(" | ".join([area,ini,fin,dias,obs]))
-    return "ÁREA | INICIO | TERMINA | DÍAS | OBSERVACIONES" + (("\n"+"\n".join(rows)) if rows else "\nSin programación registrada")
+
+        v = {
+            c["id"]: (c.get("text") or "").strip()
+            for c in s.get("column_values", [])
+        }
+
+        area = (s.get("name") or "").strip()
+
+        ini = display_date(
+            v.get(
+                SUBITEM_COLUMNS["fecha_inicio"],
+                ""
+            )
+        )
+
+        fin = display_date(
+            v.get(
+                SUBITEM_COLUMNS["fecha_fin"],
+                ""
+            )
+        )
+
+        obs = v.get(
+            SUBITEM_COLUMNS["observaciones"],
+            ""
+        )
+
+        dias = ""
+
+        try:
+            dias = str(
+                (
+                    datetime.strptime(
+                        fin,
+                        "%d/%m/%Y"
+                    )
+                    -
+                    datetime.strptime(
+                        ini,
+                        "%d/%m/%Y"
+                    )
+                ).days + 1
+            )
+        except Exception:
+            pass
+
+        if any((area, ini, fin, obs)):
+
+            rows.append(
+                " | ".join(
+                    [
+                        area,
+                        ini,
+                        fin,
+                        dias,
+                        obs,
+                    ]
+                )
+            )
+
+    if rows:
+        return "\n".join(rows)
+
+    return ""
+
+
 def build_services(data):
     values=[x.strip() for x in (data.get("servicios_basicos") or "").replace(";",",").split(",") if x.strip()]
     other=data.get("otro_servicio_basico","").strip()
