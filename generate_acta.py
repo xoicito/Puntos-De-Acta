@@ -32,13 +32,11 @@ def generate_acta(item_id):
         rubrics = json.loads((base / "rubros.json").read_text(encoding="utf-8"))
 
         replacements = {
-            "{{PROYECTO}}": data["proyecto"],
-            "{{RUBRO}}": data["rubro"],
-            "{{NO_CONTRATO}}": data["no_contrato"],
-            "{{TIPO_CONTRATO}}": data["tipo_contrato"],
-            "{{FECHA_ACTA}}": display_date(data["fecha_acta"]),
-            "{{EMPRESA}}": data["empresa"],
-            "{{CONTACTO}}": data["contacto"],
+            "{{PROYECTO}}": data["proyecto"].upper(),
+            "{{RUBRO}}": data["rubro"].upper(),
+            "{{TIPO_CONTRATO}}": data["tipo_contrato"].upper(),
+            "{{EMPRESA}}": data["empresa"].upper(),
+            "{{CONTACTO}}": data["contacto"].upper(),
             "{{TELEFONO}}": data["telefono"],
             "{{NIT}}": data["nit"],
             "{{NO_COTIZACION}}": data["no_cotizacion"],
