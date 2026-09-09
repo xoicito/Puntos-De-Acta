@@ -109,18 +109,17 @@ def build_services(data):
     values=[x.strip() for x in (data.get("servicios_basicos") or "").replace(";",",").split(",") if x.strip()]
     other=data.get("otro_servicio_basico","").strip()
     if other and other.lower() not in {x.lower() for x in values}: values.append(other)
-    return numbered(values) if values else "No aplica"
+    return "\n".join(values) if values else ""
 def build_blocks(data,rubrics):
     code=rubric_code(data.get("rubro")); spec=rubrics.get(code,{}).get("puntos_revision",[])
     return {
       "{{PROGRAMACION}}": build_programacion(data.get("subitems",[])),
-      "{{TRABAJOS_PREVIOS}}": numbered(split_lines(data.get("trabajos_previos"))) or "No aplica",
+      "{{TRABAJOS_PREVIOS}}":"\n".join(split_lines(data.get("trabajos_previos"))) or "No aplica",
       "{{SERVICIOS_BASICOS}}": build_services(data),
       "{{PUNTOS_REVISION}}": numbered(spec+IMMUTABLE_POINTS),
       "{{CONDICIONES_ESPECIALES}}":
-      numbered(
+      "\n".join(
           split_lines(
               data.get("condiciones_especiales")
           )
       )
-    }
