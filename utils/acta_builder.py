@@ -154,19 +154,18 @@ def build_blocks(data, rubrics):
         ),
 
         "{{SERVICIOS_BASICOS}}":
-        build_services(data),
+        [
+            x.strip()
+            for x in build_services(data).splitlines()
+            if x.strip()
+        ],
 
         "{{PUNTOS_REVISION}}":
-        "\n".join(
-            spec + IMMUTABLE_POINTS
-        ),
+        spec + IMMUTABLE_POINTS,
 
         "{{CONDICIONES_ESPECIALES}}":
-        "\n".join(
-            split_lines(
-                data.get(
-                    "condiciones_especiales"
-                )
+        split_lines(
+            data.get(
+                "condiciones_especiales"
             )
         ),
-    }
