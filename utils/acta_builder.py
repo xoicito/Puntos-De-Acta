@@ -1,39 +1,106 @@
 from datetime import datetime
 from config import COLUMN_ALIASES, SUBITEM_COLUMNS
 
-IMMUTABLE_POINTS=[
-"CAMBIO DE PROVEEDOR: Si el proveedor no reacciona a los requerimientos solicitados previos y a los contratados, se debe cambiar no más de 3 días después de la falta de reacción.",
-"GARANTÍA: Si el proveedor tuvo un trabajo de mala calidad, se deben descontar materiales y otros gastos que se requieran.",
-"RETENCIÓN: 5% del monto total retenido por 3 meses luego de haber recibido con satisfacción los trabajos.",
-"El proveedor se compromete a cumplir con todas las normas del ACUERDO GUBERNATIVO 229-204 Y SUS REFORMAS 33-2016. De no cumplir con las normativas del acuerdo o las internas del proyecto, se procederá a aplicar una multa económica según la falta cometida.",
+IMMUTABLE_POINTS = [
+    "CAMBIO DE PROVEEDOR: Si el proveedor no reacciona a los requerimientos solicitados previos y a los contratados, se debe cambiar no más de 3 días después de la falta de reacción.",
+    "GARANTÍA: Si el proveedor tuvo un trabajo de mala calidad, se deben descontar materiales y otros gastos que se requieran.",
+    "RETENCIÓN: 5% del monto total retenido por 3 meses luego de haber recibido con satisfacción los trabajos.",
+    "El proveedor se compromete a cumplir con todas las normas del ACUERDO GUBERNATIVO 229-204 Y SUS REFORMAS 33-2016. De no cumplir con las normativas del acuerdo o las internas del proyecto, se procederá a aplicar una multa económica según la falta cometida.",
 ]
 
-def _values(item): return {c["id"]: (c.get("text") or "").strip() for c in item.get("column_values",[])}
-def _pick(values,key):
-    for cid in COLUMN_ALIASES[key]:
-        if values.get(cid): return values[cid]
+
+def _values(item):
+    return {
+        c["id"]: (c.get("text") or "").strip()
+        for c in item.get("column_values", [])
+    }
+
+
+def _pick(values, key):
+    for cid in COLUMN_ALIASESif values.get(cid):
+            return values[cid]
     return ""
+
+
 def item_data(item):
-    v=_values(item); data={k:_pick(v,k) for k in COLUMN_ALIASES}
-    data["item_id"]=str(item["id"]); data["item_name"]=item.get("name","")
-    data["board_id"]=str(item.get("board",{}).get("id", ""))
-    data["subitems"]=item.get("subitems",[])
+
+    v = _values(item)
+
+    data = {
+        k: _pick(v, k)
+        for k in COLUMN_ALIASES
+    }
+
+    data["item_id"] = str(item["id"])
+    data["item_name"] = item.get("name", "")
+    data["board_id"] = str(
+        item.get("board", {}).get("id", "")
+    )
+    data["subitems"] = item.get("subitems", [])
+
     return data
 
-def split_lines(text): return [" ".join(x.split()) for x in (text or "").splitlines() if x.strip()]
-def numbered(lines): return "\n".join(f"{i}. {x}" for i,x in enumerate(lines,1))
+
+def split_lines(text):
+
+    return [
+        " ".join(x.split())
+        for x in (text or "").splitlines()
+        if x.strip()
+    ]
+
+
+def numbered(lines):
+
+    return "\n".join(
+        f"{i}. {x}"
+        for i, x in enumerate(lines, 1)
+    )
+
+
 def pct(value):
-    value=(value or "").strip(); return value if not value or value.endswith("%") else value+"%"
+
+    value = (value or "").strip()
+
+    return (
+        value
+        if not value
+        or value.endswith("%")
+        else value + "%"
+    )
+
+
 def display_date(value):
-    if not value: return ""
-    for fmt in ("%Y-%m-%d","%m/%d/%Y","%d/%m/%Y"):
-        try: return datetime.strptime(value,fmt).strftime("%d/%m/%Y")
-        except ValueError: pass
+
+    if not value:
+        return ""
+
+    for fmt in (
+        "%Y-%m-%d",
+        "%m/%d/%Y",
+        "%d/%m/%Y",
+    ):
+        try:
+            return datetime.strptime(
+                value,
+                fmt
+            ).strftime("%d/%m/%Y")
+        except ValueError:
+            pass
+
     return value
 
+
 def rubric_code(rubro):
+
     import re
-    m=re.search(r"\b(1\d{2})\b",rubro or ""); return m.group(1) if m else "100"
+
+    m = re.search(
+        r"\b(1\d{2})\b",
+        rubro or ""
+    )
+
+    return m.group(1) if m else "100"
 
 
 def build_programacion(subitems):
@@ -43,11 +110,18 @@ def build_programacion(subitems):
     for s in subitems:
 
         v = {
-            c["id"]: (c.get("text") or "").strip()
-            for c in s.get("column_values", [])
+            c["id"]: (
+                c.get("text") or ""
+            ).strip()
+            for c in s.get(
+                "column_values",
+                []
+            )
         }
 
-        area = (s.get("name") or "").strip()
+        area = (
+            s.get("name") or ""
+        ).strip()
 
         ini = display_date(
             v.get(
@@ -74,10 +148,12 @@ def build_programacion(subitems):
                 "area": area,
                 "inicio": ini,
                 "fin": fin,
-                "obs": obs
+                "obs": obs,
             })
 
     return rows
+
+
 def build_services(data):
 
     values = [
@@ -112,7 +188,7 @@ def build_services(data):
     ):
         values.append(other)
 
-    return "\n".join(values) if values else ""
+    return values
 
 
 def build_blocks(data, rubrics):
@@ -124,28 +200,35 @@ def build_blocks(data, rubrics):
     spec = (
         rubrics
         .get(code, {})
-        .get("puntos_revision", [])
+        .get(
+            "puntos_revision",
+            []
+        )
+    )
+
+    programacion = build_programacion(
+        data.get(
+            "subitems",
+            []
+        )
     )
 
     return {
-        
+
         "{{PROGRAMACION}}":
         "\n".join([
             " | ".join([
                 r["area"],
                 r["inicio"],
                 r["fin"],
-                r["obs"]
+                r["obs"],
             ])
-            for r in build_programacion(
-                data.get(
-                    "subitems",
-                    []
-                )
-            )
+            for r in programacion
         ]),
 
-        
+        "__PROGRAMACION_ROWS__":
+        programacion,
+
         "{{TRABAJOS_PREVIOS}}":
         split_lines(
             data.get(
@@ -154,11 +237,7 @@ def build_blocks(data, rubrics):
         ),
 
         "{{SERVICIOS_BASICOS}}":
-        [
-            x.strip()
-            for x in build_services(data).splitlines()
-            if x.strip()
-        ],
+        build_services(data),
 
         "{{PUNTOS_REVISION}}":
         spec + IMMUTABLE_POINTS,
