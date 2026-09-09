@@ -26,6 +26,29 @@ def write_lines(ws, start_row, column, text):
         )
 
 
+def write_lines(ws, start_row, column, text):
+
+    lines = [
+        x.strip()
+        for x in str(text or "").splitlines()
+        if x.strip()
+    ]
+
+    for offset, line in enumerate(lines):
+
+        ws.cell(
+            row=start_row + offset,
+            column=column
+        ).value = line
+
+        ws.cell(
+            row=start_row + offset,
+            column=column
+        ).alignment = Alignment(
+            wrap_text=True,
+            vertical="top"
+        )
+
 def render_excel(template_path, output_path, replacements):
 
     wb = load_workbook(template_path)
@@ -86,6 +109,16 @@ def render_excel(template_path, output_path, replacements):
             )
         )
 
+          write_lines(
+            ws,
+            76,
+            5,
+            replacements.get(
+                "{{SERVICIOS_BASICOS}}",
+                ""
+            )
+        )
+        
         # REEMPLAZOS NORMALES
         for row in ws.iter_rows():
 
