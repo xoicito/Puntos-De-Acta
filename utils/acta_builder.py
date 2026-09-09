@@ -130,9 +130,9 @@ def build_blocks(data,rubrics):
         build_services(data),
 
         "{{PUNTOS_REVISION}}":
-        numbered(
+        "\n".join(
             spec + IMMUTABLE_POINTS
-        ),
+        ),,
 
         "{{CONDICIONES_ESPECIALES}}":
         "\n".join(
