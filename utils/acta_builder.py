@@ -66,45 +66,16 @@ def build_programacion(subitems):
             ""
         )
 
-        dias = ""
-
-        try:
-            dias = str(
-                (
-                    datetime.strptime(
-                        fin,
-                        "%d/%m/%Y"
-                    )
-                    -
-                    datetime.strptime(
-                        ini,
-                        "%d/%m/%Y"
-                    )
-                ).days + 1
-            )
-        except Exception:
-            pass
-
         if any((area, ini, fin, obs)):
 
-            rows.append(
-                " | ".join(
-                    [
-                        area,
-                        ini,
-                        fin,
-                        dias,
-                        obs,
-                    ]
-                )
-            )
+            rows.append({
+                "area": area,
+                "inicio": ini,
+                "fin": fin,
+                "obs": obs
+            })
 
-    if rows:
-        return "\n".join(rows)
-
-    return ""
-
-
+    return rows
 def build_services(data):
 
     values = [
