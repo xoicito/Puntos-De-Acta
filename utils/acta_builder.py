@@ -127,14 +127,23 @@ def build_blocks(data, rubrics):
 
     return {
         
-        "__PROGRAMACION_ROWS__":
-        build_programacion(
-            data.get(
-                "subitems",
-                []
+        "{{PROGRAMACION}}":
+        "\n".join([
+            " | ".join([
+                r["area"],
+                r["inicio"],
+                r["fin"],
+                r["obs"]
+            ])
+            for r in build_programacion(
+                data.get(
+                    "subitems",
+                    []
+                )
             )
-        ),
+        ]),
 
+        
         "{{TRABAJOS_PREVIOS}}":
         "\n".join(
             split_lines(
