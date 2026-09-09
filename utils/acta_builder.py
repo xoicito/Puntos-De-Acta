@@ -17,8 +17,10 @@ def _values(item):
 
 
 def _pick(values, key):
+
     for cid in COLUMN_ALIASESif values.get(cid):
             return values[cid]
+
     return ""
 
 
