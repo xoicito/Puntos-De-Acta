@@ -149,7 +149,7 @@ def build_blocks(data, rubrics):
 
         "{{PUNTOS_REVISION}}":
         "\n".join(
-            [f"• {x}" for x in (spec + IMMUTABLE_POINTS)]
+            spec + IMMUTABLE_POINTS
         ),
 
         "{{CONDICIONES_ESPECIALES}}":
