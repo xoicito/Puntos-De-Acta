@@ -147,11 +147,9 @@ def build_blocks(data, rubrics):
 
         
         "{{TRABAJOS_PREVIOS}}":
-        "\n".join(
-            split_lines(
-                data.get(
-                    "trabajos_previos"
-                )
+        split_lines(
+            data.get(
+                "trabajos_previos"
             )
         ),
 
