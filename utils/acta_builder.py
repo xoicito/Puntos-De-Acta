@@ -34,6 +34,8 @@ def display_date(value):
 def rubric_code(rubro):
     import re
     m=re.search(r"\b(1\d{2})\b",rubro or ""); return m.group(1) if m else "100"
+
+
 def build_programacion(subitems):
 
     rows = []
