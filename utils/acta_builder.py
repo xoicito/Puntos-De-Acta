@@ -126,8 +126,8 @@ def build_blocks(data, rubrics):
     )
 
     return {
-
-        "{{PROGRAMACION}}":
+        
+        "__PROGRAMACION_ROWS__":
         build_programacion(
             data.get(
                 "subitems",
