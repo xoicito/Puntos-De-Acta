@@ -44,6 +44,8 @@ def generate_acta(item_id):
             "{{ESTIMACIONES}}": pct(data["estimaciones"]),
             "{{CONTRA_ENTREGA}}": pct(data["contra_entrega"]),
             "{{RETENIDO}}": pct(data["retenido"]),
+            "{{NO_CONTRATO}}": data["no_contrato"],
+            "{{FECHA_ACTA}}": display_date(data["fecha_acta"]),
         }
 
         replacements.update(build_blocks(data, rubrics))
