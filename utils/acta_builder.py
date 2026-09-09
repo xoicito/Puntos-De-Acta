@@ -106,9 +106,39 @@ def build_programacion(subitems):
 
 
 def build_services(data):
-    values=[x.strip() for x in (data.get("servicios_basicos") or "").replace(";",",").split(",") if x.strip()]
-    other=data.get("otro_servicio_basico","").strip()
-    if other and other.lower() not in {x.lower() for x in values}: values.append(other)
+
+    values = [
+        x.strip()
+        for x in (
+            data.get(
+                "servicios_basicos"
+            )
+            or ""
+        ).replace(
+            ";",
+            ","
+        ).split(",")
+        if x.strip()
+    ]
+
+    other = (
+        data.get(
+            "otro_servicio_basico",
+            ""
+        )
+        .strip()
+    )
+
+    if (
+        other
+        and other.lower()
+        not in {
+            x.lower()
+            for x in values
+        }
+    ):
+        values.append(other)
+
     return "\n".join(values) if values else ""
 
 
