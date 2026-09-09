@@ -169,3 +169,4 @@ def build_blocks(data, rubrics):
                 "condiciones_especiales"
             )
         ),
+    }
