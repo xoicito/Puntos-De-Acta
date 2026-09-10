@@ -4,21 +4,39 @@ from openpyxl.styles import Alignment
 
 def write_list_to_range(ws, start_row, end_row, column, items):
     """Write list items to a range of cells, respecting the boundaries."""
+
     for i, item in enumerate(items):
+
         row = start_row + i
+
         if row > end_row:
             break
+
         try:
-            ws.cell(row=row, column=column).value = str(item)
-        except Exception as e:
+
+            cell = ws.cell(row=row, column=column)
+
             print(
-                f"ERROR CELDA row={row} col={column} item={item} error={e}"
+                f"INTENTANDO row={row} col={column} tipo={type(cell).__name__}"
             )
+
+            cell.value = str(item)
+
+            cell.alignment = Alignment(
+                wrap_text=True,
+                vertical="top"
+            )
+
+        except Exception as e:
+
+            print(
+                f"ERROR CELDA row={row} col={column} "
+                f"tipo={type(cell).__name__} "
+                f"item={item} "
+                f"error={e}"
+            )
+
             raise
-        ws.cell(row=row, column=column).alignment = Alignment(
-            wrap_text=True,
-            vertical="top"
-        )
 
 
 def write_programacion_row(ws, row_num, area, inicio, fin, obs):
@@ -36,6 +54,7 @@ def write_programacion_row(ws, row_num, area, inicio, fin, obs):
 
 
 def render_excel(template_path, output_path, replacements):
+    print("=== RENDER EXCEL INICIADO ===")
     """Render Excel template with replacements and list data in proper cell ranges."""
     wb = load_workbook(template_path)
 
@@ -44,6 +63,7 @@ def render_excel(template_path, output_path, replacements):
 # PROGRAMACION deshabilitada temporalmente
 
         # TRABAJOS PREVIOS - E69:E73 (5 rows)
+        print("TRABAJOS_PREVIOS")
         trabajos = replacements.get("{{TRABAJOS_PREVIOS}}", [])
         if isinstance(trabajos, list):
             write_list_to_range(ws, 69, 73, 5, trabajos)
