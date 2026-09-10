@@ -274,6 +274,25 @@ def build_puntos_generales(data):
     }
     
 
+def build_planos_entregados(data):
+
+    selected = parse_multi(
+        data.get("planos_entregados")
+    )
+
+    return {
+        "arquitectura": "SI" if "arquitectura" in selected else "NO",
+        "cotas": "SI" if "cotas" in selected else "NO",
+        "elevaciones": "SI" if "elevaciones y secciones" in selected else "NO",
+        "hidrosanitarias": "SI" if "hidrosanitarias" in selected else "NO",
+        "electricidad": "SI" if "electricidad" in selected else "NO",
+        "acabados": "SI" if "acabados" in selected else "NO",
+        "estructura_principal": "SI" if "estructura principal" in selected else "NO",
+        "estructura_secundaria": "SI" if "estructura secundaria" in selected else "NO",
+        "obras_secundarias": "SI" if "obras secundarias" in selected else "NO",
+    }
+
+
 def build_blocks(data, rubrics):
     """Build replacement blocks for Excel template with data from item and rubrics."""
     code = rubric_code(
