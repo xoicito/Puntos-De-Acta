@@ -276,6 +276,9 @@ def build_blocks(data, rubrics):
         )
     )
 
+    print("SPEC =", spec)
+    print("IMMUTABLE =", IMMUTABLE_POINTS)
+
     blocks = {
 
         "{{PROGRAMACION}}":
