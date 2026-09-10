@@ -35,18 +35,7 @@ def render_excel(template_path, output_path, replacements):
 
     for ws in wb.worksheets:
 
-        # PROGRAMACION - Write first row only
-        programacion_rows = replacements.get("__PROGRAMACION_ROWS__", [])
-        if programacion_rows:
-            first_row = programacion_rows[0]
-            write_programacion_row(
-                ws,
-                62,
-                first_row.get("area", ""),
-                first_row.get("inicio", ""),
-                first_row.get("fin", ""),
-                first_row.get("obs", "")
-            )
+# PROGRAMACION deshabilitada temporalmente
 
         # TRABAJOS PREVIOS - E69:E73 (5 rows)
         trabajos = replacements.get("{{TRABAJOS_PREVIOS}}", [])
