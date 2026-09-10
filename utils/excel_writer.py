@@ -3,31 +3,7 @@ from openpyxl.styles import Alignment
 
 
 def write_lines(ws, start_row, column, text):
-
-    lines = [
-        x.strip()
-        for x in str(text or "").splitlines()
-        if x.strip()
-    ]
-
-    for i, line in enumerate(lines):
-
-        ws.cell(
-            row=start_row + i,
-            column=column
-        ).value = line
-
-        ws.cell(
-            row=start_row + i,
-            column=column
-        ).alignment = Alignment(
-            wrap_text=True,
-            vertical="top"
-        )
-
-
-def write_lines(ws, start_row, column, text):
-
+    """Write text lines to Excel cells with proper formatting."""
     lines = [
         x.strip()
         for x in str(text or "").splitlines()
@@ -35,7 +11,6 @@ def write_lines(ws, start_row, column, text):
     ]
 
     for offset, line in enumerate(lines):
-
         ws.cell(
             row=start_row + offset,
             column=column
@@ -49,15 +24,15 @@ def write_lines(ws, start_row, column, text):
             vertical="top"
         )
 
-def render_excel(template_path, output_path, replacements):
 
+def render_excel(template_path, output_path, replacements):
+    """Render Excel template with replacements and special handling for dynamic sections."""
     wb = load_workbook(template_path)
 
     for ws in wb.worksheets:
 
         # PROGRAMACION
         if "{{PROGRAMACION}}" in str(ws["D62"].value):
-
             ws["D62"] = str(
                 replacements.get(
                     "{{PROGRAMACION}}",
@@ -109,16 +84,6 @@ def render_excel(template_path, output_path, replacements):
             )
         )
 
-          write_lines(
-            ws,
-            76,
-            5,
-            replacements.get(
-                "{{SERVICIOS_BASICOS}}",
-                ""
-            )
-        )
-        
         # REEMPLAZOS NORMALES
         for row in ws.iter_rows():
 
