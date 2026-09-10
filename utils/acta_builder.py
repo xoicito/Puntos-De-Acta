@@ -23,7 +23,6 @@ def _pick(values, key):
 
     return ""
 
-
 def item_data(item):
 
     v = _values(item)
