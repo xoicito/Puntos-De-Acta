@@ -110,3 +110,4 @@ def render_excel(template_path, output_path, replacements):
     wb.save(output_path)
 
     return output_path
+
