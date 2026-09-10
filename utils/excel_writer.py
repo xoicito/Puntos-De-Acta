@@ -2,109 +2,105 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 
 
-def write_lines(ws, start_row, column, text):
-    """Write text lines to Excel cells with proper formatting."""
-    lines = [
-        x.strip()
-        for x in str(text or "").splitlines()
-        if x.strip()
-    ]
+def write_list_to_range(ws, start_row, end_row, column, items):
+    """Write list items to a range of cells, respecting the boundaries."""
+    for i, item in enumerate(items):
+        row = start_row + i
+        if row > end_row:
+            break
+        ws.cell(row=row, column=column).value = str(item)
+        ws.cell(row=row, column=column).alignment = Alignment(
+            wrap_text=True,
+            vertical="top"
+        )
 
-    for offset, line in enumerate(lines):
-        ws.cell(
-            row=start_row + offset,
-            column=column
-        ).value = line
 
-        ws.cell(
-            row=start_row + offset,
-            column=column
-        ).alignment = Alignment(
+def write_programacion_row(ws, row_num, area, inicio, fin, obs):
+    """Write a single programacion row to the specified columns."""
+    ws.cell(row=row_num, column=4).value = area  # D
+    ws.cell(row=row_num, column=7).value = inicio  # G
+    ws.cell(row=row_num, column=10).value = fin  # J
+    ws.cell(row=row_num, column=13).value = obs  # M
+
+    for col in [4, 7, 10, 13]:
+        ws.cell(row=row_num, column=col).alignment = Alignment(
             wrap_text=True,
             vertical="top"
         )
 
 
 def render_excel(template_path, output_path, replacements):
-    """Render Excel template with replacements and special handling for dynamic sections."""
+    """Render Excel template with replacements and list data in proper cell ranges."""
     wb = load_workbook(template_path)
 
     for ws in wb.worksheets:
 
-        # PROGRAMACION
-        if "{{PROGRAMACION}}" in str(ws["D62"].value):
-            ws["D62"] = str(
-                replacements.get(
-                    "{{PROGRAMACION}}",
-                    ""
-                )
+        # PROGRAMACION - Write first row only
+        programacion_rows = replacements.get("__PROGRAMACION_ROWS__", [])
+        if programacion_rows:
+            first_row = programacion_rows[0]
+            write_programacion_row(
+                ws,
+                62,
+                first_row.get("area", ""),
+                first_row.get("inicio", ""),
+                first_row.get("fin", ""),
+                first_row.get("obs", "")
             )
 
-        # TRABAJOS PREVIOS
-        write_lines(
-            ws,
-            69,
-            5,
-            replacements.get(
-                "{{TRABAJOS_PREVIOS}}",
-                ""
-            )
-        )
+        # TRABAJOS PREVIOS - E69:E73 (5 rows)
+        trabajos = replacements.get("{{TRABAJOS_PREVIOS}}", [])
+        if isinstance(trabajos, list):
+            write_list_to_range(ws, 69, 73, 5, trabajos)
+        elif isinstance(trabajos, str):
+            write_list_to_range(ws, 69, 73, 5, trabajos.split('\n'))
 
-        # SERVICIOS BASICOS
-        write_lines(
-            ws,
-            76,
-            5,
-            replacements.get(
-                "{{SERVICIOS_BASICOS}}",
-                ""
-            )
-        )
+        # SERVICIOS BASICOS - E76:E80 (5 rows)
+        servicios = replacements.get("{{SERVICIOS_BASICOS}}", [])
+        if isinstance(servicios, list):
+            write_list_to_range(ws, 76, 80, 5, servicios)
+        elif isinstance(servicios, str):
+            write_list_to_range(ws, 76, 80, 5, servicios.split('\n'))
 
-        # PUNTOS REVISION
-        write_lines(
-            ws,
-            84,
-            5,
-            replacements.get(
-                "{{PUNTOS_REVISION}}",
-                ""
-            )
-        )
+        # PUNTOS REVISION - E84:E98 (15 rows)
+        puntos = replacements.get("{{PUNTOS_REVISION}}", [])
+        if isinstance(puntos, list):
+            write_list_to_range(ws, 84, 98, 5, puntos)
+        elif isinstance(puntos, str):
+            write_list_to_range(ws, 84, 98, 5, puntos.split('\n'))
 
-        # CONDICIONES ESPECIALES
-        write_lines(
-            ws,
-            109,
-            5,
-            replacements.get(
-                "{{CONDICIONES_ESPECIALES}}",
-                ""
-            )
-        )
+        # CONDICIONES ESPECIALES - E109:E116 (8 rows)
+        condiciones = replacements.get("{{CONDICIONES_ESPECIALES}}", [])
+        if isinstance(condiciones, list):
+            write_list_to_range(ws, 109, 116, 5, condiciones)
+        elif isinstance(condiciones, str):
+            write_list_to_range(ws, 109, 116, 5, condiciones.split('\n'))
 
-        # REEMPLAZOS NORMALES
+        # REEMPLAZOS NORMALES - Text placeholders in cells
         for row in ws.iter_rows():
-
             for cell in row:
-
-                if not isinstance(
-                    cell.value,
-                    str
-                ):
+                if not isinstance(cell.value, str):
                     continue
 
                 for placeholder, value in replacements.items():
-
-                    if placeholder.startswith("{{"):
+                    # Skip list placeholders and special keys
+                    if placeholder.startswith("{{") and placeholder.endswith("}}"):
+                        if placeholder in ["{{PROGRAMACION}}", "{{TRABAJOS_PREVIOS}}", 
+                                         "{{SERVICIOS_BASICOS}}", "{{PUNTOS_REVISION}}", 
+                                         "{{CONDICIONES_ESPECIALES}}"]:
+                            continue
 
                         if placeholder in cell.value:
-
-                            cell.value = cell.value.replace(
-                                placeholder,
-                                str(value or "")
-                            )
+                            if isinstance(value, list):
+                                cell.value = cell.value.replace(
+                                    placeholder,
+                                    "\n".join(str(v) for v in value)
+                                )
+                            else:
+                                cell.value = cell.value.replace(
+                                    placeholder,
+                                    str(value or "")
+                                )
 
                             cell.alignment = Alignment(
                                 wrap_text=True,
