@@ -5,11 +5,12 @@ IMMUTABLE_POINTS = [
     "CAMBIO DE PROVEEDOR: Si el proveedor no reacciona a los requerimientos solicitados previos y a los contratados, se debe cambiar no más de 3 días después de la falta de reacción.",
     "GARANTÍA: Si el proveedor tuvo un trabajo de mala calidad, se deben descontar materiales y otros gastos que se requieran.",
     "RETENCIÓN: 5% del monto total retenido por 3 meses luego de haber recibido con satisfacción los trabajos.",
-    "El proveedor se compromete a cumplir con todas las normas del ACUERDO GUBERNATIVO 229-204 Y SUS REFORMAS 33-2016. De no cumplir con las normativas del acuerdo o las internas del proyecto, se penalizará de acuerdo a lo establecido.",
+    "El proveedor se compromete a cumplir con todas las normas del ACUERDO GUBERNATIVO 229-204 Y SUS REFORMAS 33-2016. De no cumplir con las normativas del acuerdo o las internas del proyecto, se podrá dar por terminado el contrato.",
 ]
 
 
 def _values(item):
+    """Extract column values from an item as a dictionary."""
     return {
         c["id"]: (c.get("text") or "").strip()
         for c in item.get("column_values", [])
@@ -17,15 +18,19 @@ def _values(item):
 
 
 def _pick(values, key):
+    """Pick the first available column value for a given key from COLUMN_ALIASES."""
+    if key not in COLUMN_ALIASES:
+        return ""
 
-    for cid in COLUMN_ALIASES:
-        if values.get(cid):
-            return values[cid]
+    for column_id in COLUMN_ALIASES[key]:
+        if values.get(column_id):
+            return values[column_id]
 
     return ""
 
-def item_data(item):
 
+def item_data(item):
+    """Extract and organize item data using column aliases."""
     v = _values(item)
 
     data = {
@@ -44,7 +49,7 @@ def item_data(item):
 
 
 def split_lines(text):
-
+    """Split text into lines, removing empty ones and normalizing whitespace."""
     return [
         " ".join(x.split())
         for x in (text or "").splitlines()
@@ -53,7 +58,7 @@ def split_lines(text):
 
 
 def numbered(lines):
-
+    """Convert a list of lines into a numbered list format."""
     return "\n".join(
         f"{i}. {x}"
         for i, x in enumerate(lines, 1)
@@ -61,7 +66,7 @@ def numbered(lines):
 
 
 def pct(value):
-
+    """Ensure a value ends with a percentage symbol."""
     value = (value or "").strip()
 
     return (
@@ -73,7 +78,7 @@ def pct(value):
 
 
 def display_date(value):
-
+    """Convert a date string to DD/MM/YYYY format, supporting multiple input formats."""
     if not value:
         return ""
 
@@ -94,7 +99,7 @@ def display_date(value):
 
 
 def rubric_code(rubro):
-
+    """Extract the rubric code (1XX pattern) from a rubric string."""
     import re
 
     m = re.search(
@@ -106,7 +111,7 @@ def rubric_code(rubro):
 
 
 def build_programacion(subitems):
-
+    """Build a list of programming entries from subitems with dates and observations."""
     rows = []
 
     for s in subitems:
@@ -157,7 +162,7 @@ def build_programacion(subitems):
 
 
 def build_services(data):
-
+    """Build a list of basic services from comma/semicolon-separated values."""
     values = [
         x.strip()
         for x in (
@@ -194,7 +199,7 @@ def build_services(data):
 
 
 def build_blocks(data, rubrics):
-
+    """Build replacement blocks for Excel template with data from item and rubrics."""
     code = rubric_code(
         data.get("rubro")
     )
