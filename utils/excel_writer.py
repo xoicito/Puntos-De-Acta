@@ -73,6 +73,89 @@ def render_excel(template_path, output_path, replacements):
 
     ws = wb["C-9-12"]
 
+    # -------------------------
+    # PUNTOS GENERALES
+    # -------------------------
+    
+    ws["J30"] = replacements.get(
+        "{{PG_BITACORA}}",
+        "NO"
+    )
+    
+    ws["J31"] = replacements.get(
+        "{{PG_SEGURIDAD}}",
+        "NO"
+    )
+    
+    ws["J32"] = replacements.get(
+        "{{PG_PROTOCOLO}}",
+        "NO"
+    )
+    
+    ws["J33"] = replacements.get(
+        "{{PG_REUNION}}",
+        "NO"
+    )
+    
+    ws["J34"] = replacements.get(
+        "{{PG_SUPERVISOR}}",
+        "NO"
+    )
+    
+    ws["J35"] = replacements.get(
+        "{{PG_ENCARGADO}}",
+        "NO"
+    )
+    
+    # -------------------------
+    # PLANOS ENTREGADOS
+    # -------------------------
+    
+    ws["J38"] = replacements.get(
+        "{{PL_ARQ}}",
+        "NO"
+    )
+    
+    ws["J39"] = replacements.get(
+        "{{PL_COTAS}}",
+        "NO"
+    )
+    
+    ws["J40"] = replacements.get(
+        "{{PL_ELEV}}",
+        "NO"
+    )
+    
+    ws["J41"] = replacements.get(
+        "{{PL_HIDRO}}",
+        "NO"
+    )
+    
+    ws["J42"] = replacements.get(
+        "{{PL_ELEC}}",
+        "NO"
+    )
+    
+    ws["J43"] = replacements.get(
+        "{{PL_ACAB}}",
+        "NO"
+    )
+    
+    ws["J44"] = replacements.get(
+        "{{PL_ESTR_PRIN}}",
+        "NO"
+    )
+    
+    ws["J45"] = replacements.get(
+        "{{PL_ESTR_SEC}}",
+        "NO"
+    )
+    
+    ws["J46"] = replacements.get(
+        "{{PL_OBRAS}}",
+        "NO"
+    )
+
     programacion_rows = replacements.get(
         "__PROGRAMACION_ROWS__",
         []
