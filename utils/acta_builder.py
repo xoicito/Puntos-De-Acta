@@ -248,6 +248,32 @@ def build_puntos_generales(data):
     build_puntos_generales(data)
 )
 
+
+def parse_multi(value):
+
+    return {
+        x.strip().lower()
+        for x in (value or "").split(",")
+        if x.strip()
+    }
+
+
+def build_puntos_generales(data):
+
+    selected = parse_multi(
+        data.get("puntos_generales")
+    )
+
+    return {
+        "bitacora": "SI" if "llevar bitácora diaria" in selected else "NO",
+        "seguridad": "SI" if "encargado de seguridad industrial" in selected else "NO",
+        "protocolo": "SI" if "protocolo de seguridad" in selected else "NO",
+        "reunion": "SI" if "reunión semanal con líder de proyecto" in selected else "NO",
+        "supervisor": "SI" if "arq / ing para supervisar" in selected else "NO",
+        "encargado_tecnico": "SI" if "encargado técnico de supervisión (maestro de obras, etc)" in selected else "NO",
+    }
+    
+
 def build_blocks(data, rubrics):
     """Build replacement blocks for Excel template with data from item and rubrics."""
     code = rubric_code(
