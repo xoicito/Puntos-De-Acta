@@ -5,7 +5,7 @@ IMMUTABLE_POINTS = [
     "CAMBIO DE PROVEEDOR: Si el proveedor no reacciona a los requerimientos solicitados previos y a los contratados, se debe cambiar no más de 3 días después de la falta de reacción.",
     "GARANTÍA: Si el proveedor tuvo un trabajo de mala calidad, se deben descontar materiales y otros gastos que se requieran.",
     "RETENCIÓN: 5% del monto total retenido por 3 meses luego de haber recibido con satisfacción los trabajos.",
-    "El proveedor se compromete a cumplir con todas las normas del ACUERDO GUBERNATIVO 229-204 Y SUS REFORMAS 33-2016. De no cumplir con las normativas del acuerdo o las internas del proyecto, se procederá a aplicar una multa económica según la falta cometida.",
+    "El proveedor se compromete a cumplir con todas las normas del ACUERDO GUBERNATIVO 229-204 Y SUS REFORMAS 33-2016. De no cumplir con las normativas del acuerdo o las internas del proyecto, se p[...]
 ]
 
 
@@ -18,7 +18,8 @@ def _values(item):
 
 def _pick(values, key):
 
-    for cid in COLUMN_ALIASESif values.get(cid):
+    for cid in COLUMN_ALIASES:
+        if values.get(cid):
             return values[cid]
 
     return ""
