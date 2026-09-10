@@ -66,32 +66,35 @@ def write_programacion_row(ws, row_num, area, inicio, fin, obs):
 
 
 def render_excel(template_path, output_path, replacements):
+
     print("=== RENDER EXCEL INICIADO ===")
-    """Render Excel template with replacements and list data in proper cell ranges."""
+
     wb = load_workbook(template_path)
 
-    for ws in wb.worksheets:
+    ws = wb["C-9-12"]
 
-        programacion_rows = replacements.get(
-            "__PROGRAMACION_ROWS__",
-            []
-        )
-        
-        if programacion_rows:
-        
-            fila = programacion_rows[0]
-        
-            ws["D62"] = fila.get("area", "")
-            ws["G62"] = fila.get("inicio", "")
-            ws["J62"] = fila.get("fin", "")
-            ws["M62"] = fila.get("obs", "")
-        
-            for celda in ["D62", "G62", "J62", "M62"]:
-        
-                ws[celda].alignment = Alignment(
-                    wrap_text=True,
-                    vertical="top"
-                )
+    programacion_rows = replacements.get(
+        "__PROGRAMACION_ROWS__",
+        []
+    )
+
+    if programacion_rows:
+
+        fila = programacion_rows[0]
+
+        ws["D62"] = fila.get("area", "")
+        ws["G62"] = fila.get("inicio", "")
+        ws["J62"] = fila.get("fin", "")
+        ws["M62"] = fila.get("obs", "")
+
+        for celda in ["D62", "G62", "J62", "M62"]:
+
+            ws[celda].alignment = Alignment(
+                wrap_text=True,
+                vertical="top"
+            )
+
+    # aquí sigue el resto del código...
 
         # TRABAJOS PREVIOS - E69:E73 (5 rows)
         print("TRABAJOS_PREVIOS")
