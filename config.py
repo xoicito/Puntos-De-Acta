@@ -36,5 +36,12 @@ COLUMN_ALIASES = {
     "servicios_basicos": ["dropdown_mm6zmjj0", "multi_selectwd6nkr5w", "dropdown_mm6z5pp1"],
     "otro_servicio_basico": ["short_text1uon0zlm", "text_mm6zhxm8"],
     "condiciones_especiales": ["long_text_mm6zx1hp", "long_text5iqaoat6", "long_text_mm6zfxx9"],
+        "puntos_generales": [
+        "multi_selectyys0fxzb"
+    ],
+
+    "planos_entregados": [
+        "multi_selecthrnfdufd"
+    ],
 }
 SUBITEM_COLUMNS = {"fecha_inicio": "fecha0", "fecha_fin": "fecha__1", "observaciones": "texto"}
