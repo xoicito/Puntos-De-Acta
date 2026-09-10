@@ -21,6 +21,8 @@ def _clean(value):
 def generate_acta(item_id):
     item = get_item(item_id)
     data = item_data(item)
+    print("PUNTOS_GENERALES:", data.get("puntos_generales"))
+    print("PLANOS_ENTREGADOS:", data.get("planos_entregados"))
 
     board_id = int(data.get("board_id") or ACTA_BOARD_ID)
 
