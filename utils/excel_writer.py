@@ -38,6 +38,18 @@ def write_list_to_range(ws, start_row, end_row, column, items):
 
             raise
 
+def write_list_to_rows(ws, rows, column, items):
+
+    for row, item in zip(rows, items):
+
+        cell = ws.cell(row=row, column=column)
+
+        cell.value = str(item)
+
+        cell.alignment = Alignment(
+            wrap_text=True,
+            vertical="top"
+        )
 
 def write_programacion_row(ws, row_num, area, inicio, fin, obs):
     """Write a single programacion row to the specified columns."""
@@ -79,10 +91,13 @@ def render_excel(template_path, output_path, replacements):
 
         # PUNTOS REVISION - E84:E98 (15 rows)
         puntos = replacements.get("{{PUNTOS_REVISION}}", [])
-        if isinstance(puntos, list):
-            write_list_to_range(ws, 84, 98, 5, puntos)
-        elif isinstance(puntos, str):
-            write_list_to_range(ws, 84, 98, 5, puntos.split('\n'))
+        
+        write_list_to_rows(
+            ws,
+            [84, 86, 88, 90, 92, 94, 96, 98],
+            5,
+            puntos
+        )
 
         # CONDICIONES ESPECIALES - E109:E116 (8 rows)
         condiciones = replacements.get("{{CONDICIONES_ESPECIALES}}", [])
