@@ -244,6 +244,9 @@ def build_puntos_generales(data):
             else "NO"
         ),
     }
+    print(
+    build_puntos_generales(data)
+)
 
 def build_blocks(data, rubrics):
     """Build replacement blocks for Excel template with data from item and rubrics."""
