@@ -8,7 +8,13 @@ def write_list_to_range(ws, start_row, end_row, column, items):
         row = start_row + i
         if row > end_row:
             break
-        ws.cell(row=row, column=column).value = str(item)
+        try:
+            ws.cell(row=row, column=column).value = str(item)
+        except Exception as e:
+            print(
+                f"ERROR CELDA row={row} col={column} item={item} error={e}"
+            )
+            raise
         ws.cell(row=row, column=column).alignment = Alignment(
             wrap_text=True,
             vertical="top"
