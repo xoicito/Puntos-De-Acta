@@ -197,82 +197,6 @@ def build_services(data):
 
     return values
 
-def parse_multi(value):
-
-    return {
-        x.strip().lower()
-        for x in (value or "").split(",")
-        if x.strip()
-    }
-
-
-def build_puntos_generales(data):
-
-    selected = parse_multi(
-        data.get("puntos_generales")
-    )
-
-    return {
-        "bitacora": (
-            "SI"
-            if "llevar bitácora diaria" in selected
-            else "NO"
-        ),
-        "seguridad": (
-            "SI"
-            if "encargado de seguridad industrial" in selected
-            else "NO"
-        ),
-        "protocolo": (
-            "SI"
-            if "protocolo de seguridad" in selected
-            else "NO"
-        ),
-        "reunion": (
-            "SI"
-            if "reunión semanal con líder de proyecto" in selected
-            else "NO"
-        ),
-        "supervisor": (
-            "SI"
-            if "arq / ing para supervisar" in selected
-            else "NO"
-        ),
-        "encargado_tecnico": (
-            "SI"
-            if "encargado técnico de supervisión (maestro de obras, etc)" in selected
-            else "NO"
-        ),
-    }
-    print(
-    build_puntos_generales(data)
-)
-
-
-def parse_multi(value):
-
-    return {
-        x.strip().lower()
-        for x in (value or "").split(",")
-        if x.strip()
-    }
-
-
-def build_puntos_generales(data):
-
-    selected = parse_multi(
-        data.get("puntos_generales")
-    )
-
-    return {
-        "bitacora": "SI" if "llevar bitácora diaria" in selected else "NO",
-        "seguridad": "SI" if "encargado de seguridad industrial" in selected else "NO",
-        "protocolo": "SI" if "protocolo de seguridad" in selected else "NO",
-        "reunion": "SI" if "reunión semanal con líder de proyecto" in selected else "NO",
-        "supervisor": "SI" if "arq / ing para supervisar" in selected else "NO",
-        "encargado_tecnico": "SI" if "encargado técnico de supervisión (maestro de obras, etc)" in selected else "NO",
-    }
-    
 
 def build_planos_entregados(data):
 
@@ -290,42 +214,6 @@ def build_planos_entregados(data):
         "estructura_principal": "SI" if "estructura principal" in selected else "NO",
         "estructura_secundaria": "SI" if "estructura secundaria" in selected else "NO",
         "obras_secundarias": "SI" if "obras secundarias" in selected else "NO",
-    }
-
-
-def parse_multi(value):
-
-    return {
-        x.strip().lower()
-        for x in (value or "").split(",")
-        if x.strip()
-    }
-
-
-def build_puntos_generales(data):
-
-    selected = parse_multi(
-        data.get("puntos_generales")
-    )
-
-    return {
-        "{{PG_BITACORA}}":
-            "SI" if "llevar bitácora diaria" in selected else "NO",
-
-        "{{PG_SEGURIDAD}}":
-            "SI" if "encargado de seguridad industrial" in selected else "NO",
-
-        "{{PG_PROTOCOLO}}":
-            "SI" if "protocolo de seguridad" in selected else "NO",
-
-        "{{PG_REUNION}}":
-            "SI" if "reunión semanal con lider de proyecto" in selected else "NO",
-
-        "{{PG_SUPERVISOR}}":
-            "SI" if "arq / ing para supervisar" in selected else "NO",
-
-        "{{PG_ENCARGADO}}":
-            "SI" if "encargado técnico de supervisión (maestro de obras, etc)" in selected else "NO",
     }
 
 
@@ -367,6 +255,7 @@ def build_planos(data):
 
 def build_blocks(data, rubrics):
     """Build replacement blocks for Excel template with data from item and rubrics."""
+
     code = rubric_code(
         data.get("rubro")
     )
@@ -387,7 +276,7 @@ def build_blocks(data, rubrics):
         )
     )
 
-    return {
+    blocks = {
 
         "{{PROGRAMACION}}":
         "\n".join([
@@ -424,6 +313,16 @@ def build_blocks(data, rubrics):
         ),
     }
 
+    blocks.update(
+        build_puntos_generales(data)
+    )
+
+    blocks.update(
+        build_planos(data)
+    )
+
+    return blocks
+    
 
 def parse_multi(value):
 
