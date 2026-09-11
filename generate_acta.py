@@ -23,6 +23,10 @@ def generate_acta(item_id):
     data = item_data(item)
     print("PUNTOS_GENERALES:", data.get("puntos_generales"))
     print("PLANOS_ENTREGADOS:", data.get("planos_entregados"))
+    print("MULTA_ATRASO =", data.get("multa_atraso"))
+    print("MULTA_ORDEN =", data.get("multa_orden"))
+    print("MULTA_SEGURIDAD =", data.get("multa_seguridad"))
+    print("MULTA_REPORTERIA =", data.get("multa_reporteria"))
 
     board_id = int(data.get("board_id") or ACTA_BOARD_ID)
 
