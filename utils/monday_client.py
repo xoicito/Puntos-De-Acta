@@ -130,6 +130,58 @@ def upload_file(item_id, column_id, file_path):
     response.raise_for_status()
     payload = response.json()
 
+
+from config import COTIZACION_BOARD_ID
+
+def get_cotizacion_rows(acta_id):
+    q = """
+    query ($board: ID!) {
+      boards(ids: [$board]) {
+        items_page(limit: 500) {
+          items {
+            name
+            column_values {
+              id
+              text
+            }
+          }
+        }
+      }
+    }
+    """
+
+    boards = graphql(
+        q,
+        {"board": str(COTIZACION_BOARD_ID)}
+    )["boards"]
+
+    if not boards:
+        return []
+
+    rows = []
+
+    for item in boards[0]["items_page"]["items"]:
+
+        if (item.get("name") or "").strip() != acta_id:
+            continue
+
+        values = {
+            c["id"]: c.get("text", "")
+            for c in item["column_values"]
+        }
+
+        rows.append({
+            "descripcion": values.get("text_mm73s8w0", ""),
+            "unidad": values.get("text_mm73d37w", ""),
+            "cantidad": values.get("text_mm73kpsc", ""),
+            "precio": values.get("text_mm73qvb9", ""),
+            "observaciones": values.get("text_mm734j2g", ""),
+        })
+
+    print("COTIZACION_ROWS =", rows)
+
+    return rows
+
     if payload.get("errors"):
         raise MondayError(json.dumps(payload["errors"], ensure_ascii=False))
 
