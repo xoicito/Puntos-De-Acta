@@ -295,6 +295,7 @@ def build_template_points(data):
         x.strip()
         for x in values.split(",")
         if x.strip()
+        and x.strip().lower() != "otros"
     ]
 
     otro = (
