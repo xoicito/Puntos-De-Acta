@@ -106,6 +106,11 @@ def render_excel(template_path, output_path, replacements):
         "{{PG_ENCARGADO}}",
         "NO"
     )
+
+    ws["P30"] = replacements.get("{{MULTA_ATRASO}}", "")
+    ws["P31"] = replacements.get("{{MULTA_ORDEN}}", "")
+    ws["P32"] = replacements.get("{{MULTA_SEGURIDAD}}", "")
+    ws["P33"] = replacements.get("{{MULTA_REPORTERIA}}", "")
     
     # -------------------------
     # PLANOS ENTREGADOS
