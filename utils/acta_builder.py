@@ -409,7 +409,12 @@ def build_puntos_generales(data):
             "SI" if "arq / ing para supervisar" in selected else "NO",
 
         "{{PG_ENCARGADO}}":
-            "SI" if "encargado técnico de supervisión (maestro de obras, etc)" in selected else "NO",
+        "SI"
+        if any(
+            "encargado técnico de supervisión" in x
+            for x in selected
+        )
+        else "NO",
     }
 
 
