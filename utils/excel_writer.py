@@ -214,9 +214,9 @@ def render_excel(template_path, output_path, replacements):
         # CONDICIONES ESPECIALES - E109:E116 (8 rows)
         condiciones = replacements.get("{{CONDICIONES_ESPECIALES}}", [])
         if isinstance(condiciones, list):
-            write_list_to_range(ws, 109, 116, 5, condiciones)
+            write_list_to_range(ws, 115, 122, 5, condiciones)
         elif isinstance(condiciones, str):
-            write_list_to_range(ws, 109, 116, 5, condiciones.split('\n'))
+            write_list_to_range(ws, 115, 122, 5, condiciones.split('\n'))
 
         # REEMPLAZOS NORMALES - Text placeholders in cells
         for row in ws.iter_rows():
