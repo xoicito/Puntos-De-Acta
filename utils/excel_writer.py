@@ -160,15 +160,22 @@ def render_excel(template_path, output_path, replacements):
         "__PROGRAMACION_ROWS__",
         []
     )
-
-    if programacion_rows:
-
-        fila = programacion_rows[0]
-
-        ws["D62"] = fila.get("area", "")
-        ws["G62"] = fila.get("inicio", "")
-        ws["J62"] = fila.get("fin", "")
-        ws["M62"] = fila.get("obs", "")
+    
+    for offset, fila in enumerate(programacion_rows[:5]):
+    
+        row_num = 62 + offset
+    
+        ws[f"D{row_num}"] = fila.get("area", "")
+        ws[f"G{row_num}"] = fila.get("inicio", "")
+        ws[f"J{row_num}"] = fila.get("fin", "")
+        ws[f"M{row_num}"] = fila.get("obs", "")
+    
+        for col in ["D", "G", "J", "M"]:
+    
+            ws[f"{col}{row_num}"].alignment = Alignment(
+                wrap_text=True,
+                vertical="top"
+            )
 
         for celda in ["D62", "G62", "J62", "M62"]:
 
