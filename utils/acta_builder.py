@@ -350,6 +350,18 @@ def build_blocks(data, rubrics):
             )
         ),
 
+        "{{MULTA_ATRASO}}":
+            data.get("multa_atraso", ""),
+
+        "{{MULTA_ORDEN}}":
+             data.get("multa_orden", ""),
+
+        "{{MULTA_SEGURIDAD}}":
+            data.get("multa_seguridad", ""),
+
+        "{{MULTA_REPORTERIA}}":
+            data.get("multa_reporteria", ""),
+
         "{{SERVICIOS_BASICOS}}":
         build_services(data),
 
