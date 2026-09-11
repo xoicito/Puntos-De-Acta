@@ -314,14 +314,7 @@ def build_blocks(data, rubrics):
         data.get("rubro")
     )
 
-    spec = (
-        rubrics
-        .get(code, {})
-        .get(
-            "puntos_revision",
-            []
-        )
-    )
+    spec = build_template_points(data)
 
     programacion = build_programacion(
         data.get(
