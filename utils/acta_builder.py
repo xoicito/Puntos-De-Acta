@@ -389,6 +389,7 @@ def build_puntos_generales(data):
     selected = parse_multi(
         data.get("puntos_generales")
     )
+    print("SELECTED_PUNTOS =", selected)
 
     return {
 
