@@ -15,7 +15,7 @@ ACTA_TRIGGER_LABEL = os.getenv("ACTA_TRIGGER_LABEL", "Generar")
 # IDs del board actual. Se aceptan alias de la versión anterior para facilitar migraciones.
 COLUMN_ALIASES = {
     "plantilla": ["single_selectb2r025a"],
-    "herreria": ["single_select6unfqcg"],
+    "herreria": ["multi_select3i0wzl2b"],
     "ventaneria": ["multi_selectv1jxlsfg"],
     "tabla_yeso": ["multi_selectzfz9xl7e"],
     "pintura": ["multi_selectc0iwzq3k"],
