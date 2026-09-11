@@ -18,6 +18,7 @@ COLUMN_ALIASES = {
     "multa_atraso": ["short_textjv7r1s2w"],
     "multa_orden": ["short_textt2l4xfsm"],
     "multa_seguridad": ["short_textih9093ma"],
+    "acta_id": ["text_mm736ka4"],
     "multa_reporteria": ["short_texthyqsd3r3"],
     "herreria": ["multi_select3i0wzl2b"],
     "ventaneria": ["multi_selectv1jxlsfg"],
