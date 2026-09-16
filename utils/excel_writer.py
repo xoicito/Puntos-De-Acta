@@ -2,6 +2,63 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 
 
+def write_cotizacion_rows(ws, rows):
+
+    for offset, row in enumerate(rows[:6]):
+
+        excel_row = 50 + offset
+
+        ws[f"D{excel_row}"] = offset + 1
+
+        ws[f"E{excel_row}"] = row.get(
+            "descripcion",
+            ""
+        )
+
+        ws[f"K{excel_row}"] = row.get(
+            "unidad",
+            ""
+        )
+
+        ws[f"L{excel_row}"] = row.get(
+            "cantidad",
+            ""
+        )
+
+        ws[f"M{excel_row}"] = row.get(
+            "precio",
+            ""
+        )
+
+        try:
+
+            subtotal = (
+                float(
+                    row.get(
+                        "cantidad",
+                        0
+                    )
+                )
+                *
+                float(
+                    row.get(
+                        "precio",
+                        0
+                    )
+                )
+            )
+
+            ws[f"N{excel_row}"] = subtotal
+
+        except Exception:
+            pass
+
+        ws[f"P{excel_row}"] = row.get(
+            "observaciones",
+            ""
+        )
+
+
 def write_list_to_range(ws, start_row, end_row, column, items):
     """Write list items to a range of cells, respecting the boundaries."""
 
@@ -72,6 +129,14 @@ def render_excel(template_path, output_path, replacements):
     wb = load_workbook(template_path)
 
     ws = wb["C-9-12"]
+    
+    write_cotizacion_rows(
+        ws,
+        replacements.get(
+            "__COTIZACION_ROWS__",
+            []
+        )
+    )
     # PUNTOS GENERALES
 
     ws["J30"] = replacements.get("{{PG_BITACORA}}", "NO")
