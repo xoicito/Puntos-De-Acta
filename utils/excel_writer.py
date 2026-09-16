@@ -1,12 +1,4 @@
-
-            cell.value = str(item)
-
-            cell.alignment = Alignment(
-                horizontal="center",
-                vertical="center",
-                wrap_text=True
-            )        
-                        
+                   
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 
