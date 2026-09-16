@@ -69,7 +69,6 @@ def write_cotizacion_rows(ws, rows):
 
 
 def write_list_to_range(ws, start_row, end_row, column, items):
-    """Write list items to a range of cells, respecting the boundaries."""
 
     for i, item in enumerate(items):
 
@@ -80,12 +79,20 @@ def write_list_to_range(ws, start_row, end_row, column, items):
 
         try:
 
-            cell = ws.cell(row=row, column=column)
+            cell = ws.cell(
+                row=row,
+                column=column
+            )
 
             print(
                 f"INTENTANDO row={row} col={column} tipo={type(cell).__name__}"
             )
 
+            cell.value = str(item)
+
+            cell.alignment = Alignment(
+                horizontal="center",
+                vertical="center",
                 wrap_text=True
             )
 
@@ -99,6 +106,7 @@ def write_list_to_range(ws, start_row, end_row, column, items):
             )
 
             raise
+
 
 def write_list_to_rows(ws, rows, column, items):
 
@@ -209,7 +217,7 @@ def render_excel(template_path, output_path, replacements):
     
     ws["J38"] = replacements.get(
         "{{PL_ARQ}}",
-        "NO"from
+        "NO"
     )
     
     ws["J39"] = replacements.get(
