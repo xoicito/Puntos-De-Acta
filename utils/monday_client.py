@@ -182,7 +182,20 @@ def get_cotizacion_rows(acta_id):
 
     return rows
 
-    if payload.get("errors"):
-        raise MondayError(json.dumps(payload["errors"], ensure_ascii=False))
-
-    return payload.get("data", {}).get("add_file_to_column", {}).get("id")
+    import random
+    import string
+    
+    
+    def generate_acta_id():
+    
+        letters = "".join(
+            random.choice(string.ascii_uppercase)
+            for _ in range(2)
+        )
+    
+        numbers = "".join(
+            random.choice(string.digits)
+            for _ in range(3)
+        )
+    
+        return f"PA-{letters}{numbers}"
