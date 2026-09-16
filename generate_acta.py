@@ -61,6 +61,7 @@ def generate_acta(item_id):
             "{{CONTACTO}}": data["contacto"].upper(),
             "{{TELEFONO}}": data["telefono"],
             "{{NIT}}": data["nit"],
+            "{{GERENTE_PROYECTO}}":data.get("gerente_proyecto","").upper(),
             "{{NO_COTIZACION}}": data["no_cotizacion"],
             "{{ANTICIPO}}": pct(data["anticipo"]),
             "{{ESTIMACIONES}}": pct(data["estimaciones"]),
