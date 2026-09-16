@@ -70,11 +70,7 @@ def write_list_to_range(ws, start_row, end_row, column, items):
             break
 
         try:
-
-            cell = ws.cell(
-                row=row,
-                column=column
-            )
+            cell = ws.cell(row=row, column=column)
 
             print(
                 f"INTENTANDO row={row} col={column} tipo={type(cell).__name__}"
