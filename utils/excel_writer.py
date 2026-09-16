@@ -1,4 +1,9 @@
-from openpyxl import load_workbook
+
+            cell.value = str(item)
+
+            cell.alignment = Alignment(
+                horizontal="center",
+                vertical="center",from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 
 
@@ -77,11 +82,6 @@ def write_list_to_range(ws, start_row, end_row, column, items):
                 f"INTENTANDO row={row} col={column} tipo={type(cell).__name__}"
             )
 
-            cell.value = str(item)
-
-            cell.alignment = Alignment(
-                horizontal="center",
-                vertical="center",
                 wrap_text=True
             )
 
@@ -105,8 +105,9 @@ def write_list_to_rows(ws, rows, column, items):
         cell.value = str(item)
 
         cell.alignment = Alignment(
-            wrap_text=True,
-            vertical="top"
+            horizontal="center",
+            vertical="center",
+            wrap_text=True
         )
 
 def write_programacion_row(ws, row_num, area, inicio, fin, obs):
@@ -204,7 +205,7 @@ def render_excel(template_path, output_path, replacements):
     
     ws["J38"] = replacements.get(
         "{{PL_ARQ}}",
-        "NO"
+        "NO"from
     )
     
     ws["J39"] = replacements.get(
