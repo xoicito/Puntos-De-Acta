@@ -26,6 +26,16 @@ def _clean(value):
 def generate_acta(item_id):
     item = get_item(item_id)
     data = item_data(item)
+    print("ACTA_ID =", data.get("acta_id"))
+
+    cotizacion_rows = get_cotizacion_rows(
+        data.get("acta_id")
+    )
+
+    print(
+        "COTIZACION_ROWS =",
+        cotizacion_rows
+    )
     print("PUNTOS_GENERALES:", data.get("puntos_generales"))
     print("PLANOS_ENTREGADOS:", data.get("planos_entregados"))
     print("MULTA_ATRASO =", data.get("multa_atraso"))
@@ -60,6 +70,10 @@ def generate_acta(item_id):
         }
 
         replacements.update(build_blocks(data, rubrics))
+
+        replacements["__COTIZACION_ROWS__"] = (
+            cotizacion_rows
+        )
 
         missing = [f for f in ("proyecto", "rubro", "no_contrato", "empresa") if not data.get(f)]
 
