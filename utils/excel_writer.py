@@ -9,28 +9,32 @@ def write_cotizacion_rows(ws, rows):
 
         excel_row = 50 + offset
 
-        ws[f"D{excel_row}"] = offset + 1
-
-        ws[f"E{excel_row}"] = row.get(
-            "descripcion",
-            ""
+    ws[f"D{row_num}"] = fila.get("area", "")
+    ws[f"G{row_num}"] = fila.get("inicio", "")
+    ws[f"I{row_num}"] = fila.get("fin", "")
+    
+    try:
+        from datetime import datetime
+    
+        inicio = datetime.strptime(
+            fila.get("inicio", ""),
+            "%d/%m/%Y"
         )
-
-        ws[f"K{excel_row}"] = row.get(
-            "unidad",
-            ""
+    
+        fin = datetime.strptime(
+            fila.get("fin", ""),
+            "%d/%m/%Y"
         )
+    
+        ws[f"K{row_num}"] = (fin - inicio).days + 1
+    
+    except Exception:
+        ws[f"K{row_num}"] = ""
+    
+    ws[f"M{row_num}"] = fila.get("obs", "")
 
-        ws[f"L{excel_row}"] = row.get(
-            "cantidad",
-            ""
-        )
 
-        ws[f"M{excel_row}"] = row.get(
-            "precio",
-            ""
-        )
-
+      
         try:
 
             subtotal = (
