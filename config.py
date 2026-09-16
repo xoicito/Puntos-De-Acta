@@ -17,6 +17,7 @@ COTIZACION_BOARD_ID = 18430739172
 COLUMN_ALIASES = {
     "plantilla": ["single_selectb2r025a"],
     "multa_atraso": ["short_textjv7r1s2w"],
+    "lider_proyecto": ["short_textoea3ks5w"],
     "multa_orden": ["short_textt2l4xfsm"],
     "multa_seguridad": ["short_textih9093ma"],
     "acta_id": ["text_mm736ka4"],
