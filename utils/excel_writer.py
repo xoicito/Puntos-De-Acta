@@ -80,8 +80,9 @@ def write_list_to_range(ws, start_row, end_row, column, items):
             cell.value = str(item)
 
             cell.alignment = Alignment(
-                wrap_text=True,
-                vertical="top"
+                horizontal="center",
+                vertical="center",
+                wrap_text=True
             )
 
         except Exception as e:
