@@ -340,6 +340,18 @@ def render_excel(template_path, output_path, replacements):
                                 vertical="top"
                             )
 
+    from openpyxl.styles import Alignment
+
+    ws["D133"].alignment = Alignment(
+        horizontal="center",
+        vertical="center"
+    )
+    
+    ws["O133"].alignment = Alignment(
+        horizontal="center",
+        vertical="center"
+    )
+    
     wb.save(output_path)
 
     return output_path
