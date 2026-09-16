@@ -42,7 +42,11 @@ def write_list_to_range(ws, start_row, end_row, column, items):
             break
 
         try:
-            cell = ws.cell(row=row, column=column)
+
+            cell = ws.cell(
+                row=row,
+                column=column
+            )
 
             print(
                 f"INTENTANDO row={row} col={column} tipo={type(cell).__name__}"
@@ -220,76 +224,45 @@ def render_excel(template_path, output_path, replacements):
         "NO"
     )
 
-    programacion_rows = replacements.get(
-        "__PROGRAMACION_ROWS__",
-        []
-    )
-    
-    for offset, fila in enumerate(programacion_rows[:5]):
-    
-        row_num = 62 + offset
-    
+programacion_rows = replacements.get(
+    "__PROGRAMACION_ROWS__",
+    []
+)
+
+for offset, fila in enumerate(programacion_rows[:5]):
+
+    row_num = 62 + offset
+
     ws[f"D{row_num}"] = fila.get("area", "")
     ws[f"G{row_num}"] = fila.get("inicio", "")
     ws[f"I{row_num}"] = fila.get("fin", "")
-    
+
     try:
         from datetime import datetime
-    
+
         inicio = datetime.strptime(
             fila.get("inicio", ""),
             "%d/%m/%Y"
         )
-    
+
         fin = datetime.strptime(
             fila.get("fin", ""),
             "%d/%m/%Y"
         )
-    
+
         ws[f"K{row_num}"] = (fin - inicio).days + 1
-    
+
     except Exception:
         ws[f"K{row_num}"] = ""
-    
+
     ws[f"M{row_num}"] = fila.get("obs", "")
-        
-        try:
-            from datetime import datetime
-        
-            inicio = datetime.strptime(
-                fila.get("inicio", ""),
-                "%d/%m/%Y"
-            )
-        
-            fin = datetime.strptime(
-                fila.get("fin", ""),
-                "%d/%m/%Y"
-            )
-        
-            ws[f"M{row_num}"] = (
-                fin - inicio
-            ).days + 1
-        
-        except Exception:
-            ws[f"M{row_num}"] = ""
-        
-        ws[f"N{row_num}"] = fila.get("obs", "")
-    
-        for col in ["D", "G", "J", "M"]:
-    
-            ws[f"{col}{row_num}"].alignment = Alignment(
-                wrap_text=True,
-                vertical="top"
-            )
 
-        for celda in ["D62", "G62", "J62", "M62"]:
+    for col in ["D", "G", "I", "K", "M"]:
 
-            ws[celda].alignment = Alignment(
-                wrap_text=True,
-                vertical="top"
-            )
-
-    # aquí sigue el resto del código...
+        ws[f"{col}{row_num}"].alignment = Alignment(
+            wrap_text=True,
+            vertical="top"
+        )
 
         # TRABAJOS PREVIOS - E69:E73 (5 rows)
         print("TRABAJOS_PREVIOS")
