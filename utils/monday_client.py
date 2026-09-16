@@ -182,20 +182,56 @@ def get_cotizacion_rows(acta_id):
 
     return rows
 
-    import random
-    import string
-    
-    
-    def generate_acta_id():
-    
-        letters = "".join(
-            random.choice(string.ascii_uppercase)
-            for _ in range(2)
-        )
-    
-        numbers = "".join(
-            random.choice(string.digits)
-            for _ in range(3)
-        )
-    
-        return f"PA-{letters}{numbers}"
+import random
+import string
+
+
+def generate_acta_id():
+
+    letters = "".join(
+        random.choice(string.ascii_uppercase)
+        for _ in range(2)
+    )
+
+    numbers = "".join(
+        random.choice(string.digits)
+        for _ in range(3)
+    )
+
+    return f"PA-{letters}{numbers}"
+
+
+def update_text_column(
+    item_id,
+    board_id,
+    column_id,
+    value
+):
+
+    q = """
+    mutation (
+        $board: ID!,
+        $item: ID!,
+        $column: String!,
+        $value: String!
+    ) {
+      change_simple_column_value(
+        board_id: $board,
+        item_id: $item,
+        column_id: $column,
+        value: $value
+      ) {
+        id
+      }
+    }
+    """
+
+    graphql(
+        q,
+        {
+            "board": str(board_id),
+            "item": str(item_id),
+            "column": column_id,
+            "value": value,
+        }
+    )
