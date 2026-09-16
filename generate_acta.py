@@ -29,7 +29,7 @@ def generate_acta(item_id):
     print("ACTA_ID =", data.get("acta_id"))
 
     cotizacion_rows = get_cotizacion_rows(
-        data.get("acta_id")
+        data.get("no_contrato")
     )
 
     print(
