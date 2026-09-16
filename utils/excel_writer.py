@@ -229,9 +229,29 @@ def render_excel(template_path, output_path, replacements):
     
         row_num = 62 + offset
     
-        ws[f"D{row_num}"] = fila.get("area", "")
-        ws[f"G{row_num}"] = fila.get("inicio", "")
-        ws[f"J{row_num}"] = fila.get("fin", "")
+    ws[f"D{row_num}"] = fila.get("area", "")
+    ws[f"G{row_num}"] = fila.get("inicio", "")
+    ws[f"I{row_num}"] = fila.get("fin", "")
+    
+    try:
+        from datetime import datetime
+    
+        inicio = datetime.strptime(
+            fila.get("inicio", ""),
+            "%d/%m/%Y"
+        )
+    
+        fin = datetime.strptime(
+            fila.get("fin", ""),
+            "%d/%m/%Y"
+        )
+    
+        ws[f"K{row_num}"] = (fin - inicio).days + 1
+    
+    except Exception:
+        ws[f"K{row_num}"] = ""
+    
+    ws[f"M{row_num}"] = fila.get("obs", "")
         
         try:
             from datetime import datetime
