@@ -54,6 +54,7 @@ def generate_acta(item_id):
 
         replacements = {
             "{{PROYECTO}}": data["proyecto"].upper(),
+            "{{LIDER}}": data.get("lider_proyecto", "").upper(),
             "{{RUBRO}}": data["rubro"].upper(),
             "{{TIPO_CONTRATO}}": data["tipo_contrato"].upper(),
             "{{EMPRESA}}": data["empresa"].upper(),
