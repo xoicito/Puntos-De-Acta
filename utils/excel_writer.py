@@ -3,7 +3,11 @@
 
             cell.alignment = Alignment(
                 horizontal="center",
-                vertical="center",from openpyxl import load_workbook
+                vertical="center",
+                wrap_text=True
+            )        
+                        
+from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 
 
@@ -358,8 +362,9 @@ def render_excel(template_path, output_path, replacements):
                                 )
 
                             cell.alignment = Alignment(
-                                wrap_text=True,
-                                vertical="top"
+                                horizontal="center",
+                                vertical="center",
+                                wrap_text=True
                             )
 
     ws["D133"].alignment = Alignment(
