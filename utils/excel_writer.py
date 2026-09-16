@@ -349,6 +349,12 @@ def render_excel(template_path, output_path, replacements):
         horizontal="center",
         vertical="center"
     )
+
+    ws["H133"].alignment = Alignment(
+        horizontal="center",
+        vertical="center"
+    )
+    
     
     wb.save(output_path)
 
