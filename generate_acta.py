@@ -9,7 +9,12 @@ from config import (
     ACTA_TEMPLATE,
     ACTA_XLSX_COLUMN_ID,
 )
-from utils.monday_client import change_status, get_item, upload_file
+from utils.monday_client import (
+    change_status,
+    get_item,
+    upload_file,
+    get_cotizacion_rows
+)
 from utils.acta_builder import build_blocks, display_date, item_data, pct
 from utils.excel_writer import render_excel
 
