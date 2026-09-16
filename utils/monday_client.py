@@ -162,7 +162,7 @@ def get_cotizacion_rows(acta_id):
 
     for item in boards[0]["items_page"]["items"]:
 
-        if (item.get("name") or "").strip() != acta_id:
+        if (item.get("name") or "").strip() != str(acta_id):
             continue
 
         values = {
