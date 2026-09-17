@@ -255,11 +255,10 @@ def render_excel(template_path, output_path, replacements):
     for offset, fila in enumerate(programacion_rows[:5]):
 
         row_num = 62 + offset
-
+        
         ws[f"D{row_num}"] = fila.get("area", "")
         ws[f"G{row_num}"] = fila.get("inicio", "")
-        ws[f"J{row_num}"] = fila.get("fin", "")
-        ws[f"M{row_num}"] = fila.get("obs", "")
+        ws[f"I{row_num}"] = fila.get("fin", "")
         
         try:
             from datetime import datetime
@@ -274,28 +273,12 @@ def render_excel(template_path, output_path, replacements):
                 "%d/%m/%Y"
             )
         
-            ws[f"M{row_num}"] = (
-                fin - inicio
-            ).days + 1
+            ws[f"K{row_num}"] = (fin - inicio).days + 1
         
         except Exception:
-            ws[f"M{row_num}"] = ""
+            ws[f"K{row_num}"] = ""
         
-        ws[f"N{row_num}"] = fila.get("obs", "")
-
-        for col in ["D", "G", "J", "M"]:
-
-            ws[f"{col}{row_num}"].alignment = Alignment(
-                wrap_text=True,
-                vertical="top"
-            )
-
-        for celda in ["D62", "G62", "J62", "M62"]:
-
-            ws[celda].alignment = Alignment(
-                wrap_text=True,
-                vertical="top"
-            )
+        ws[f"M{row_num}"] = fila.get("obs", "")
 
     # aquí sigue el resto del código...
 
