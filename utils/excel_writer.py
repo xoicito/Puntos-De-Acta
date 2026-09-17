@@ -120,15 +120,69 @@ def _copy_row_style(ws, source_row, target_row, min_col=2, max_col=18):
         ws.row_dimensions[target_row].height = src_dim.height
 
 
+def _shift_row_dimensions(ws, insert_at, amount):
+    """openpyxl's insert_rows() only moves cell content - it does NOT move
+    row-level properties (height, hidden, customFormat), which live in
+    ws.row_dimensions keyed by row number. Left alone, a hidden row (e.g.
+    Condiciones Especiales) would stay hidden at its OLD row number - which
+    now holds different content - while the content that moved into its old
+    slot loses the hidden flag entirely. Shift those records by hand so they
+    follow their row's actual content.
+    """
+
+    existing_rows = sorted(
+        (r for r in ws.row_dimensions if r >= insert_at),
+        reverse=True,
+    )
+
+    for row in existing_rows:
+        src = ws.row_dimensions[row]
+        dst = ws.row_dimensions[row + amount]
+        dst.height = src.height
+        dst.hidden = src.hidden
+        del ws.row_dimensions[row]
+
+
+def _shift_merged_ranges(ws, insert_at, amount):
+    """insert_rows() does not shift merged cell ranges either - a merge that
+    was at or below the insertion point stays at its old row numbers even
+    though its content moved. Left alone, this produces a stale merge
+    sitting on top of whatever new content lands at that row number (in our
+    case, colliding with the merges written for newly-inserted rows) and
+    openpyxl silently drops cell values on save when merges conflict. Move
+    every affected merge down by hand instead.
+    """
+
+    to_shift = [mcr for mcr in list(ws.merged_cells.ranges) if mcr.min_row >= insert_at]
+
+    for mcr in to_shift:
+        # Not ws.unmerge_cells(): it also deletes the MergedCell placeholder
+        # objects for the range, but insert_rows()'s cell-move already
+        # relocated those along with everything else, so nothing is left
+        # at the old position for it to delete and it raises KeyError.
+        # Just drop the stale range record; merge_cells() below recreates
+        # fresh placeholders at the correct (shifted) position.
+        ws.merged_cells.remove(mcr)
+
+    for mcr in to_shift:
+        ws.merge_cells(
+            start_row=mcr.min_row + amount,
+            start_column=mcr.min_col,
+            end_row=mcr.max_row + amount,
+            end_column=mcr.max_col,
+        )
+
+
 def ensure_cotizacion_capacity(ws, needed_rows, first_row=50, template_capacity=6):
     """Insert extra rows into the Alcance de Cotizacion table if there are more
     quotation lines than the template's built-in rows can hold, and fix up the
     SUBTOTAL/IVA/TOTAL formulas that sit right below the table.
 
-    openpyxl shifts cell content, styles and merges when inserting rows, but
-    it does NOT rewrite formula text - so SUM(N50:N55) etc. would silently
-    keep pointing at the old range after an insert. Those three formulas are
-    corrected by hand here.
+    openpyxl's insert_rows() only moves cell content - it does NOT rewrite
+    formula text (so SUM(N50:N55) would silently keep pointing at the old
+    range), and it does NOT shift row-level properties or merged cell
+    ranges. All three are corrected by hand here - see
+    _shift_row_dimensions and _shift_merged_ranges.
 
     Returns how many rows were inserted (0 if the template's built-in rows
     already covered `needed_rows`), so the caller can shift every hardcoded
@@ -144,6 +198,8 @@ def ensure_cotizacion_capacity(ws, needed_rows, first_row=50, template_capacity=
     insert_at = last_template_row + 1  # 56
 
     ws.insert_rows(insert_at, extra)
+    _shift_row_dimensions(ws, insert_at, extra)
+    _shift_merged_ranges(ws, insert_at, extra)
 
     for i in range(extra):
         target_row = insert_at + i
