@@ -15,6 +15,14 @@ ACTA_ID_COLUMN_ID = os.getenv("ACTA_ID_COLUMN_ID", "text_mm736ka4")
 SIGNATURE_COLUMN_ID = os.getenv("SIGNATURE_COLUMN_ID", "signature9vmootoj")
 COTIZACION_BOARD_ID = 18430739172
 
+# Board de Aprobación (firma de Arq. Melissa Alvarenga)
+FIRMA_BOARD_ID = int(os.getenv("FIRMA_BOARD_ID", "18419366411"))
+FIRMA_ESTADO_COLUMN_ID = os.getenv("FIRMA_ESTADO_COLUMN_ID", "color_mm4t50")
+FIRMA_TRIGGER_LABEL = os.getenv("FIRMA_TRIGGER_LABEL", "FIRMADO")
+FIRMA_PA_EDITABLE_COLUMN_ID = os.getenv("FIRMA_PA_EDITABLE_COLUMN_ID", "file_mm4vcga3")
+FIRMA_PA_FIRMADO_COLUMN_ID = os.getenv("FIRMA_PA_FIRMADO_COLUMN_ID", "file_mm4n19yn")
+MELISSA_SIGNATURE_PATH = os.getenv("MELISSA_SIGNATURE_PATH", "assets/firma_melissa.jpg")
+
 # IDs del board actual. Se aceptan alias de la versión anterior para facilitar migraciones.
 COLUMN_ALIASES = {
     "plantilla": ["single_selectb2r025a"],

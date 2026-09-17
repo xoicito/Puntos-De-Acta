@@ -22,10 +22,15 @@ def _row_height_px(ws, row):
 
 
 def insert_signature(ws, signature_path, top_left, cols, rows):
-    """Insert an image scaled to fit inside the given box without distorting it."""
+    """Insert an image scaled to fit inside the given box without distorting it.
+
+    Returns True if the image was inserted, False otherwise. Callers that treat
+    the signature as a required step (e.g. an approval signing flow) should
+    check this and avoid publishing the document as "signed" on failure.
+    """
 
     if not signature_path:
-        return
+        return False
 
     try:
         img = XLImage(signature_path)
@@ -40,8 +45,11 @@ def insert_signature(ws, signature_path, top_left, cols, rows):
 
         ws.add_image(img, top_left)
 
+        return True
+
     except Exception as e:
         print(f"ERROR FIRMA_IMAGEN: {e}")
+        return False
 
 
 def write_cotizacion_rows(ws, rows):

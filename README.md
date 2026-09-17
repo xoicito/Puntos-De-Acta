@@ -7,7 +7,8 @@ Archivos listos para integrarse al repositorio existente de Contrato Fast Track 
 2. Agregue las dependencias de `requirements.txt` (ya incluidas en el proyecto).
 3. Configure en Render las variables de `.env.example`; nunca suba el token real a GitHub.
 4. En el board de Monday.com cree dos columnas de tipo **Archivos** para la salida XLSX y PDF. Copie sus IDs en `ACTA_XLSX_COLUMN_ID` y `ACTA_PDF_COLUMN_ID`.
-5. Configure el webhook de Monday hacia `/webhook/puntos-acta`.
+5. Configure el webhook de Monday hacia `/webhook/puntos-acta` (dispara cuando `ACTA_STATUS_COLUMN_ID` cambia a `ACTA_TRIGGER_LABEL`).
+6. Configure un segundo webhook de Monday, en el board de Aprobación (`FIRMA_BOARD_ID`), hacia `/webhook/firma-melissa` (dispara cuando `FIRMA_ESTADO_COLUMN_ID` cambia a `FIRMA_TRIGGER_LABEL`).
 
 ## Flujo de uso
 1. Cree un item en el board con los campos requeridos:
@@ -34,17 +35,30 @@ Archivos listos para integrarse al repositorio existente de Contrato Fast Track 
 
 6. Los archivos se cargarán automáticamente en las columnas especificadas
 
+## Firma de aprobación (Arq. Melissa Alvarenga)
+
+Este es un flujo independiente, en un board distinto (`FIRMA_BOARD_ID`), que no depende del flujo de generación anterior:
+
+1. Alguien sube el Excel editable del acta a la columna **PA EDITABLE** (`FIRMA_PA_EDITABLE_COLUMN_ID`) de un item en el board de Aprobación.
+2. Melissa cambia **ESTADO DE APROBACIÓN** (`FIRMA_ESTADO_COLUMN_ID`) a `FIRMADO`.
+3. El sistema descarga el archivo de PA EDITABLE, inserta su firma (`MELISSA_SIGNATURE_PATH`) en el recuadro D128:F131 sin deformarla, y sube el resultado a **PA FIRMADO PRC** (`FIRMA_PA_FIRMADO_COLUMN_ID`) del mismo item.
+
+Todo ocurre dentro del mismo item del board de Aprobación; no requiere relacionarlo con el item del board principal.
+
 ## Estructura del proyecto
 
 ```
 .
 ├── app.py                          # Aplicación Flask principal
-├── acta_routes.py                  # Rutas y webhook de Monday.com
+├── acta_routes.py                  # Rutas y webhooks de Monday.com
 ├── generate_acta.py                # Lógica principal de generación
+├── sign_document.py                # Flujo de firma de aprobación (Melissa Alvarenga)
 ├── config.py                       # Configuración y constantes
 ├── requirements.txt                # Dependencias Python
 ├── rubros.json                     # Datos de rubros con puntos de revisión
 ├── .env.example                    # Plantilla de variables de entorno
+├── assets/                         # Imágenes fijas (firma de aprobación)
+│   └── firma_melissa.jpg
 ├── templates/                      # Carpeta para plantillas Excel
 │   └── 100_PUNTO_DE_ACTA_PLANTILLA.xlsx
 └── utils/
@@ -69,6 +83,12 @@ ACTA_STATUS_COLUMN_ID=estado_10
 ACTA_TRIGGER_LABEL=Generar
 ACTA_TEMPLATE=templates/100_PUNTO_DE_ACTA_PLANTILLA.xlsx
 ACTA_OUTPUT_DIR=/tmp/puntos_acta
+FIRMA_BOARD_ID=18419366411
+FIRMA_ESTADO_COLUMN_ID=color_mm4t50
+FIRMA_TRIGGER_LABEL=FIRMADO
+FIRMA_PA_EDITABLE_COLUMN_ID=file_mm4vcga3
+FIRMA_PA_FIRMADO_COLUMN_ID=file_mm4n19yn
+MELISSA_SIGNATURE_PATH=assets/firma_melissa.jpg
 PORT=10000
 ```
 
