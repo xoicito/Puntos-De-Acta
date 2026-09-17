@@ -417,13 +417,6 @@ def build_blocks(data, rubrics):
 
         "{{PUNTOS_REVISION}}":
         spec + IMMUTABLE_POINTS,
-
-        "{{CONDICIONES_ESPECIALES}}":
-        split_lines(
-            data.get(
-                "condiciones_especiales"
-            )
-        ),
     }
 
     blocks.update(

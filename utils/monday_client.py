@@ -235,3 +235,53 @@ def update_text_column(
             "value": value,
         }
     )
+
+
+def get_file_public_url(item, column_id):
+    """Return the public URL of the first file uploaded to a file-type column, or None."""
+
+    raw_value = None
+
+    for c in item.get("column_values", []):
+        if c["id"] == column_id:
+            raw_value = c.get("value")
+            break
+
+    if not raw_value:
+        return None
+
+    try:
+        parsed = json.loads(raw_value)
+    except (TypeError, ValueError):
+        return None
+
+    files = parsed.get("files") or []
+
+    if not files:
+        return None
+
+    asset_id = files[0].get("assetId") or files[0].get("asset_id")
+
+    if not asset_id:
+        return None
+
+    q = """query ($ids: [ID!]!) {
+        assets(ids: $ids) {
+            public_url
+        }
+    }"""
+
+    assets = graphql(q, {"ids": [str(asset_id)]})["assets"]
+
+    return assets[0]["public_url"] if assets else None
+
+
+def download_file(url, dest_path):
+    """Download a file from a public URL to a local path."""
+
+    response = requests.get(url, timeout=120)
+    response.raise_for_status()
+
+    Path(dest_path).write_bytes(response.content)
+
+    return dest_path

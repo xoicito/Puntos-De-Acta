@@ -11,6 +11,8 @@ ACTA_XLSX_COLUMN_ID = os.getenv("ACTA_XLSX_COLUMN_ID", "")
 ACTA_PDF_COLUMN_ID = os.getenv("ACTA_PDF_COLUMN_ID", "")
 ACTA_STATUS_COLUMN_ID = os.getenv("ACTA_STATUS_COLUMN_ID", "estado_10")
 ACTA_TRIGGER_LABEL = os.getenv("ACTA_TRIGGER_LABEL", "Generar")
+ACTA_ID_COLUMN_ID = os.getenv("ACTA_ID_COLUMN_ID", "text_mm736ka4")
+SIGNATURE_COLUMN_ID = os.getenv("SIGNATURE_COLUMN_ID", "signature9vmootoj")
 COTIZACION_BOARD_ID = 18430739172
 
 # IDs del board actual. Se aceptan alias de la versión anterior para facilitar migraciones.
@@ -67,7 +69,6 @@ COLUMN_ALIASES = {
     "trabajos_previos": ["short_text2kl0cen0", "long_text_mm6z536e"],
     "servicios_basicos": ["dropdown_mm6zmjj0", "multi_selectwd6nkr5w", "dropdown_mm6z5pp1"],
     "otro_servicio_basico": ["short_text1uon0zlm", "text_mm6zhxm8"],
-    "condiciones_especiales": ["long_text_mm6zx1hp", "long_text5iqaoat6", "long_text_mm6zfxx9"],
         "puntos_generales": [
         "multi_selectyys0fxzb"
     ],

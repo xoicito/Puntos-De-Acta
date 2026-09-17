@@ -22,13 +22,17 @@ Archivos listos para integrarse al repositorio existente de Contrato Fast Track 
    - Campo `fecha__1`: Fecha de fin
    - Campo `texto`: Observaciones
 
-3. Cambie el estado del item a `Generar`
+3. (Opcional) Suba una imagen a la columna de firma (`SIGNATURE_COLUMN_ID`); se insertará en el acta ajustada al recuadro D128:F131 sin deformarse.
 
-4. El sistema procesará automáticamente y generará dos archivos:
-   - Archivo XLSX con los datos del acta
-   - Archivo PDF (si LibreOffice está disponible)
+4. Cambie el estado del item a `Generar`
 
-5. Los archivos se cargarán automáticamente en las columnas especificadas
+5. El sistema procesará automáticamente:
+   - Genera un `ID de Punto de Acta` único (columna `ACTA_ID_COLUMN_ID`) si el item todavía no tiene uno.
+   - Busca en el board de Cotización (`COTIZACION_BOARD_ID`) los items cuyo `Name` sea igual a ese ID y los inserta como filas en "Alcance de Cotización del Proveedor". Para que un renglón de cotización aparezca en el acta, su `Name` debe copiarse exactamente igual al `ID de Punto de Acta` generado.
+   - Genera el archivo XLSX con los datos del acta
+   - Genera el archivo PDF (si LibreOffice está disponible)
+
+6. Los archivos se cargarán automáticamente en las columnas especificadas
 
 ## Estructura del proyecto
 
@@ -59,6 +63,8 @@ MONDAY_API_VERSION=2026-01
 ACTA_BOARD_ID=<id_del_board>
 ACTA_XLSX_COLUMN_ID=<id_columna_xlsx>
 ACTA_PDF_COLUMN_ID=<id_columna_pdf>
+ACTA_ID_COLUMN_ID=text_mm736ka4
+SIGNATURE_COLUMN_ID=signature9vmootoj
 ACTA_STATUS_COLUMN_ID=estado_10
 ACTA_TRIGGER_LABEL=Generar
 ACTA_TEMPLATE=templates/100_PUNTO_DE_ACTA_PLANTILLA.xlsx
@@ -71,6 +77,7 @@ PORT=10000
 - **Flask**: Framework web para las rutas
 - **requests**: Cliente HTTP para llamadas a API de Monday.com
 - **openpyxl**: Lectura y escritura de archivos Excel
+- **Pillow**: Requerido por openpyxl para preservar imágenes (logos, firma) al leer/escribir el Excel
 - **gunicorn**: Servidor WSGI para producción
 - **LibreOffice** (opcional): Conversión de Excel a PDF
 
@@ -81,6 +88,7 @@ PORT=10000
 - La conversión a PDF requiere LibreOffice instalado en el servidor
 - Los archivos de salida se generan en el directorio especificado por `ACTA_OUTPUT_DIR`
 - El sistema maneja tanto nombres de columnas como IDs del API de Monday.com (para compatibilidad con migraciones)
+- La sección "Condiciones Especiales" fue retirada del flujo (ya no se llena) y sus filas quedan ocultas en la plantilla; no se eliminaron físicamente para no romper las referencias de fila del resto del template
 
 ## Mantenimiento
 

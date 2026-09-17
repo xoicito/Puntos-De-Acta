@@ -1,5 +1,47 @@
 from openpyxl import load_workbook
+from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Alignment
+
+DEFAULT_COL_WIDTH = 8.43
+DEFAULT_ROW_HEIGHT = 15.0
+MAX_DIGIT_WIDTH = 7
+
+
+def _col_width_px(ws, col_letter):
+    width = ws.column_dimensions[col_letter].width
+    if width is None:
+        width = DEFAULT_COL_WIDTH
+    return int((256 * width + int(128 / MAX_DIGIT_WIDTH)) / 256 * MAX_DIGIT_WIDTH)
+
+
+def _row_height_px(ws, row):
+    height = ws.row_dimensions[row].height
+    if height is None:
+        height = DEFAULT_ROW_HEIGHT
+    return int(height * 96 / 72)
+
+
+def insert_signature(ws, signature_path, top_left, cols, rows):
+    """Insert an image scaled to fit inside the given box without distorting it."""
+
+    if not signature_path:
+        return
+
+    try:
+        img = XLImage(signature_path)
+
+        box_w = sum(_col_width_px(ws, c) for c in cols)
+        box_h = sum(_row_height_px(ws, r) for r in rows)
+
+        scale = min(box_w / img.width, box_h / img.height)
+
+        img.width = int(img.width * scale)
+        img.height = int(img.height * scale)
+
+        ws.add_image(img, top_left)
+
+    except Exception as e:
+        print(f"ERROR FIRMA_IMAGEN: {e}")
 
 
 def write_cotizacion_rows(ws, rows):
@@ -69,9 +111,8 @@ def write_list_to_range(ws, start_row, end_row, column, items):
             cell.value = str(item)
 
             cell.alignment = Alignment(
-                horizontal="center",
-                vertical="center",
-                wrap_text=True
+                wrap_text=True,
+                vertical="top"
             )
 
         except Exception as e:
@@ -119,6 +160,8 @@ def render_excel(template_path, output_path, replacements):
     wb = load_workbook(template_path)
 
     ws = wb["C-9-12"]
+
+    print(f"IMAGENES CARGADAS DE LA PLANTILLA: {len(ws._images)}")
 
     write_cotizacion_rows(
         ws,
@@ -282,70 +325,59 @@ def render_excel(template_path, output_path, replacements):
             print(f"ERROR PROGRAMACION M{row_num}: {e}")
             raise
 
-    # aquí sigue el resto del código...
+    # TRABAJOS PREVIOS - E69:E73 (5 rows)
+    print("TRABAJOS_PREVIOS")
+    trabajos = replacements.get("{{TRABAJOS_PREVIOS}}", [])
+    if isinstance(trabajos, list):
+        write_list_to_range(ws, 69, 73, 5, trabajos)
+    elif isinstance(trabajos, str):
+        write_list_to_range(ws, 69, 73, 5, trabajos.split('\n'))
 
-        # TRABAJOS PREVIOS - E69:E73 (5 rows)
-        print("TRABAJOS_PREVIOS")
-        trabajos = replacements.get("{{TRABAJOS_PREVIOS}}", [])
-        if isinstance(trabajos, list):
-            write_list_to_range(ws, 69, 73, 5, trabajos)
-        elif isinstance(trabajos, str):
-            write_list_to_range(ws, 69, 73, 5, trabajos.split('\n'))
+    # SERVICIOS BASICOS - E76:E80 (5 rows)
+    servicios = replacements.get("{{SERVICIOS_BASICOS}}", [])
+    if isinstance(servicios, list):
+        write_list_to_range(ws, 76, 80, 5, servicios)
+    elif isinstance(servicios, str):
+        write_list_to_range(ws, 76, 80, 5, servicios.split('\n'))
 
-        # SERVICIOS BASICOS - E76:E80 (5 rows)
-        servicios = replacements.get("{{SERVICIOS_BASICOS}}", [])
-        if isinstance(servicios, list):
-            write_list_to_range(ws, 76, 80, 5, servicios)
-        elif isinstance(servicios, str):
-            write_list_to_range(ws, 76, 80, 5, servicios.split('\n'))
+    # PUNTOS REVISION - E84:E98 (15 rows)
+    puntos = replacements.get("{{PUNTOS_REVISION}}", [])
 
-        # PUNTOS REVISION - E84:E98 (15 rows)
-        puntos = replacements.get("{{PUNTOS_REVISION}}", [])
+    write_list_to_rows(
+        ws,
+        list(range(84, 112)),
+        5,
+        puntos
+    )
 
-        write_list_to_rows(
-            ws,
-            list(range(84, 112)),
-            5,
-            puntos
-        )
+    # REEMPLAZOS NORMALES - Text placeholders in cells
+    for row in ws.iter_rows():
+        for cell in row:
+            if not isinstance(cell.value, str):
+                continue
 
-        # CONDICIONES ESPECIALES - E109:E116 (8 rows)
-        condiciones = replacements.get("{{CONDICIONES_ESPECIALES}}", [])
-        if isinstance(condiciones, list):
-            write_list_to_range(ws, 115, 122, 5, condiciones)
-        elif isinstance(condiciones, str):
-            write_list_to_range(ws, 115, 122, 5, condiciones.split('\n'))
+            for placeholder, value in replacements.items():
+                # Skip list placeholders and special keys
+                if placeholder.startswith("{{") and placeholder.endswith("}}"):
+                    if placeholder in ["{{PROGRAMACION}}", "{{TRABAJOS_PREVIOS}}",
+                                     "{{SERVICIOS_BASICOS}}", "{{PUNTOS_REVISION}}"]:
+                        continue
 
-        # REEMPLAZOS NORMALES - Text placeholders in cells
-        for row in ws.iter_rows():
-            for cell in row:
-                if not isinstance(cell.value, str):
-                    continue
-
-                for placeholder, value in replacements.items():
-                    # Skip list placeholders and special keys
-                    if placeholder.startswith("{{") and placeholder.endswith("}}"):
-                        if placeholder in ["{{PROGRAMACION}}", "{{TRABAJOS_PREVIOS}}", 
-                                         "{{SERVICIOS_BASICOS}}", "{{PUNTOS_REVISION}}", 
-                                         "{{CONDICIONES_ESPECIALES}}"]:
-                            continue
-
-                        if placeholder in cell.value:
-                            if isinstance(value, list):
-                                cell.value = cell.value.replace(
-                                    placeholder,
-                                    "\n".join(str(v) for v in value)
-                                )
-                            else:
-                                cell.value = cell.value.replace(
-                                    placeholder,
-                                    str(value or "")
-                                )
-
-                            cell.alignment = Alignment(
-                                wrap_text=True,
-                                vertical="top"
+                    if placeholder in cell.value:
+                        if isinstance(value, list):
+                            cell.value = cell.value.replace(
+                                placeholder,
+                                "\n".join(str(v) for v in value)
                             )
+                        else:
+                            cell.value = cell.value.replace(
+                                placeholder,
+                                str(value or "")
+                            )
+
+                        # Alignment intentionally left untouched here so the
+                        # template's own per-cell formatting (e.g. centered
+                        # percentage fields) survives the replacement.
 
     ws["D133"].alignment = Alignment(
         horizontal="center",
@@ -362,6 +394,13 @@ def render_excel(template_path, output_path, replacements):
         vertical="center"
     )
 
+    insert_signature(
+        ws,
+        replacements.get("__SIGNATURE_PATH__"),
+        top_left="D128",
+        cols=("D", "E", "F"),
+        rows=(128, 129, 130, 131),
+    )
 
     wb.save(output_path)
 

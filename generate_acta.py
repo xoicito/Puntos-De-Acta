@@ -4,16 +4,22 @@ from pathlib import Path
 
 from config import (
     ACTA_BOARD_ID,
+    ACTA_ID_COLUMN_ID,
     ACTA_OUTPUT_DIR,
     ACTA_STATUS_COLUMN_ID,
     ACTA_TEMPLATE,
     ACTA_XLSX_COLUMN_ID,
+    SIGNATURE_COLUMN_ID,
 )
 from utils.monday_client import (
     change_status,
+    download_file,
+    generate_acta_id,
+    get_file_public_url,
     get_item,
     upload_file,
-    get_cotizacion_rows
+    get_cotizacion_rows,
+    update_text_column,
 )
 from utils.acta_builder import build_blocks, display_date, item_data, pct
 from utils.excel_writer import render_excel
@@ -26,10 +32,17 @@ def _clean(value):
 def generate_acta(item_id):
     item = get_item(item_id)
     data = item_data(item)
+
+    board_id = int(data.get("board_id") or ACTA_BOARD_ID)
+
+    if not data.get("acta_id"):
+        data["acta_id"] = generate_acta_id()
+        update_text_column(item_id, board_id, ACTA_ID_COLUMN_ID, data["acta_id"])
+
     print("ACTA_ID =", data.get("acta_id"))
 
     cotizacion_rows = get_cotizacion_rows(
-        data.get("no_contrato")
+        data.get("acta_id")
     )
 
     print(
@@ -42,8 +55,6 @@ def generate_acta(item_id):
     print("MULTA_ORDEN =", data.get("multa_orden"))
     print("MULTA_SEGURIDAD =", data.get("multa_seguridad"))
     print("MULTA_REPORTERIA =", data.get("multa_reporteria"))
-
-    board_id = int(data.get("board_id") or ACTA_BOARD_ID)
 
     change_status(item_id, board_id, ACTA_STATUS_COLUMN_ID, "Procesando")
 
@@ -88,6 +99,21 @@ def generate_acta(item_id):
         output_directory.mkdir(parents=True, exist_ok=True)
 
         xlsx = str(output_directory / f"{stem}.xlsx")
+
+        signature_path = None
+
+        try:
+            signature_url = get_file_public_url(item, SIGNATURE_COLUMN_ID)
+
+            if signature_url:
+                suffix = Path(signature_url.split("?")[0]).suffix or ".png"
+                signature_path = str(output_directory / f"{stem}_firma{suffix}")
+                download_file(signature_url, signature_path)
+        except Exception as e:
+            print(f"ERROR FIRMA: {e}")
+            signature_path = None
+
+        replacements["__SIGNATURE_PATH__"] = signature_path
 
         render_excel(base / ACTA_TEMPLATE, xlsx, replacements)
 
