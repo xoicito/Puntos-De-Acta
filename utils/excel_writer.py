@@ -8,13 +8,24 @@ def write_cotizacion_rows(ws, rows):
 
         excel_row = 50 + offset
 
+        values = [
+            (f"D{excel_row}", offset + 1),
+            (f"E{excel_row}", row.get("descripcion", "")),
+            (f"K{excel_row}", row.get("unidad", "")),
+            (f"L{excel_row}", row.get("cantidad", "")),
+            (f"M{excel_row}", row.get("precio", "")),
+            (f"P{excel_row}", row.get("observaciones", "")),
+        ]
+
+        for cell_ref, value in values:
+
+            try:
+                ws[cell_ref] = value
+            except Exception as e:
+                print(f"ERROR_COTIZACION {cell_ref} -> {e}")
+                raise
+
         try:
-            ws[f"D{excel_row}"] = offset + 1
-            ws[f"E{excel_row}"] = row.get("descripcion", "")
-            ws[f"K{excel_row}"] = row.get("unidad", "")
-            ws[f"L{excel_row}"] = row.get("cantidad", "")
-            ws[f"M{excel_row}"] = row.get("precio", "")
-            ws[f"P{excel_row}"] = row.get("observaciones", "")
 
             subtotal = (
                 float(row.get("cantidad", 0))
@@ -27,7 +38,7 @@ def write_cotizacion_rows(ws, rows):
         except Exception as e:
 
             print(
-                f"ERROR COTIZACION fila={excel_row} error={e}"
+                f"ERROR_SUBTOTAL N{excel_row} -> {e}"
             )
 
             raise
