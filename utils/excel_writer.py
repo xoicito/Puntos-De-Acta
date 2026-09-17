@@ -1,6 +1,7 @@
 from openpyxl import load_workbook
 from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Alignment
+from openpyxl.utils import get_column_letter
 
 DEFAULT_COL_WIDTH = 8.43
 DEFAULT_ROW_HEIGHT = 15.0
@@ -21,8 +22,52 @@ def _row_height_px(ws, row):
     return int(height * 96 / 72)
 
 
-def insert_signature(ws, signature_path, top_left, cols, rows):
-    """Insert an image scaled to fit inside the given box without distorting it.
+def _find_placeholder_box(ws, placeholder):
+    """Locate a text placeholder in the sheet and return its (top_left, cols, rows) box.
+
+    If the placeholder's cell is part of a merged range, the whole merged range
+    becomes the box. Otherwise the single cell is used. The placeholder text is
+    cleared from the cell either way. Returns None if the placeholder isn't found.
+    """
+
+    for row in ws.iter_rows():
+        for cell in row:
+            if not isinstance(cell.value, str) or placeholder not in cell.value:
+                continue
+
+            for merged_range in ws.merged_cells.ranges:
+                if cell.coordinate in merged_range:
+                    cols = tuple(
+                        get_column_letter(c)
+                        for c in range(merged_range.min_col, merged_range.max_col + 1)
+                    )
+                    rows_box = tuple(
+                        range(merged_range.min_row, merged_range.max_row + 1)
+                    )
+                    cell.value = cell.value.replace(placeholder, "").strip() or None
+                    return (
+                        f"{get_column_letter(merged_range.min_col)}{merged_range.min_row}",
+                        cols,
+                        rows_box,
+                    )
+
+            col_letter = get_column_letter(cell.column)
+            cell.value = cell.value.replace(placeholder, "").strip() or None
+            return cell.coordinate, (col_letter,), (cell.row,)
+
+    return None
+
+
+def insert_signature(ws, signature_path, top_left, cols, rows, placeholder=None):
+    """Insert an image scaled to fit inside a box without distorting it.
+
+    If `placeholder` is given and found somewhere in the sheet, its cell (or
+    merged range) is used as the box instead of the fixed top_left/cols/rows
+    arguments, and the placeholder text is cleared. This lets different
+    template variants place the signature wherever they need to just by
+    containing that placeholder text, instead of relying on a fixed cell
+    range that only matches one template layout. If the placeholder isn't
+    found (or isn't given), the fixed box is used as-is.
 
     Returns True if the image was inserted, False otherwise. Callers that treat
     the signature as a required step (e.g. an approval signing flow) should
@@ -31,6 +76,11 @@ def insert_signature(ws, signature_path, top_left, cols, rows):
 
     if not signature_path:
         return False
+
+    if placeholder:
+        found = _find_placeholder_box(ws, placeholder)
+        if found:
+            top_left, cols, rows = found
 
     try:
         img = XLImage(signature_path)

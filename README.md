@@ -41,7 +41,9 @@ Este es un flujo independiente, en un board distinto (`FIRMA_BOARD_ID`), que no 
 
 1. Alguien sube el Excel editable del acta a la columna **PA EDITABLE** (`FIRMA_PA_EDITABLE_COLUMN_ID`) de un item en el board de Aprobación.
 2. Melissa cambia **ESTADO DE APROBACIÓN** (`FIRMA_ESTADO_COLUMN_ID`) a `FIRMADO`.
-3. El sistema descarga el archivo de PA EDITABLE, inserta su firma (`MELISSA_SIGNATURE_PATH`) en el recuadro D128:F131 sin deformarla, y sube el resultado a **PA FIRMADO PRC** (`FIRMA_PA_FIRMADO_COLUMN_ID`) del mismo item.
+3. El sistema descarga el archivo de PA EDITABLE, inserta su firma (`MELISSA_SIGNATURE_PATH`) sin deformarla, y sube el resultado a **Dup. of PA FIRMADO PRC** (`FIRMA_PA_FIRMADO_COLUMN_ID`) del mismo item.
+   - La ubicación de la firma se busca primero como un placeholder de texto (`FIRMA_PLACEHOLDER`, por defecto `{{FIRMA_MELISSA}}`) en cualquier celda de la plantilla; si esa celda es parte de un rango combinado, se usa todo el rango. Esto permite que distintas variantes de plantilla coloquen la firma donde necesiten con solo incluir ese texto.
+   - Si la plantilla no tiene el placeholder, se usa como respaldo el recuadro fijo L128:M131.
 
 Todo ocurre dentro del mismo item del board de Aprobación; no requiere relacionarlo con el item del board principal.
 
@@ -87,7 +89,7 @@ FIRMA_BOARD_ID=18419366411
 FIRMA_ESTADO_COLUMN_ID=color_mm4t50
 FIRMA_TRIGGER_LABEL=FIRMADO
 FIRMA_PA_EDITABLE_COLUMN_ID=file_mm4vcga3
-FIRMA_PA_FIRMADO_COLUMN_ID=file_mm4n19yn
+FIRMA_PA_FIRMADO_COLUMN_ID=file_mm7936qy
 MELISSA_SIGNATURE_PATH=assets/firma_melissa.jpg
 PORT=10000
 ```

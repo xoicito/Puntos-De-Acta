@@ -6,6 +6,7 @@ from config import (
     ACTA_OUTPUT_DIR,
     FIRMA_PA_EDITABLE_COLUMN_ID,
     FIRMA_PA_FIRMADO_COLUMN_ID,
+    FIRMA_PLACEHOLDER,
     MELISSA_SIGNATURE_PATH,
 )
 from utils.monday_client import (
@@ -46,6 +47,7 @@ def sign_document(item_id):
         top_left="L128",
         cols=("L", "M"),
         rows=(128, 129, 130, 131),
+        placeholder=FIRMA_PLACEHOLDER,
     )
 
     if not signed_ok:
