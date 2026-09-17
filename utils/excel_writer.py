@@ -304,7 +304,7 @@ def render_excel(template_path, output_path, replacements):
 
         write_list_to_rows(
             ws,
-            [84, 86, 88, 90, 92, 94, 96, 98],
+            list(range(84, 112)),
             5,
             puntos
         )
