@@ -8,55 +8,40 @@ def write_cotizacion_rows(ws, rows):
 
         excel_row = 50 + offset
 
-        ws[f"D{excel_row}"] = offset + 1
+        celdas = [
+            (f"D{excel_row}", offset + 1),
+            (f"E{excel_row}", row.get("descripcion", "")),
+            (f"K{excel_row}", row.get("unidad", "")),
+            (f"L{excel_row}", row.get("cantidad", "")),
+            (f"M{excel_row}", row.get("precio", "")),
+            (f"P{excel_row}", row.get("observaciones", ""))
+        ]
 
-        ws[f"E{excel_row}"] = row.get(
-            "descripcion",
-            ""
-        )
+        for celda, valor in celdas:
 
-        ws[f"K{excel_row}"] = row.get(
-            "unidad",
-            ""
-        )
-
-        ws[f"L{excel_row}"] = row.get(
-            "cantidad",
-            ""
-        )
-
-        ws[f"M{excel_row}"] = row.get(
-            "precio",
-            ""
-        )
+            try:
+                ws[celda] = valor
+            except Exception as e:
+                print(f"ERROR COTIZACION {celda}: {e}")
+                raise
 
         try:
 
             subtotal = (
-                float(
-                    row.get(
-                        "cantidad",
-                        0
-                    )
-                )
+                float(row.get("cantidad", 0))
                 *
-                float(
-                    row.get(
-                        "precio",
-                        0
-                    )
-                )
+                float(row.get("precio", 0))
             )
 
             ws[f"N{excel_row}"] = subtotal
 
-        except Exception:
-            pass
+        except Exception as e:
 
-        ws[f"P{excel_row}"] = row.get(
-            "observaciones",
-            ""
-        )
+            print(
+                f"ERROR SUBTOTAL N{excel_row}: {e}"
+            )
+
+            raise
 
 
 def write_list_to_range(ws, start_row, end_row, column, items):
