@@ -247,8 +247,7 @@ def render_excel(template_path, output_path, replacements):
         for celda, valor in [
             (f"D{row_num}", fila.get("area", "")),
             (f"G{row_num}", fila.get("inicio", "")),
-            (f"I{row_num}", fila.get("fin", "")),
-        ]:
+        ]
         
             try:
                 ws[celda] = valor
