@@ -33,7 +33,10 @@ def write_cotizacion_rows(ws, rows):
                 float(row.get("precio", 0))
             )
 
-            ws[f"N{excel_row}"] = subtotal
+            try:
+                ws[f"N{excel_row}"] = subtotal
+            except Exception:
+                ws[f"O{excel_row}"] = subtotal
 
         except Exception as e:
 
