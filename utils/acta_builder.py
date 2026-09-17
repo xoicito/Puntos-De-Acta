@@ -8,6 +8,34 @@ IMMUTABLE_POINTS = [
     "El proveedor se compromete a cumplir con todas las normas del ACUERDO GUBERNATIVO 229-204 Y SUS REFORMAS 33-2016. De no cumplir con las normativas del acuerdo o las internas del proyecto, se podrá dar por terminado el contrato.",
 ]
 
+# Default amounts, taken from the original template (cells P30-P33) - used
+# whenever the corresponding multa is selected in the MULTAS_COLUMN_ID
+# dropdown. Anything not selected renders as "N/A".
+MULTAS_DEFAULTS = {
+    "atraso": "1% POR DIA",
+    "orden": "Q.25 POR EVENTO",
+    "seguridad": "Q.50 POR PERSONA",
+    "reporteria": "Q.25 POR EVENTO",
+}
+
+# Maps each dropdown option label (lowercase) to the multa key it selects.
+# TODO: confirm against the real option labels once the dropdown column ID
+# and its options are provided - these are best guesses based on the
+# template's own row labels (L30-L33) in the meantime.
+MULTAS_OPTION_MAP = {
+    "por atraso de entrega": "atraso",
+    "atraso": "atraso",
+    "por orden y limpieza": "orden",
+    "orden y limpieza": "orden",
+    "orden": "orden",
+    "por no cumplir con seguridad industrial": "seguridad",
+    "seguridad industrial": "seguridad",
+    "seguridad": "seguridad",
+    "por no cumplir con documentos de reporteria semanal": "reporteria",
+    "reporteria semanal": "reporteria",
+    "reporteria": "reporteria",
+}
+
 
 def _values(item):
     """Extract column values from an item as a dictionary."""
@@ -345,24 +373,16 @@ def build_blocks(data, rubrics):
             )
         ),
 
-        "{{MULTA_ATRASO}}":
-            data.get("multa_atraso", ""),
-
-        "{{MULTA_ORDEN}}":
-             data.get("multa_orden", ""),
-
-        "{{MULTA_SEGURIDAD}}":
-            data.get("multa_seguridad", ""),
-
-        "{{MULTA_REPORTERIA}}":
-            data.get("multa_reporteria", ""),
-
         "{{SERVICIOS_BASICOS}}":
         build_services(data),
 
         "{{PUNTOS_REVISION}}":
         spec + IMMUTABLE_POINTS,
     }
+
+    blocks.update(
+        build_multas(data)
+    )
 
     blocks.update(
         build_puntos_generales(data)
@@ -381,6 +401,33 @@ def parse_multi(value):
         x.strip().lower()
         for x in (value or "").split(",")
         if x.strip()
+    }
+
+
+def build_multas(data):
+    """Resolve which multas apply from the MULTAS_COLUMN_ID dropdown selection.
+
+    A selected multa renders with its default amount (from the original
+    template); anything not selected renders as "N/A".
+    """
+
+    selected_options = parse_multi(data.get("multas_aplicar"))
+    print("MULTAS_SELECCIONADAS =", selected_options)
+
+    selected_keys = {
+        MULTAS_OPTION_MAP[option]
+        for option in selected_options
+        if option in MULTAS_OPTION_MAP
+    }
+
+    def value_for(key):
+        return MULTAS_DEFAULTS[key] if key in selected_keys else "N/A"
+
+    return {
+        "{{MULTA_ATRASO}}": value_for("atraso"),
+        "{{MULTA_ORDEN}}": value_for("orden"),
+        "{{MULTA_SEGURIDAD}}": value_for("seguridad"),
+        "{{MULTA_REPORTERIA}}": value_for("reporteria"),
     }
 
 

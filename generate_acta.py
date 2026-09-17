@@ -51,10 +51,7 @@ def generate_acta(item_id):
     )
     print("PUNTOS_GENERALES:", data.get("puntos_generales"))
     print("PLANOS_ENTREGADOS:", data.get("planos_entregados"))
-    print("MULTA_ATRASO =", data.get("multa_atraso"))
-    print("MULTA_ORDEN =", data.get("multa_orden"))
-    print("MULTA_SEGURIDAD =", data.get("multa_seguridad"))
-    print("MULTA_REPORTERIA =", data.get("multa_reporteria"))
+    print("MULTAS_APLICAR =", data.get("multas_aplicar"))
 
     change_status(item_id, board_id, ACTA_STATUS_COLUMN_ID, "Procesando")
 
