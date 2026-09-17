@@ -33,6 +33,7 @@ def write_cotizacion_rows(ws, rows):
                 float(row.get("precio", 0))
             )
 
+            ws[f"N{excel_row}"] = subtotal
             try:
                 ws[f"N{excel_row}"] = subtotal
             except Exception:
@@ -45,7 +46,7 @@ def write_cotizacion_rows(ws, rows):
             )
 
             raise
-            
+
 
 def write_list_to_range(ws, start_row, end_row, column, items):
     """Write list items to a range of cells, respecting the boundaries."""
@@ -243,37 +244,38 @@ def render_excel(template_path, output_path, replacements):
     for offset, fila in enumerate(programacion_rows[:5]):
 
         row_num = 62 + offset
-        
+
         for celda, valor in [
             (f"D{row_num}", fila.get("area", "")),
             (f"G{row_num}", fila.get("inicio", "")),
-        ]
-        
+            (f"I{row_num}", fila.get("fin", "")),
+        ]:
+
             try:
                 ws[celda] = valor
             except Exception as e:
                 print(f"ERROR PROGRAMACION {celda}: {e}")
                 raise
-        
+
         try:
             from datetime import datetime
-        
+
             inicio = datetime.strptime(
                 fila.get("inicio", ""),
                 "%d/%m/%Y"
             )
-        
+
             fin = datetime.strptime(
                 fila.get("fin", ""),
                 "%d/%m/%Y"
             )
-        
+
             ws[f"K{row_num}"] = (fin - inicio).days + 1
-        
+
         except Exception as e:
             print(f"ERROR PROGRAMACION K{row_num}: {e}")
             raise
-        
+
         try:
             ws[f"M{row_num}"] = fila.get("obs", "")
         except Exception as e:
