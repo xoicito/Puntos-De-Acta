@@ -241,9 +241,17 @@ def render_excel(template_path, output_path, replacements):
 
         row_num = 62 + offset
         
-        ws[f"D{row_num}"] = fila.get("area", "")
-        ws[f"G{row_num}"] = fila.get("inicio", "")
-        ws[f"I{row_num}"] = fila.get("fin", "")
+        for celda, valor in [
+            (f"D{row_num}", fila.get("area", "")),
+            (f"G{row_num}", fila.get("inicio", "")),
+            (f"I{row_num}", fila.get("fin", "")),
+        ]:
+        
+            try:
+                ws[celda] = valor
+            except Exception as e:
+                print(f"ERROR PROGRAMACION {celda}: {e}")
+                raise
         
         try:
             from datetime import datetime
@@ -260,10 +268,15 @@ def render_excel(template_path, output_path, replacements):
         
             ws[f"K{row_num}"] = (fin - inicio).days + 1
         
-        except Exception:
-            ws[f"K{row_num}"] = ""
+        except Exception as e:
+            print(f"ERROR PROGRAMACION K{row_num}: {e}")
+            raise
         
-        ws[f"M{row_num}"] = fila.get("obs", "")
+        try:
+            ws[f"M{row_num}"] = fila.get("obs", "")
+        except Exception as e:
+            print(f"ERROR PROGRAMACION M{row_num}: {e}")
+            raise
 
     # aquí sigue el resto del código...
 
