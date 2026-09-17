@@ -26,6 +26,14 @@ MELISSA_SIGNATURE_PATH = os.getenv("MELISSA_SIGNATURE_PATH", "assets/firma_melis
 
 MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 
+# Dropdown letting the requester choose how the signature will be provided:
+# an uploaded PNG (existing SIGNATURE_COLUMN_ID file column) or Monday's
+# built-in e-signature column type (a separate column, not yet created).
+# TODO: pending real column IDs and the exact option label text.
+METODO_FIRMA_COLUMN_ID = os.getenv("METODO_FIRMA_COLUMN_ID", "")
+METODO_FIRMA_MONDAY_LABEL = os.getenv("METODO_FIRMA_MONDAY_LABEL", "Firmar con Monday")
+FIRMA_MONDAY_COLUMN_ID = os.getenv("FIRMA_MONDAY_COLUMN_ID", "")
+
 # IDs del board actual. Se aceptan alias de la versión anterior para facilitar migraciones.
 COLUMN_ALIASES = {
     "plantilla": ["single_selectb2r025a"],
@@ -33,6 +41,7 @@ COLUMN_ALIASES = {
     "gerente_proyecto": ["short_textlyk3dimh"],
     "acta_id": ["text_mm736ka4"],
     "multas_aplicar": [MULTAS_COLUMN_ID],
+    "metodo_firma": [METODO_FIRMA_COLUMN_ID],
     "herreria": ["multi_select3i0wzl2b"],
     "ventaneria": ["multi_selectv1jxlsfg"],
     "tabla_yeso": ["multi_selectzfz9xl7e"],

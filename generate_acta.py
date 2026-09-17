@@ -9,6 +9,8 @@ from config import (
     ACTA_STATUS_COLUMN_ID,
     ACTA_TEMPLATE,
     ACTA_XLSX_COLUMN_ID,
+    FIRMA_MONDAY_COLUMN_ID,
+    METODO_FIRMA_MONDAY_LABEL,
     SIGNATURE_COLUMN_ID,
 )
 from utils.monday_client import (
@@ -99,8 +101,17 @@ def generate_acta(item_id):
 
         signature_path = None
 
+        metodo_firma = (data.get("metodo_firma") or "").strip().lower()
+
+        if metodo_firma == METODO_FIRMA_MONDAY_LABEL.strip().lower() and FIRMA_MONDAY_COLUMN_ID:
+            firma_column_id = FIRMA_MONDAY_COLUMN_ID
+        else:
+            firma_column_id = SIGNATURE_COLUMN_ID
+
+        print(f"METODO_FIRMA = {metodo_firma!r} -> columna {firma_column_id}")
+
         try:
-            signature_url = get_file_public_url(item, SIGNATURE_COLUMN_ID)
+            signature_url = get_file_public_url(item, firma_column_id)
 
             if signature_url:
                 suffix = Path(signature_url.split("?")[0]).suffix or ".png"
