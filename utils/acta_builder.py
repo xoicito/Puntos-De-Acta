@@ -298,62 +298,7 @@ def build_template_points(data):
         and x.strip().lower() != "otros"
     ]
 
-    otro = (
-        data.get("otros_revision") or ""
-    ).strip()
-
-    if otro:
-        points.append(otro)
-
-    return points
-
-
-def get_template_points(data):
-
-    plantilla = (data.get("plantilla") or "").strip().lower()
-
-    mapping = {
-        "herrería": "herreria",
-        "ventanería": "ventaneria",
-        "tabla yeso": "tabla_yeso",
-        "pintura": "pintura",
-        "electricidad": "electricidad",
-        "piso": "piso",
-        "cielo falso": "cielo_falso",
-        "aluminio y vidrio": "aluminio_vidrio",
-        "hidrosanitaria": "hidrosanitaria",
-        "aire acondicionado": "aac",
-        "sistema contra incendios": "sci",
-        "carpintería": "carpinteria",
-        "mobiliario": "mobiliario",
-        "mampostería": "mamposteria",
-        "obra civil": "obra_civil",
-        "topografía": "topografia",
-        "urbanización": "urbanizacion",
-        "cubierta": "cubierta",
-        "impermeabilización": "impermeabilizacion",
-        "estructura metálica": "estructura_metalica",
-        "señalización": "senalizacion",
-        "acabados": "acabados",
-    }
-
-    field = mapping.get(plantilla)
-
-    if not field:
-        return []
-
-    values = data.get(field) or ""
-
-    points = [
-        x.strip()
-        for x in values.split(",")
-        if x.strip() and x.strip().lower() != "otros"
-    ]
-
-    otro = (data.get("otros_revision") or "").strip()
-
-    if otro:
-        points.append(otro)
+    points.extend(split_lines(data.get("otros_revision")))
 
     return points
 
