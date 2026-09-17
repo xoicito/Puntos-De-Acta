@@ -26,14 +26,13 @@ MELISSA_SIGNATURE_PATH = os.getenv("MELISSA_SIGNATURE_PATH", "assets/firma_melis
 
 MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 
-# Dropdown letting the requester choose how the signature will be provided:
-# an uploaded PNG ("Archivo", SIGNATURE_COLUMN_ID = file80ymdmtg) or
-# Monday's built-in signing experience ("Firma", FIRMA_MONDAY_COLUMN_ID =
-# signature9vmootoj). Both report as plain "file" columns in the API, so
-# the same asset-extraction logic (get_file_public_url) works for either.
-# TODO: pending the dropdown's real column ID and its exact option label.
-METODO_FIRMA_COLUMN_ID = os.getenv("METODO_FIRMA_COLUMN_ID", "")
-METODO_FIRMA_MONDAY_LABEL = os.getenv("METODO_FIRMA_MONDAY_LABEL", "Firmar con Monday")
+# "Elegir la manera de firma del Lider de Proyecto" dropdown: "Subir PNG"
+# (SIGNATURE_COLUMN_ID = file80ymdmtg) or "Dibujarla", Monday's built-in
+# signing experience (FIRMA_MONDAY_COLUMN_ID = signature9vmootoj). Both
+# report as plain "file" columns in the API, so the same asset-extraction
+# logic (get_file_public_url) works for either.
+METODO_FIRMA_COLUMN_ID = os.getenv("METODO_FIRMA_COLUMN_ID", "single_selectvkxra86")
+METODO_FIRMA_MONDAY_LABEL = os.getenv("METODO_FIRMA_MONDAY_LABEL", "Dibujarla")
 FIRMA_MONDAY_COLUMN_ID = os.getenv("FIRMA_MONDAY_COLUMN_ID", "signature9vmootoj")
 
 # IDs del board actual. Se aceptan alias de la versión anterior para facilitar migraciones.
