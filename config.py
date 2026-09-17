@@ -24,8 +24,7 @@ FIRMA_PA_FIRMADO_COLUMN_ID = os.getenv("FIRMA_PA_FIRMADO_COLUMN_ID", "file_mm793
 FIRMA_PLACEHOLDER = os.getenv("FIRMA_PLACEHOLDER", "{{FIRMA_MELISSA}}")
 MELISSA_SIGNATURE_PATH = os.getenv("MELISSA_SIGNATURE_PATH", "assets/firma_melissa.jpg")
 
-# TODO: pending real column ID for the "which multas apply" dropdown.
-MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "")
+MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 
 # IDs del board actual. Se aceptan alias de la versión anterior para facilitar migraciones.
 COLUMN_ALIASES = {

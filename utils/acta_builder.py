@@ -18,20 +18,23 @@ MULTAS_DEFAULTS = {
     "reporteria": "Q.25 POR EVENTO",
 }
 
-# Maps each dropdown option label (lowercase) to the multa key it selects.
-# TODO: confirm against the real option labels once the dropdown column ID
-# and its options are provided - these are best guesses based on the
-# template's own row labels (L30-L33) in the meantime.
+# Maps each "Multas a Aplicar" dropdown option label (lowercase) to the
+# multa key it selects. Matches the exact option text configured in Monday
+# (multi_select278mnjmn), accents included, plus a couple of forgiving
+# fallback variants.
 MULTAS_OPTION_MAP = {
     "por atraso de entrega": "atraso",
     "atraso": "atraso",
+    "por órden y limpieza": "orden",
     "por orden y limpieza": "orden",
     "orden y limpieza": "orden",
     "orden": "orden",
     "por no cumplir con seguridad industrial": "seguridad",
     "seguridad industrial": "seguridad",
     "seguridad": "seguridad",
+    "por no cumplir con documentos de reportería semanal": "reporteria",
     "por no cumplir con documentos de reporteria semanal": "reporteria",
+    "reportería semanal": "reporteria",
     "reporteria semanal": "reporteria",
     "reporteria": "reporteria",
 }
