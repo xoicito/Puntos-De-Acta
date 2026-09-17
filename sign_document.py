@@ -43,8 +43,8 @@ def sign_document(item_id):
     signed_ok = insert_signature(
         ws,
         str(base / MELISSA_SIGNATURE_PATH),
-        top_left="D128",
-        cols=("D", "E", "F"),
+        top_left="L128",
+        cols=("L", "M"),
         rows=(128, 129, 130, 131),
     )
 
