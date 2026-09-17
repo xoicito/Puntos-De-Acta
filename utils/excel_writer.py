@@ -1,3 +1,5 @@
+import copy
+
 from openpyxl import load_workbook
 from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Alignment
@@ -102,9 +104,74 @@ def insert_signature(ws, signature_path, top_left, cols, rows, placeholder=None)
         return False
 
 
+def _copy_row_style(ws, source_row, target_row, min_col=2, max_col=18):
+    """Copy cell styles and row height from one row to another (not values)."""
+
+    for col in range(min_col, max_col + 1):
+        src = ws.cell(row=source_row, column=col)
+        dst = ws.cell(row=target_row, column=col)
+
+        if src.has_style:
+            dst._style = copy.copy(src._style)
+
+    src_dim = ws.row_dimensions.get(source_row)
+
+    if src_dim is not None:
+        ws.row_dimensions[target_row].height = src_dim.height
+
+
+def ensure_cotizacion_capacity(ws, needed_rows, first_row=50, template_capacity=6):
+    """Insert extra rows into the Alcance de Cotizacion table if there are more
+    quotation lines than the template's built-in rows can hold, and fix up the
+    SUBTOTAL/IVA/TOTAL formulas that sit right below the table.
+
+    openpyxl shifts cell content, styles and merges when inserting rows, but
+    it does NOT rewrite formula text - so SUM(N50:N55) etc. would silently
+    keep pointing at the old range after an insert. Those three formulas are
+    corrected by hand here.
+
+    Returns how many rows were inserted (0 if the template's built-in rows
+    already covered `needed_rows`), so the caller can shift every hardcoded
+    row number for everything below this table by the same amount.
+    """
+
+    extra = max(0, needed_rows - template_capacity)
+
+    if not extra:
+        return 0
+
+    last_template_row = first_row + template_capacity - 1  # 55
+    insert_at = last_template_row + 1  # 56
+
+    ws.insert_rows(insert_at, extra)
+
+    for i in range(extra):
+        target_row = insert_at + i
+
+        # Rows 50-55 alternate between two banding styles by row-number
+        # parity (zebra striping) - keep extending that same pattern rather
+        # than flattening every new row to one look.
+        style_source_row = first_row if target_row % 2 == 0 else first_row + 1
+
+        _copy_row_style(ws, style_source_row, target_row)
+        ws.merge_cells(start_row=target_row, start_column=5, end_row=target_row, end_column=10)  # E:J
+        ws.merge_cells(start_row=target_row, start_column=14, end_row=target_row, end_column=15)  # N:O
+
+    new_last_row = last_template_row + extra
+    subtotal_row = insert_at + extra  # was 56
+    iva_row = subtotal_row + 1  # was 57
+    total_row = subtotal_row + 2  # was 58
+
+    ws[f"N{subtotal_row}"] = f"=SUM(N{first_row}:N{new_last_row})"
+    ws[f"N{iva_row}"] = f"=+N{subtotal_row}*0.12"
+    ws[f"N{total_row}"] = f"=+N{iva_row}+N{subtotal_row}"
+
+    return extra
+
+
 def write_cotizacion_rows(ws, rows):
 
-    for offset, row in enumerate(rows[:6]):
+    for offset, row in enumerate(rows):
 
         excel_row = 50 + offset
 
@@ -221,13 +288,13 @@ def render_excel(template_path, output_path, replacements):
 
     print(f"IMAGENES CARGADAS DE LA PLANTILLA: {len(ws._images)}")
 
-    write_cotizacion_rows(
-        ws,
-        replacements.get(
-            "__COTIZACION_ROWS__",
-            []
-        )
-    )
+    cotizacion_rows = replacements.get("__COTIZACION_ROWS__", [])
+
+    row_shift = ensure_cotizacion_capacity(ws, len(cotizacion_rows))
+
+    print(f"COTIZACION_ROW_SHIFT: {row_shift}")
+
+    write_cotizacion_rows(ws, cotizacion_rows)
     # PUNTOS GENERALES
 
     ws["J30"] = replacements.get("{{PG_BITACORA}}", "NO")
@@ -344,7 +411,7 @@ def render_excel(template_path, output_path, replacements):
 
     for offset, fila in enumerate(programacion_rows[:5]):
 
-        row_num = 62 + offset
+        row_num = 62 + row_shift + offset
 
         for celda, valor in [
             (f"D{row_num}", fila.get("area", "")),
@@ -387,23 +454,23 @@ def render_excel(template_path, output_path, replacements):
     print("TRABAJOS_PREVIOS")
     trabajos = replacements.get("{{TRABAJOS_PREVIOS}}", [])
     if isinstance(trabajos, list):
-        write_list_to_range(ws, 69, 73, 5, trabajos)
+        write_list_to_range(ws, 69 + row_shift, 73 + row_shift, 5, trabajos)
     elif isinstance(trabajos, str):
-        write_list_to_range(ws, 69, 73, 5, trabajos.split('\n'))
+        write_list_to_range(ws, 69 + row_shift, 73 + row_shift, 5, trabajos.split('\n'))
 
     # SERVICIOS BASICOS - E76:E80 (5 rows)
     servicios = replacements.get("{{SERVICIOS_BASICOS}}", [])
     if isinstance(servicios, list):
-        write_list_to_range(ws, 76, 80, 5, servicios)
+        write_list_to_range(ws, 76 + row_shift, 80 + row_shift, 5, servicios)
     elif isinstance(servicios, str):
-        write_list_to_range(ws, 76, 80, 5, servicios.split('\n'))
+        write_list_to_range(ws, 76 + row_shift, 80 + row_shift, 5, servicios.split('\n'))
 
     # PUNTOS REVISION - E84:E98 (15 rows)
     puntos = replacements.get("{{PUNTOS_REVISION}}", [])
 
     write_list_to_rows(
         ws,
-        list(range(84, 112)),
+        list(range(84 + row_shift, 112 + row_shift)),
         5,
         puntos
     )
@@ -437,17 +504,17 @@ def render_excel(template_path, output_path, replacements):
                         # template's own per-cell formatting (e.g. centered
                         # percentage fields) survives the replacement.
 
-    ws["D133"].alignment = Alignment(
+    ws[f"D{133 + row_shift}"].alignment = Alignment(
         horizontal="center",
         vertical="center"
     )
 
-    ws["O133"].alignment = Alignment(
+    ws[f"O{133 + row_shift}"].alignment = Alignment(
         horizontal="center",
         vertical="center"
     )
 
-    ws["H133"].alignment = Alignment(
+    ws[f"H{133 + row_shift}"].alignment = Alignment(
         horizontal="center",
         vertical="center"
     )
@@ -455,9 +522,9 @@ def render_excel(template_path, output_path, replacements):
     insert_signature(
         ws,
         replacements.get("__SIGNATURE_PATH__"),
-        top_left="D128",
+        top_left=f"D{128 + row_shift}",
         cols=("D", "E", "F"),
-        rows=(128, 129, 130, 131),
+        rows=(128 + row_shift, 129 + row_shift, 130 + row_shift, 131 + row_shift),
     )
 
     wb.save(output_path)
