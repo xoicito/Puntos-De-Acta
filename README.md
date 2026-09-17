@@ -23,7 +23,7 @@ Archivos listos para integrarse al repositorio existente de Contrato Fast Track 
    - Campo `fecha__1`: Fecha de fin
    - Campo `texto`: Observaciones
 
-3. (Opcional) Suba una imagen a la columna de firma (`SIGNATURE_COLUMN_ID`); se insertará en el acta ajustada al recuadro D128:F131 sin deformarse.
+3. (Opcional) Elija el método de firma (`METODO_FIRMA_COLUMN_ID`): subir un PNG a la columna "Archivo" (`SIGNATURE_COLUMN_ID`) o firmar directamente con la experiencia de firma de Monday, columna "Firma" (`FIRMA_MONDAY_COLUMN_ID`). Cualquiera de las dos se insertará en el acta ajustada al recuadro correspondiente sin deformarse.
 
 4. Cambie el estado del item a `Generar`
 
@@ -80,7 +80,9 @@ ACTA_BOARD_ID=<id_del_board>
 ACTA_XLSX_COLUMN_ID=<id_columna_xlsx>
 ACTA_PDF_COLUMN_ID=<id_columna_pdf>
 ACTA_ID_COLUMN_ID=text_mm736ka4
-SIGNATURE_COLUMN_ID=signature9vmootoj
+SIGNATURE_COLUMN_ID=file80ymdmtg
+METODO_FIRMA_COLUMN_ID=<id_columna_metodo_firma>
+FIRMA_MONDAY_COLUMN_ID=signature9vmootoj
 ACTA_STATUS_COLUMN_ID=estado_10
 ACTA_TRIGGER_LABEL=Generar
 ACTA_TEMPLATE=templates/100_PUNTO_DE_ACTA_PLANTILLA.xlsx

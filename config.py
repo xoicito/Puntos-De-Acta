@@ -12,7 +12,7 @@ ACTA_PDF_COLUMN_ID = os.getenv("ACTA_PDF_COLUMN_ID", "")
 ACTA_STATUS_COLUMN_ID = os.getenv("ACTA_STATUS_COLUMN_ID", "estado_10")
 ACTA_TRIGGER_LABEL = os.getenv("ACTA_TRIGGER_LABEL", "Generar")
 ACTA_ID_COLUMN_ID = os.getenv("ACTA_ID_COLUMN_ID", "text_mm736ka4")
-SIGNATURE_COLUMN_ID = os.getenv("SIGNATURE_COLUMN_ID", "signature9vmootoj")
+SIGNATURE_COLUMN_ID = os.getenv("SIGNATURE_COLUMN_ID", "file80ymdmtg")
 COTIZACION_BOARD_ID = 18430739172
 
 # Board de Aprobación (firma de Arq. Melissa Alvarenga)
@@ -27,12 +27,14 @@ MELISSA_SIGNATURE_PATH = os.getenv("MELISSA_SIGNATURE_PATH", "assets/firma_melis
 MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 
 # Dropdown letting the requester choose how the signature will be provided:
-# an uploaded PNG (existing SIGNATURE_COLUMN_ID file column) or Monday's
-# built-in e-signature column type (a separate column, not yet created).
-# TODO: pending real column IDs and the exact option label text.
+# an uploaded PNG ("Archivo", SIGNATURE_COLUMN_ID = file80ymdmtg) or
+# Monday's built-in signing experience ("Firma", FIRMA_MONDAY_COLUMN_ID =
+# signature9vmootoj). Both report as plain "file" columns in the API, so
+# the same asset-extraction logic (get_file_public_url) works for either.
+# TODO: pending the dropdown's real column ID and its exact option label.
 METODO_FIRMA_COLUMN_ID = os.getenv("METODO_FIRMA_COLUMN_ID", "")
 METODO_FIRMA_MONDAY_LABEL = os.getenv("METODO_FIRMA_MONDAY_LABEL", "Firmar con Monday")
-FIRMA_MONDAY_COLUMN_ID = os.getenv("FIRMA_MONDAY_COLUMN_ID", "")
+FIRMA_MONDAY_COLUMN_ID = os.getenv("FIRMA_MONDAY_COLUMN_ID", "signature9vmootoj")
 
 # IDs del board actual. Se aceptan alias de la versión anterior para facilitar migraciones.
 COLUMN_ALIASES = {
