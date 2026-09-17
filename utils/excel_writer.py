@@ -1,4 +1,3 @@
-                   
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 
@@ -9,30 +8,59 @@ def write_cotizacion_rows(ws, rows):
 
         excel_row = 50 + offset
 
-        for celda, valor in [
-            (f"D{excel_row}", offset + 1),
-            (f"E{excel_row}", row.get("descripcion", "")),
-            (f"K{excel_row}", row.get("unidad", "")),
-            (f"L{excel_row}", row.get("cantidad", "")),
-            (f"M{excel_row}", row.get("precio", "")),
-            (f"P{excel_row}", row.get("observaciones", "")),
-        ]:
+        ws[f"D{excel_row}"] = offset + 1
 
-            try:
-                ws[celda] = valor
-            except Exception as e:
-                print(f"ERROR COTIZACION {celda}: {e}")
-                raise
+        ws[f"E{excel_row}"] = row.get(
+            "descripcion",
+            ""
+        )
+
+        ws[f"K{excel_row}"] = row.get(
+            "unidad",
+            ""
+        )
+
+        ws[f"L{excel_row}"] = row.get(
+            "cantidad",
+            ""
+        )
+
+        ws[f"M{excel_row}"] = row.get(
+            "precio",
+            ""
+        )
 
         try:
-            subtotal = float(row.get("cantidad", 0)) * float(row.get("precio", 0))
+
+            subtotal = (
+                float(
+                    row.get(
+                        "cantidad",
+                        0
+                    )
+                )
+                *
+                float(
+                    row.get(
+                        "precio",
+                        0
+                    )
+                )
+            )
+
             ws[f"N{excel_row}"] = subtotal
-        except Exception as e:
-            print(f"ERROR SUBTOTAL N{excel_row}: {e}")
-            raise
+
+        except Exception:
+            pass
+
+        ws[f"P{excel_row}"] = row.get(
+            "observaciones",
+            ""
+        )
 
 
 def write_list_to_range(ws, start_row, end_row, column, items):
+    """Write list items to a range of cells, respecting the boundaries."""
 
     for i, item in enumerate(items):
 
@@ -43,10 +71,7 @@ def write_list_to_range(ws, start_row, end_row, column, items):
 
         try:
 
-            cell = ws.cell(
-                row=row,
-                column=column
-            )
+            cell = ws.cell(row=row, column=column)
 
             print(
                 f"INTENTANDO row={row} col={column} tipo={type(cell).__name__}"
@@ -71,7 +96,6 @@ def write_list_to_range(ws, start_row, end_row, column, items):
 
             raise
 
-
 def write_list_to_rows(ws, rows, column, items):
 
     for row, item in zip(rows, items):
@@ -81,9 +105,8 @@ def write_list_to_rows(ws, rows, column, items):
         cell.value = str(item)
 
         cell.alignment = Alignment(
-            horizontal="center",
-            vertical="center",
-            wrap_text=True
+            wrap_text=True,
+            vertical="top"
         )
 
 def write_programacion_row(ws, row_num, area, inicio, fin, obs):
@@ -107,7 +130,7 @@ def render_excel(template_path, output_path, replacements):
     wb = load_workbook(template_path)
 
     ws = wb["C-9-12"]
-    
+
     write_cotizacion_rows(
         ws,
         replacements.get(
@@ -123,9 +146,9 @@ def render_excel(template_path, output_path, replacements):
     ws["J33"] = replacements.get("{{PG_REUNION}}", "NO")
     ws["J34"] = replacements.get("{{PG_SUPERVISOR}}", "NO")
     ws["J35"] = replacements.get("{{PG_ENCARGADO}}", "NO")
-    
+
     # PLANOS ENTREGADOS
-    
+
     ws["J38"] = replacements.get("{{PL_ARQ}}", "NO")
     ws["J39"] = replacements.get("{{PL_COTAS}}", "NO")
     ws["J40"] = replacements.get("{{PL_ELEV}}", "NO")
@@ -139,32 +162,32 @@ def render_excel(template_path, output_path, replacements):
     # -------------------------
     # PUNTOS GENERALES
     # -------------------------
-    
+
     ws["J30"] = replacements.get(
         "{{PG_BITACORA}}",
         "NO"
     )
-    
+
     ws["J31"] = replacements.get(
         "{{PG_SEGURIDAD}}",
         "NO"
     )
-    
+
     ws["J32"] = replacements.get(
         "{{PG_PROTOCOLO}}",
         "NO"
     )
-    
+
     ws["J33"] = replacements.get(
         "{{PG_REUNION}}",
         "NO"
     )
-    
+
     ws["J34"] = replacements.get(
         "{{PG_SUPERVISOR}}",
         "NO"
     )
-    
+
     ws["J35"] = replacements.get(
         "{{PG_ENCARGADO}}",
         "NO"
@@ -174,95 +197,107 @@ def render_excel(template_path, output_path, replacements):
     ws["P31"] = replacements.get("{{MULTA_ORDEN}}", "")
     ws["P32"] = replacements.get("{{MULTA_SEGURIDAD}}", "")
     ws["P33"] = replacements.get("{{MULTA_REPORTERIA}}", "")
-    
+
     # -------------------------
     # PLANOS ENTREGADOS
     # -------------------------
-    
+
     ws["J38"] = replacements.get(
         "{{PL_ARQ}}",
         "NO"
     )
-    
+
     ws["J39"] = replacements.get(
         "{{PL_COTAS}}",
         "NO"
     )
-    
+
     ws["J40"] = replacements.get(
         "{{PL_ELEV}}",
         "NO"
     )
-    
+
     ws["J41"] = replacements.get(
         "{{PL_HIDRO}}",
         "NO"
     )
-    
+
     ws["J42"] = replacements.get(
         "{{PL_ELEC}}",
         "NO"
     )
-    
+
     ws["J43"] = replacements.get(
         "{{PL_ACAB}}",
         "NO"
     )
-    
+
     ws["J44"] = replacements.get(
         "{{PL_ESTR_PRIN}}",
         "NO"
     )
-    
+
     ws["J45"] = replacements.get(
         "{{PL_ESTR_SEC}}",
         "NO"
     )
-    
+
     ws["J46"] = replacements.get(
         "{{PL_OBRAS}}",
         "NO"
     )
 
-programacion_rows = replacements.get(
-    "__PROGRAMACION_ROWS__",
-    []
-)
+    programacion_rows = replacements.get(
+        "__PROGRAMACION_ROWS__",
+        []
+    )
 
-for offset, fila in enumerate(programacion_rows[:5]):
+    for offset, fila in enumerate(programacion_rows[:5]):
 
-    row_num = 62 + offset
+        row_num = 62 + offset
 
-    ws[f"D{row_num}"] = fila.get("area", "")
-    ws[f"G{row_num}"] = fila.get("inicio", "")
-    ws[f"I{row_num}"] = fila.get("fin", "")
+        ws[f"D{row_num}"] = fila.get("area", "")
+        ws[f"G{row_num}"] = fila.get("inicio", "")
+        ws[f"J{row_num}"] = fila.get("fin", "")
+        ws[f"M{row_num}"] = fila.get("obs", "")
+        
+        try:
+            from datetime import datetime
+        
+            inicio = datetime.strptime(
+                fila.get("inicio", ""),
+                "%d/%m/%Y"
+            )
+        
+            fin = datetime.strptime(
+                fila.get("fin", ""),
+                "%d/%m/%Y"
+            )
+        
+            ws[f"M{row_num}"] = (
+                fin - inicio
+            ).days + 1
+        
+        except Exception:
+            ws[f"M{row_num}"] = ""
+        
+        ws[f"N{row_num}"] = fila.get("obs", "")
 
-    try:
-        from datetime import datetime
+        for col in ["D", "G", "J", "M"]:
 
-        inicio = datetime.strptime(
-            fila.get("inicio", ""),
-            "%d/%m/%Y"
-        )
+            ws[f"{col}{row_num}"].alignment = Alignment(
+                wrap_text=True,
+                vertical="top"
+            )
 
-        fin = datetime.strptime(
-            fila.get("fin", ""),
-            "%d/%m/%Y"
-        )
+        for celda in ["D62", "G62", "J62", "M62"]:
 
-        ws[f"K{row_num}"] = (fin - inicio).days + 1
+            ws[celda].alignment = Alignment(
+                wrap_text=True,
+                vertical="top"
+            )
 
-    except Exception:
-        ws[f"K{row_num}"] = ""
-
-    ws[f"M{row_num}"] = fila.get("obs", "")
-
-    for col in ["D", "G", "I", "K", "M"]:
-
-        ws[f"{col}{row_num}"].alignment = Alignment(
-            wrap_text=True,
-            vertical="top"
-        )
+    # aquí sigue el resto del código...
 
         # TRABAJOS PREVIOS - E69:E73 (5 rows)
         print("TRABAJOS_PREVIOS")
@@ -281,7 +316,7 @@ for offset, fila in enumerate(programacion_rows[:5]):
 
         # PUNTOS REVISION - E84:E98 (15 rows)
         puntos = replacements.get("{{PUNTOS_REVISION}}", [])
-        
+
         write_list_to_rows(
             ws,
             [84, 86, 88, 90, 92, 94, 96, 98],
@@ -323,16 +358,15 @@ for offset, fila in enumerate(programacion_rows[:5]):
                                 )
 
                             cell.alignment = Alignment(
-                                horizontal="center",
-                                vertical="center",
-                                wrap_text=True
+                                wrap_text=True,
+                                vertical="top"
                             )
 
     ws["D133"].alignment = Alignment(
         horizontal="center",
         vertical="center"
     )
-    
+
     ws["O133"].alignment = Alignment(
         horizontal="center",
         vertical="center"
@@ -342,8 +376,8 @@ for offset, fila in enumerate(programacion_rows[:5]):
         horizontal="center",
         vertical="center"
     )
-    
-    
+
+
     wb.save(output_path)
 
     return output_path
