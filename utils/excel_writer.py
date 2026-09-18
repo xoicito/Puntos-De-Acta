@@ -465,6 +465,11 @@ def render_excel(template_path, output_path, replacements):
         []
     )
 
+    # The {{PROGRAMACION}} placeholder lives in D62 (first row of this
+    # table) and is only overwritten below when there's at least one
+    # subitem - clear it explicitly so it never shows as raw text.
+    ws[f"D{62 + row_shift}"] = ""
+
     for offset, fila in enumerate(programacion_rows[:5]):
 
         row_num = 62 + row_shift + offset
