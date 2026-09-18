@@ -6,7 +6,7 @@ Archivos listos para integrarse al repositorio existente de Contrato Fast Track 
 1. Copie todos los archivos y carpetas al nivel de `app.py`.
 2. Agregue las dependencias de `requirements.txt` (ya incluidas en el proyecto).
 3. Configure en Render las variables de `.env.example`; nunca suba el token real a GitHub.
-4. En el board de Monday.com cree dos columnas de tipo **Archivos** para la salida XLSX y PDF. Copie sus IDs en `ACTA_XLSX_COLUMN_ID` y `ACTA_PDF_COLUMN_ID`.
+4. En el board de Monday.com cree dos columnas de tipo **Archivos** para la salida XLSX y PDF. Copie sus IDs en `ACTA_XLSX_COLUMN_ID` y `ACTA_PDF_COLUMN_ID`. Cree una tercera columna de tipo **Archivos** para que el Lider suba su copia llena de `templates/PLANTILLA_ALCANCE_COTIZACION.xlsx`, y copie su ID en `COTIZACION_FILE_COLUMN_ID`.
 5. Configure el webhook de Monday hacia `/webhook/puntos-acta` (dispara cuando `ACTA_STATUS_COLUMN_ID` cambia a `ACTA_TRIGGER_LABEL`).
 6. Configure un segundo webhook de Monday, en el board de Aprobación (`FIRMA_BOARD_ID`), hacia `/webhook/firma-melissa` (dispara cuando `FIRMA_ESTADO_COLUMN_ID` cambia a `FIRMA_TRIGGER_LABEL`).
 
@@ -29,7 +29,7 @@ Archivos listos para integrarse al repositorio existente de Contrato Fast Track 
 
 5. El sistema procesará automáticamente:
    - Genera un `ID de Punto de Acta` único (columna `ACTA_ID_COLUMN_ID`) si el item todavía no tiene uno.
-   - Busca en el board de Cotización (`COTIZACION_BOARD_ID`) los items cuyo `Name` sea igual a ese ID y los inserta como filas en "Alcance de Cotización del Proveedor". Para que un renglón de cotización aparezca en el acta, su `Name` debe copiarse exactamente igual al `ID de Punto de Acta` generado.
+   - Lee el Excel subido a la columna `COTIZACION_FILE_COLUMN_ID` (una copia llena de `templates/PLANTILLA_ALCANCE_COTIZACION.xlsx`) y usa sus renglones para "Alcance de Cotización del Proveedor". La tabla crece automáticamente si hay más de 6 renglones.
    - Genera el archivo XLSX con los datos del acta
    - Genera el archivo PDF (si LibreOffice está disponible)
 
@@ -55,6 +55,9 @@ Todo ocurre dentro del mismo item del board de Aprobación; no requiere relacion
 ├── acta_routes.py                  # Rutas y webhooks de Monday.com
 ├── generate_acta.py                # Lógica principal de generación
 ├── sign_document.py                # Flujo de firma de aprobación (Melissa Alvarenga)
+├── firma_gerente.py                # Flujo de firma del Gerente (enlace único)
+├── firma_gerente_routes.py         # Pagina de firma del Gerente (Flask)
+├── gerente_link.py                 # Tokens firmados y con expiracion para el enlace
 ├── config.py                       # Configuración y constantes
 ├── requirements.txt                # Dependencias Python
 ├── rubros.json                     # Datos de rubros con puntos de revisión
@@ -62,9 +65,11 @@ Todo ocurre dentro del mismo item del board de Aprobación; no requiere relacion
 ├── assets/                         # Imágenes fijas (firma de aprobación)
 │   └── firma_melissa.jpg
 ├── templates/                      # Carpeta para plantillas Excel
-│   └── 100_PUNTO_DE_ACTA_PLANTILLA.xlsx
+│   ├── 100_PUNTO_DE_ACTA_PLANTILLA.xlsx
+│   └── PLANTILLA_ALCANCE_COTIZACION.xlsx  # Se le da al Lider para llenar
 └── utils/
     ├── acta_builder.py            # Construcción de bloques de datos
+    ├── cotizacion_upload.py       # Lee la plantilla de cotización subida
     ├── excel_writer.py            # Escritura en archivos Excel
     ├── monday_client.py           # Cliente para API de Monday.com
     └── pdf_converter.py           # Conversión de Excel a PDF
@@ -79,6 +84,7 @@ MONDAY_API_VERSION=2026-01
 ACTA_BOARD_ID=<id_del_board>
 ACTA_XLSX_COLUMN_ID=<id_columna_xlsx>
 ACTA_PDF_COLUMN_ID=<id_columna_pdf>
+COTIZACION_FILE_COLUMN_ID=<id_columna_cotizacion_subida>
 ACTA_ID_COLUMN_ID=text_mm736ka4
 SIGNATURE_COLUMN_ID=file80ymdmtg
 METODO_FIRMA_COLUMN_ID=single_selectvkxra86

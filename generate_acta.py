@@ -9,6 +9,7 @@ from config import (
     ACTA_STATUS_COLUMN_ID,
     ACTA_TEMPLATE,
     ACTA_XLSX_COLUMN_ID,
+    COTIZACION_FILE_COLUMN_ID,
     FIRMA_MONDAY_COLUMN_ID,
     METODO_FIRMA_MONDAY_LABEL,
     SIGNATURE_COLUMN_ID,
@@ -20,10 +21,10 @@ from utils.monday_client import (
     get_file_public_url,
     get_item,
     upload_file,
-    get_cotizacion_rows,
     update_text_column,
 )
 from utils.acta_builder import build_blocks, display_date, item_data, pct
+from utils.cotizacion_upload import parse_cotizacion_upload
 from utils.excel_writer import render_excel
 from firma_gerente import start_gerente_signing
 
@@ -43,15 +44,6 @@ def generate_acta(item_id):
         update_text_column(item_id, board_id, ACTA_ID_COLUMN_ID, data["acta_id"])
 
     print("ACTA_ID =", data.get("acta_id"))
-
-    cotizacion_rows = get_cotizacion_rows(
-        data.get("acta_id")
-    )
-
-    print(
-        "COTIZACION_ROWS =",
-        cotizacion_rows
-    )
     print("PUNTOS_GENERALES:", data.get("puntos_generales"))
     print("PLANOS_ENTREGADOS:", data.get("planos_entregados"))
     print("MULTAS_APLICAR =", data.get("multas_aplicar"))
@@ -84,10 +76,6 @@ def generate_acta(item_id):
 
         replacements.update(build_blocks(data, rubrics))
 
-        replacements["__COTIZACION_ROWS__"] = (
-            cotizacion_rows
-        )
-
         missing = [f for f in ("proyecto", "rubro", "no_contrato", "empresa") if not data.get(f)]
 
         if missing:
@@ -99,6 +87,25 @@ def generate_acta(item_id):
         output_directory.mkdir(parents=True, exist_ok=True)
 
         xlsx = str(output_directory / f"{stem}.xlsx")
+
+        cotizacion_rows = []
+
+        try:
+            if COTIZACION_FILE_COLUMN_ID:
+                cotizacion_url = get_file_public_url(item, COTIZACION_FILE_COLUMN_ID)
+
+                if cotizacion_url:
+                    suffix = Path(cotizacion_url.split("?")[0]).suffix or ".xlsx"
+                    cotizacion_path = str(output_directory / f"{stem}_cotizacion{suffix}")
+                    download_file(cotizacion_url, cotizacion_path)
+                    cotizacion_rows = parse_cotizacion_upload(cotizacion_path)
+        except Exception as e:
+            print(f"ERROR COTIZACION_UPLOAD: {e}")
+            cotizacion_rows = []
+
+        print("COTIZACION_ROWS =", cotizacion_rows)
+
+        replacements["__COTIZACION_ROWS__"] = cotizacion_rows
 
         signature_path = None
 

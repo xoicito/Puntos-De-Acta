@@ -13,7 +13,12 @@ ACTA_STATUS_COLUMN_ID = os.getenv("ACTA_STATUS_COLUMN_ID", "estado_10")
 ACTA_TRIGGER_LABEL = os.getenv("ACTA_TRIGGER_LABEL", "Generar")
 ACTA_ID_COLUMN_ID = os.getenv("ACTA_ID_COLUMN_ID", "text_mm736ka4")
 SIGNATURE_COLUMN_ID = os.getenv("SIGNATURE_COLUMN_ID", "file80ymdmtg")
-COTIZACION_BOARD_ID = 18430739172
+
+# Alcance de Cotizacion: el Lider sube una copia llena de
+# templates/PLANTILLA_ALCANCE_COTIZACION.xlsx a esta columna (tipo
+# archivo) en el board principal, en lugar de capturar renglones en un
+# board aparte. TODO: falta el ID real de esta columna.
+COTIZACION_FILE_COLUMN_ID = os.getenv("COTIZACION_FILE_COLUMN_ID", "")
 
 # Board de Aprobación (firma de Arq. Melissa Alvarenga)
 FIRMA_BOARD_ID = int(os.getenv("FIRMA_BOARD_ID", "18419366411"))
