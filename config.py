@@ -45,9 +45,10 @@ MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 # como el control de un solo uso: un token ya firmado se rechaza aunque
 # todavia no haya expirado.
 #
-# TODO: pending real IDs para todo lo de esta seccion.
+# Board "Gerentes" = 18431719434, con columna "e-mail" (text_mm7ayzbv).
+# TODO: falta GERENTE_CONNECT_COLUMN_ID (columna Connect Boards en el board principal).
 GERENTE_CONNECT_COLUMN_ID = os.getenv("GERENTE_CONNECT_COLUMN_ID", "")  # board principal
-GERENTE_EMAIL_COLUMN_ID = os.getenv("GERENTE_EMAIL_COLUMN_ID", "")  # board "Gerentes"
+GERENTE_EMAIL_COLUMN_ID = os.getenv("GERENTE_EMAIL_COLUMN_ID", "text_mm7ayzbv")  # board "Gerentes"
 GERENTE_FIRMA_LINK_COLUMN_ID = os.getenv("GERENTE_FIRMA_LINK_COLUMN_ID", "")
 GERENTE_FIRMA_ESTADO_COLUMN_ID = os.getenv("GERENTE_FIRMA_ESTADO_COLUMN_ID", "")
 GERENTE_FIRMA_ESTADO_PENDIENTE = os.getenv("GERENTE_FIRMA_ESTADO_PENDIENTE", "Pendiente")
