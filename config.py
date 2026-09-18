@@ -159,5 +159,16 @@ COLUMN_ALIASES = {
     "planos_entregados": [
         "multi_selecthrnfdufd"
     ],
+
+    "cortinas_metalicas": ["dropdown_mm7a1snp"],
+    "enlaminado": ["dropdown_mm7agxgw"],
+    "canal_flashing": ["dropdown_mm7av5pp"],
+    "acm": ["dropdown_mm7ayn6h"],
+    "alquiler_grua": ["dropdown_mm7aksrb"],
+    "bomba_concreto": ["dropdown_mm7a771m"],
+    "puertas_madera": ["dropdown_mm7atz4c"],
+    "elevadores": ["dropdown_mm7agt67"],
+    "pozo_mecanico": ["dropdown_mm7adryb"],
+    "pilotes_nailing": ["dropdown_mm7awz8f"],
 }
 SUBITEM_COLUMNS = {"fecha_inicio": "fecha0", "fecha_fin": "fecha__1", "observaciones": "texto"}
