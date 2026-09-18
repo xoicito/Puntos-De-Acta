@@ -253,6 +253,313 @@ PUNTOS_OPCION_MAP = {
         # una coincidencia que no aplica.
         "limpieza final": [],
     },
+    "cortinas_metalicas": {
+        "medidas y ajuste correcto": ["Medidas y ajuste correcto en el vano"],
+        "funcionamiento de apertura/cierre": [
+            "Estructura y mecanismo de apertura/cierre funcional",
+            "Maniobra manual y automática probada exitosamente",
+            "Operación con nivel de ruido aceptable",
+        ],
+        "motor y controles": [
+            "Motor y controles verificados (si aplica)",
+            "Cables y conexiones eléctricas en buen estado (si aplica)",
+            "Controles remotos o sistemas de activación operativos (si aplica)",
+        ],
+        "guías rieles y poleas": [
+            "Guías y rieles sin obstrucciones",
+            "Poleas y ejes sin desgaste",
+        ],
+        "anclajes correctos": ["Fijaciones y anclajes firmes y seguros"],
+        "seguridad operativa": [
+            "Elementos de seguridad revisados y operativos (freno, bloqueo)",
+            "Frenos electromagnéticos ajustados correctamente (si aplica)",
+        ],
+        "lubricación y ajuste": [
+            "Mecanismos móviles lubricados",
+            "Balanceo y tensión de resortes ajustados",
+        ],
+        "lubricacion y ajuste": [
+            "Mecanismos móviles lubricados",
+            "Balanceo y tensión de resortes ajustados",
+        ],
+        "limpieza final": ["Área limpia, sin residuos de instalación"],
+        "sellos y sensores": [
+            "Sellos y burletes en buen estado (si aplica)",
+            "Sensores y fotoceldas funcionales (si aplica)",
+        ],
+        "acabado sin daños": ["Láminas sin corrosión ni daños visibles"],
+        "acabado sin danos": ["Láminas sin corrosión ni daños visibles"],
+    },
+    "enlaminado": {
+        "alineación y nivelación": [
+            "Alineación y fijación adecuadas",
+            "Superficie nivelada y plana",
+        ],
+        "alineacion y nivelacion": [
+            "Alineación y fijación adecuadas",
+            "Superficie nivelada y plana",
+        ],
+        "solapes y sellados": [
+            "Solapes y sellados correctamente ejecutados",
+            "Juntas y uniones con buena hermeticidad",
+        ],
+        "acabado sin daños": [
+            "Recubrimientos y acabados en buen estado",
+            "Sin daños mecánicos ni deformaciones",
+            "Bordes y cortes seguros, sin desprendimientos",
+        ],
+        "acabado sin danos": [
+            "Recubrimientos y acabados en buen estado",
+            "Sin daños mecánicos ni deformaciones",
+            "Bordes y cortes seguros, sin desprendimientos",
+        ],
+        "material según especificación": ["Láminas del calibre y tipo especificado"],
+        "material segun especificacion": ["Láminas del calibre y tipo especificado"],
+        "fijaciones correctas": [
+            "Fijaciones correctamente colocadas y ajustadas",
+            "Sistemas de fijación correctamente instalados",
+            "Buena adherencia y compatibilidad con la estructura base",
+        ],
+        "drenaje funcional": ["Drenaje funcional con pendiente adecuada"],
+        "anticorrosivo aplicado": ["Protección anticorrosiva aplicada en uniones (si aplica)"],
+        "limpieza final": ["Área limpia y sin residuos metálicos"],
+    },
+    "canal_flashing": {
+        "instalación correcta de canaletas": [
+            "Canaletas y bajantes instalados correctamente",
+            "Bajantes sin obstrucciones visibles",
+        ],
+        "instalacion correcta de canaletas": [
+            "Canaletas y bajantes instalados correctamente",
+            "Bajantes sin obstrucciones visibles",
+        ],
+        "pendientes para drenaje": ["Pendientes adecuadas para buen flujo de agua"],
+        "sellados sin filtraciones": [
+            "Uniones y sellados sin filtraciones",
+            "Tornillería y uniones correctamente selladas",
+        ],
+        "anclajes y fijaciones": [
+            "Fijaciones y anclajes seguros",
+            "Anclajes y soportes firmemente instalados",
+        ],
+        "material según especificación": ["Material y calibre conforme a especificaciones"],
+        "material segun especificacion": ["Material y calibre conforme a especificaciones"],
+        "solapes correctos": ["Solapes y traslapes ejecutados correctamente"],
+        "acabado sin daños": ["Sin deformaciones ni daños en instalación"],
+        "acabado sin danos": ["Sin deformaciones ni daños en instalación"],
+        "limpieza final": ["Libre de residuos o acumulaciones"],
+    },
+    "acm": {
+        "medidas y cortes precisos": ["Dimensiones y cortes precisos verificados"],
+        "nivelación y alineación": ["Paneles alineados y nivelados correctamente"],
+        "nivelacion y alineacion": ["Paneles alineados y nivelados correctamente"],
+        "anclajes correctos": ["Sistemas de fijación y anclajes seguros"],
+        "uniones y sellados": [
+            "Uniones y sellados entre paneles correctamente ejecutados",
+            "Bordes y uniones sin deformaciones",
+        ],
+        "acabado sin daños": [
+            "Superficies sin rayones, golpes ni deformaciones",
+            "Acabado final conforme a diseño (mate o brillante)",
+        ],
+        "acabado sin danos": [
+            "Superficies sin rayones, golpes ni deformaciones",
+            "Acabado final conforme a diseño (mate o brillante)",
+        ],
+        "ventilación y dilatación": ["Ventilación y dilatación adecuadas instaladas"],
+        "ventilacion y dilatacion": ["Ventilación y dilatación adecuadas instaladas"],
+        "limpieza final": ["Zona de instalación limpia, sin residuos"],
+        "accesibilidad para mantenimiento": ["Accesibilidad futura para mantenimiento asegurada"],
+    },
+    "alquiler_grua": {
+        "documentación del operador": ["Documentación y certificación del operador verificadas"],
+        "documentacion del operador": ["Documentación y certificación del operador verificadas"],
+        "mantenimiento vigente": ["Mantenimiento vigente de grúa dentro de los últimos 3 meses"],
+        "seguros actualizados": ["Seguros actualizados del equipo y operador comprobados"],
+        "revisión física y mecánica del equipo": [
+            "Revisión del estado físico y mecánico de la grúa completado: i. Grúa limpia y sin residuos comprometedores ii. Carga máxima y distribución de peso verificados iii. Contrapesos y estabilizadores en buen estado iv. Neumáticos y chasis inspeccionados v. Sistema hidráulico sin fugas vi. Elementos de izaje en óptimas condiciones vii. Iluminación funcional para trabajos nocturnos",
+        ],
+        "revision fisica y mecanica del equipo": [
+            "Revisión del estado físico y mecánico de la grúa completado: i. Grúa limpia y sin residuos comprometedores ii. Carga máxima y distribución de peso verificados iii. Contrapesos y estabilizadores en buen estado iv. Neumáticos y chasis inspeccionados v. Sistema hidráulico sin fugas vi. Elementos de izaje en óptimas condiciones vii. Iluminación funcional para trabajos nocturnos",
+        ],
+        "pruebas de maniobras": [
+            "Pruebas previas a maniobras completadas: i. Controles de mando y respuesta verificados ii. Frenos y sistemas de seguridad funcionales",
+        ],
+        "seguridad industrial": [
+            "Autorización de Seguridad Industrial otorgada: i. Uso correcto de equipo de protección ii. Área de trabajo debidamente señalizada y delimitada iii. Método de comunicación operador–tierra definida iv. Lista de cumplimiento firmada y entregada",
+        ],
+        "condiciones climáticas seguras": ["Operación realizada bajo condiciones climáticas seguras"],
+        "condiciones climaticas seguras": ["Operación realizada bajo condiciones climáticas seguras"],
+    },
+    "bomba_concreto": {
+        "bomba en buen estado": [
+            "Bomba inspeccionada y con mantenimiento vigente",
+            "Mangueras y conexiones sin fugas ni desgaste",
+        ],
+        "capacidad conforme a requerimiento": ["Capacidad de bombeo conforme a los requerimientos"],
+        "pruebas de funcionamiento": ["Pruebas de funcionamiento satisfactorias"],
+        "concreto según especificación": ["Concreto entregado conforme a especificaciones técnicas"],
+        "concreto segun especificacion": ["Concreto entregado conforme a especificaciones técnicas"],
+        "nivelación y distribución": [
+            "Nivelación y distribución del concreto correctamente ejecutadas",
+            "Juntas de dilatación y construcción instaladas",
+        ],
+        "nivelacion y distribucion": [
+            "Nivelación y distribución del concreto correctamente ejecutadas",
+            "Juntas de dilatación y construcción instaladas",
+        ],
+        "acabado final aprobado": ["Acabado final del concreto cumple con calidad requerida"],
+        "limpieza final": ["Limpieza de equipo y área de trabajo realizada"],
+        "anticipación de instalación": [
+            "Equipo instalado con al menos 1 hora de anticipación de instalación de tuberías",
+        ],
+        "anticipacion de instalacion": [
+            "Equipo instalado con al menos 1 hora de anticipación de instalación de tuberías",
+        ],
+    },
+    "puertas_madera": {
+        "medidas y ajuste en marco": [
+            "Medidas y ajuste en marco confirmados según planos.",
+            "Holguras y separación con el marco dentro de tolerancias aceptables.",
+        ],
+        "herrajes funcionando": [
+            "Bisagras, cerraduras y herrajes correctamente instalados y funcionales.",
+        ],
+        "acabado y barniz": [
+            "Acabado superficial y barniz aplicados sin imperfecciones ni manchas.",
+            "Estética y uniformidad del color según diseño aprobado.",
+        ],
+        "funcionamiento y alineación": [
+            "Funcionamiento correcto y alineación de la hoja respecto al marco.",
+            "Cierre suave y ajuste en marcos verificado.",
+        ],
+        "funcionamiento y alineacion": [
+            "Funcionamiento correcto y alineación de la hoja respecto al marco.",
+            "Cierre suave y ajuste en marcos verificado.",
+        ],
+        "sellado perimetral": [
+            "Sellado perimetral instalado y funcional contra ruidos y filtraciones.",
+        ],
+        "anclajes y estabilidad": [
+            "Fijaciones y anclajes estables, especialmente en puertas pesadas.",
+            "Puerta presenta estabilidad estructural adecuada.",
+        ],
+        "limpieza final": ["Limpieza final realizada y sin residuos de instalación."],
+        "sin deformaciones": ["Sin deformaciones visibles por humedad o temperatura."],
+    },
+    "elevadores": {
+        "instalación según normativa": ["Instalación ejecutada conforme a planos y normativa aplicable."],
+        "instalacion segun normativa": ["Instalación ejecutada conforme a planos y normativa aplicable."],
+        "pruebas de funcionamiento con carga": [
+            "Pruebas de funcionamiento satisfactorias en todos los niveles y con carga máxima.",
+            "Arranque y frenado con carga sin anomalías.",
+            "Tiempos de respuesta y velocidad adecuados según especificación.",
+        ],
+        "acabados de cabina": [
+            "Acabados en cabina y accesos sin defectos.",
+            "Iluminación interior y exterior operativa.",
+            "Cabina con ventilación funcional y temperatura controlada.",
+        ],
+        "sistemas de emergencia y seguridad": [
+            "Sistemas de emergencia y alarmas operativos.",
+            "Puertas y sensores de seguridad operativos.",
+            "Protección contra sobrecargas eléctricas instalada.",
+        ],
+        "nivelación por piso": ["Nivelación precisa en cada piso sin desniveles."],
+        "nivelacion por piso": ["Nivelación precisa en cada piso sin desniveles."],
+        "cables y poleas de tracción": [
+            "Cables, poleas y sistemas de tracción inspeccionados y sin fallas.",
+            "Rieles y guías inspeccionadas, sin obstrucciones ni defectos.",
+        ],
+        "cables y poleas de traccion": [
+            "Cables, poleas y sistemas de tracción inspeccionados y sin fallas.",
+            "Rieles y guías inspeccionadas, sin obstrucciones ni defectos.",
+        ],
+        "botoneras y señalización": ["Botoneras y señalización instaladas y funcionales."],
+        "botoneras y senalizacion": ["Botoneras y señalización instaladas y funcionales."],
+        "documentación técnica": [
+            "Documentación técnica y certificaciones entregadas.",
+            "Protocolos de mantenimiento disponibles y acordes al equipo.",
+            "Bitácora de pruebas operativas completada y archivada",
+        ],
+        "documentacion tecnica": [
+            "Documentación técnica y certificaciones entregadas.",
+            "Protocolos de mantenimiento disponibles y acordes al equipo.",
+            "Bitácora de pruebas operativas completada y archivada",
+        ],
+        "eficiencia y confort": [
+            "Consumo energético dentro de parámetros eficientes.",
+            "Ruido y vibraciones en operación dentro de rangos normales.",
+        ],
+        "acceso para mantenimiento": ["Acceso a componentes para mantenimiento sin restricciones."],
+    },
+    "pozo_mecanico": {
+        "dimensiones según planos": ["Profundidad y diámetro del pozo conforme a planos aprobados."],
+        "dimensiones segun planos": ["Profundidad y diámetro del pozo conforme a planos aprobados."],
+        "entubado y sellos": [
+            "Entubado y sellados adecuados garantizan integridad del pozo.",
+            "Sellos contra contaminación externa instalados y verificados.",
+            "Sellado superior del pozo instalado correctamente.",
+        ],
+        "pruebas de caudal y bombeo": [
+            "Pruebas de caudal y flujo realizadas satisfactoriamente.",
+            "Pruebas de bombeo realizadas si aplica, con parámetros dentro de norma.",
+        ],
+        "estabilidad de paredes": ["Paredes estables y revestimiento sin colapsos ni desplazamientos."],
+        "drenaje funcional": ["Sistema de drenaje funcional y evacuación de agua efectiva."],
+        "documentación técnica": [
+            "Documentación técnica y certificación de obra entregada.",
+            "Materiales de perforación verificados según especificaciones.",
+        ],
+        "documentacion tecnica": [
+            "Documentación técnica y certificación de obra entregada.",
+            "Materiales de perforación verificados según especificaciones.",
+        ],
+        "calidad del agua": [
+            "Calidad del agua extraída evaluada cuando corresponde.",
+            "Flujo de agua libre de sedimentos y partículas.",
+            "Sistema de filtración eficiente y en funcionamiento.",
+        ],
+    },
+    "pilotes_nailing": {
+        "ubicación y profundidad según planos": [
+            "Ubicación y profundidad de pilotes verificadas según planos estructurales.",
+            "Pilotes verticales y alineados según especificaciones.",
+        ],
+        "ubicacion y profundidad segun planos": [
+            "Ubicación y profundidad de pilotes verificadas según planos estructurales.",
+            "Pilotes verticales y alineados según especificaciones.",
+        ],
+        "refuerzo y concreto": [
+            "Refuerzo y concreto correctamente instalados en cada pilote.",
+            "Concreto utilizado cumple estándares de calidad establecidos.",
+            "Recubrimiento de acero de refuerzo conforme a diseño.",
+        ],
+        "estabilidad de taludes y drenaje": [
+            "Taludes estables y drenaje operativo en el área intervenida.",
+            "Sistema de contención sin filtraciones ni humedad.",
+        ],
+        "anclajes y tensores": [
+            "Tensores y anclajes de sistema de contención correctamente instalados.",
+            "Anclajes activos tensados y supervisados en pre y post.",
+        ],
+        "sin fisuras ni desplazamientos": [
+            "Pilotes sin fisuras ni desplazamientos tras fundición.",
+            "Sin asentamientos diferenciales en zona estructural.",
+        ],
+        "contacto con subestructura": [
+            "Contacto adecuado entre cimentación y subestructura verificado.",
+            "Uniones entre pilotes y estructura superior selladas.",
+        ],
+        "compactación y limpieza": [
+            "Suelo circundante compactado adecuadamente.",
+            "Proceso de perforación ejecutado con limpieza de escombros.",
+        ],
+        "compactacion y limpieza": [
+            "Suelo circundante compactado adecuadamente.",
+            "Proceso de perforación ejecutado con limpieza de escombros.",
+        ],
+    },
 }
 
 
@@ -529,6 +836,16 @@ def build_template_points(data):
         "estructura metálica": "estructura_metalica",
         "señalización": "senalizacion",
         "acabados": "acabados",
+        "cortinas metálicas": "cortinas_metalicas",
+        "enlaminado": "enlaminado",
+        "canal y flashing": "canal_flashing",
+        "acm": "acm",
+        "alquiler de grúa + operador": "alquiler_grua",
+        "bomba y colocación de concreto": "bomba_concreto",
+        "puertas de madera": "puertas_madera",
+        "elevadores": "elevadores",
+        "pozo mecánico": "pozo_mecanico",
+        "pilotes + nailing": "pilotes_nailing",
     }
 
     field = mapping.get(plantilla)

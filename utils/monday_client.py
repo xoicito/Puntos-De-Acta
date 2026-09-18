@@ -310,6 +310,33 @@ def create_update(item_id, body):
     graphql(q, {"item": str(item_id), "body": body})
 
 
+def create_column(board_id, title, labels):
+    """Create a dropdown (multi-select) column on a board with the given
+    option labels. Returns the new column's id."""
+
+    q = """mutation ($board: ID!, $title: String!, $defaults: JSON) {
+        create_column(
+            board_id: $board,
+            title: $title,
+            column_type: dropdown,
+            defaults: $defaults
+        ) {
+            id
+        }
+    }"""
+
+    result = graphql(
+        q,
+        {
+            "board": str(board_id),
+            "title": title,
+            "defaults": json.dumps({"labels": labels}),
+        },
+    )
+
+    return result["create_column"]["id"]
+
+
 def create_item(board_id, item_name):
     """Create a new item on a board. Returns the new item's id."""
 
