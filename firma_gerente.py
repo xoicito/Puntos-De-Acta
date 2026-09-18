@@ -8,6 +8,8 @@ from config import (
     ACTA_BOARD_ID,
     ACTA_OUTPUT_DIR,
     ACTA_XLSX_COLUMN_ID,
+    FIRMA_BOARD_ID,
+    FIRMA_PA_EDITABLE_COLUMN_ID,
     GERENTE_CONNECT_COLUMN_ID,
     GERENTE_EMAIL_COLUMN_ID,
     GERENTE_FIRMA_ESTADO_COLUMN_ID,
@@ -23,6 +25,7 @@ from utils.acta_builder import item_data
 from utils.excel_writer import insert_signature
 from utils.monday_client import (
     change_status,
+    create_item,
     create_update,
     get_connected_person,
     get_file_public_url,
@@ -135,6 +138,29 @@ def _save_signature_image(output_directory, stem, file_storage=None, data_url=No
     raise ValueError("No se recibio ninguna firma")
 
 
+def _send_to_procurement(item_id, signed_path, data_fields):
+    """Per the approval policy, once both Lider and Gerente have signed (the
+    'PA Inicial'), the request moves to Procurement (Arq. Melissa Alvarenga's
+    board) for review. Creates a new item there and attaches the doubly-
+    signed file to PA EDITABLE - this replaces the old manual upload step.
+    """
+
+    if not FIRMA_BOARD_ID or not FIRMA_PA_EDITABLE_COLUMN_ID:
+        print("GERENTE_FIRMA: board/columna de Procurement no configurados, se omite envio")
+        return
+
+    acta_id = data_fields.get("acta_id") or f"item-{item_id}"
+    proyecto = data_fields.get("proyecto") or ""
+
+    name = f"{acta_id} - {proyecto}".strip(" -")
+
+    new_item_id = create_item(FIRMA_BOARD_ID, name)
+
+    upload_file(new_item_id, FIRMA_PA_EDITABLE_COLUMN_ID, signed_path)
+
+    print(f"GERENTE_FIRMA: enviado a Procurement, item={new_item_id} ({name})")
+
+
 def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None):
     """Verify the token again, insert the signature, upload the result, and
     mark the item as signed. Meant to run on the POST of the signing page -
@@ -188,6 +214,11 @@ def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None)
 
     if GERENTE_FIRMA_ESTADO_COLUMN_ID:
         change_status(item_id, board_id, GERENTE_FIRMA_ESTADO_COLUMN_ID, GERENTE_FIRMA_ESTADO_FIRMADO)
+
+    try:
+        _send_to_procurement(item_id, signed_path, item_data(item))
+    except Exception as e:
+        print(f"GERENTE_FIRMA: no se pudo enviar a Procurement: {e}")
 
     audit = audit or {}
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")

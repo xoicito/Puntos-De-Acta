@@ -1,6 +1,8 @@
 import json
 import re
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from config import (
     ACTA_BOARD_ID,
@@ -16,6 +18,7 @@ from config import (
 )
 from utils.monday_client import (
     change_status,
+    create_update,
     download_file,
     generate_acta_id,
     get_file_public_url,
@@ -33,6 +36,29 @@ def _clean(value):
     return re.sub(r"[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ._-]+", "_", str(value or "")).strip("_")
 
 
+GUATEMALA_TZ = ZoneInfo("America/Guatemala")
+
+
+def _is_late_submission(now=None):
+    """Per the Politica de Aprobacion de Puntos de Acta: requests are
+    accepted Monday 7:00am to Wednesday 10:00am (Guatemala time). Outside
+    that window the request is actually queued for the following week's
+    review cycle - this only flags it, doesn't block generation.
+    """
+
+    now = now or datetime.now(GUATEMALA_TZ)
+    weekday = now.weekday()  # Monday=0 ... Sunday=6
+
+    if weekday == 0:  # lunes
+        return now.hour < 7
+    if weekday == 1:  # martes
+        return False
+    if weekday == 2:  # miercoles
+        return (now.hour, now.minute) >= (10, 0)
+
+    return True  # jueves-domingo
+
+
 def generate_acta(item_id):
     item = get_item(item_id)
     data = item_data(item)
@@ -47,6 +73,19 @@ def generate_acta(item_id):
     print("PUNTOS_GENERALES:", data.get("puntos_generales"))
     print("PLANOS_ENTREGADOS:", data.get("planos_entregados"))
     print("MULTAS_APLICAR =", data.get("multas_aplicar"))
+
+    if _is_late_submission():
+        print("SOLICITUD FUERA DE PLAZO (Lunes 7:00am - Miercoles 10:00am)")
+        try:
+            create_update(
+                item_id,
+                "Esta solicitud se recibio fuera del horario oficial "
+                "(Lunes 7:00am a Miercoles 10:00am) segun la Politica de "
+                "Aprobacion de Puntos de Acta. Sera programada para el "
+                "siguiente ciclo de revision semanal.",
+            )
+        except Exception as e:
+            print(f"ERROR_LATE_FLAG: {e}")
 
     change_status(item_id, board_id, ACTA_STATUS_COLUMN_ID, "Procesando")
 

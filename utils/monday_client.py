@@ -308,3 +308,17 @@ def create_update(item_id, body):
     }"""
 
     graphql(q, {"item": str(item_id), "body": body})
+
+
+def create_item(board_id, item_name):
+    """Create a new item on a board. Returns the new item's id."""
+
+    q = """mutation ($board: ID!, $name: String!) {
+        create_item(board_id: $board, item_name: $name) {
+            id
+        }
+    }"""
+
+    result = graphql(q, {"board": str(board_id), "name": item_name})
+
+    return result["create_item"]["id"]
