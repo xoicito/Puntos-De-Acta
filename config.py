@@ -50,8 +50,10 @@ MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 # ("BASE DATOS GERENTES").
 GERENTE_CONNECT_COLUMN_ID = os.getenv("GERENTE_CONNECT_COLUMN_ID", "board_relation_mm7apess")
 GERENTE_EMAIL_COLUMN_ID = os.getenv("GERENTE_EMAIL_COLUMN_ID", "text_mm7ayzbv")  # board "Gerentes"
-GERENTE_FIRMA_LINK_COLUMN_ID = os.getenv("GERENTE_FIRMA_LINK_COLUMN_ID", "")
-GERENTE_FIRMA_ESTADO_COLUMN_ID = os.getenv("GERENTE_FIRMA_ESTADO_COLUMN_ID", "")
+GERENTE_FIRMA_LINK_COLUMN_ID = os.getenv("GERENTE_FIRMA_LINK_COLUMN_ID", "text_mm7aftw0")  # "Gerente Firma Link"
+GERENTE_FIRMA_ESTADO_COLUMN_ID = os.getenv("GERENTE_FIRMA_ESTADO_COLUMN_ID", "color_mm7a8c8q")  # "Firmado?"
+# TODO: confirmar las etiquetas reales de "Firmado?" - asumiendo Pendiente/Firmado,
+# pero si es un status Si/No hay que ajustar estos dos valores para que coincidan.
 GERENTE_FIRMA_ESTADO_PENDIENTE = os.getenv("GERENTE_FIRMA_ESTADO_PENDIENTE", "Pendiente")
 GERENTE_FIRMA_ESTADO_FIRMADO = os.getenv("GERENTE_FIRMA_ESTADO_FIRMADO", "Firmado")
 GERENTE_FIRMA_PLACEHOLDER = os.getenv("GERENTE_FIRMA_PLACEHOLDER", "{{FIRMA_GERENTE}}")
