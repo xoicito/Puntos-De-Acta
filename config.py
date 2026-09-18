@@ -43,6 +43,15 @@ FIRMA_NOTIFICAR_NOMBRES = [
 
 MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 
+# Interruptor temporal para pruebas: cuando esta en "true", se genera el
+# documento normalmente pero se omite el envio del enlace de firma al
+# Gerente (y por lo tanto tambien todo lo que depende de que el Gerente
+# firme - el paso a Procurement, Melissa, Allan y Julio - ya que nada de
+# eso ocurre sin ese enlace). Util para mostrar el formulario/documento
+# sin notificar a nadie real. Dejar en "false" (o sin configurar) en uso
+# normal.
+TEST_MODE_SKIP_NOTIFICATIONS = os.getenv("TEST_MODE_SKIP_NOTIFICATIONS", "false").strip().lower() == "true"
+
 # Firma del Gerente de Proyecto via enlace único (no requiere sesión de Monday).
 #
 # Flujo: al terminar de generar el acta, se resuelve el correo real del

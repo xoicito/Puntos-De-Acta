@@ -19,6 +19,7 @@ from config import (
     GERENTE_LINK_BASE_URL,
     GERENTE_LINK_EXPIRATION_HOURS,
     GERENTE_FIRMA_LINK_COLUMN_ID,
+    TEST_MODE_SKIP_NOTIFICATIONS,
 )
 from gerente_link import InvalidLinkError, generate_signing_link, verify_token
 from utils.acta_builder import item_data
@@ -49,6 +50,10 @@ def start_gerente_signing(item_id, board_id):
 
     if not GERENTE_CONNECT_COLUMN_ID or not GERENTE_EMAIL_COLUMN_ID:
         print("GERENTE_FIRMA: columnas de Gerente no configuradas, se omite")
+        return
+
+    if TEST_MODE_SKIP_NOTIFICATIONS:
+        print("GERENTE_FIRMA: TEST_MODE_SKIP_NOTIFICATIONS activo, se omite enlace de firma y todo lo posterior")
         return
 
     item = get_item(item_id)
