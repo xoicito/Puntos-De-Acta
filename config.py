@@ -46,8 +46,9 @@ MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 # todavia no haya expirado.
 #
 # Board "Gerentes" = 18431719434, con columna "e-mail" (text_mm7ayzbv).
-# TODO: falta GERENTE_CONNECT_COLUMN_ID (columna Connect Boards en el board principal).
-GERENTE_CONNECT_COLUMN_ID = os.getenv("GERENTE_CONNECT_COLUMN_ID", "")  # board principal
+# Columna Connect Boards en el board principal = board_relation_mm7apess
+# ("BASE DATOS GERENTES").
+GERENTE_CONNECT_COLUMN_ID = os.getenv("GERENTE_CONNECT_COLUMN_ID", "board_relation_mm7apess")
 GERENTE_EMAIL_COLUMN_ID = os.getenv("GERENTE_EMAIL_COLUMN_ID", "text_mm7ayzbv")  # board "Gerentes"
 GERENTE_FIRMA_LINK_COLUMN_ID = os.getenv("GERENTE_FIRMA_LINK_COLUMN_ID", "")
 GERENTE_FIRMA_ESTADO_COLUMN_ID = os.getenv("GERENTE_FIRMA_ESTADO_COLUMN_ID", "")
