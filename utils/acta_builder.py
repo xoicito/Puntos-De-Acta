@@ -39,6 +39,222 @@ MULTAS_OPTION_MAP = {
     "reporteria": "reporteria",
 }
 
+# Cada opción del multi-select del formulario (más simple, para el Líder)
+# se expande a una o más líneas exactas de "Puntos de Revisión Específica"
+# tomadas de la plantilla oficial de ese rubro - así el documento final
+# siempre usa el texto oficial, nunca el texto corto de la opción. Solo
+# cubre los rubros cuya plantilla oficial (100-117) ya se revisó línea por
+# línea; los demás rubros siguen usando el texto de la opción tal cual
+# (comportamiento anterior) hasta que se agregue su plantilla oficial.
+PUNTOS_OPCION_MAP = {
+    "herreria": {
+        "soldaduras completas": [
+            "Soldaduras y uniones estructurales revisadas",
+        ],
+        "soldaduras limpias": [
+            "Limpieza final realizada, sin residuos metálicos",
+        ],
+        "cordones uniformes": [
+            "Material utilizado según especificaciones",
+            "Bordes sin filos peligrosos",
+        ],
+        "aplicación de anticorrosivo": [
+            "Tratamientos anticorrosivos aplicados (galvanizado, pintura)",
+        ],
+        "aplicacion de anticorrosivo": [
+            "Tratamientos anticorrosivos aplicados (galvanizado, pintura)",
+        ],
+        "aplicación de pintura final": [
+            "Acabados bien ejecutados (lijado, pulido, pintura)",
+            "Pintura o esmalte aplicado correctamente",
+            "Estado final documentado y registrado",
+        ],
+        "aplicacion de pintura final": [
+            "Acabados bien ejecutados (lijado, pulido, pintura)",
+            "Pintura o esmalte aplicado correctamente",
+            "Estado final documentado y registrado",
+        ],
+        "anclajes correctos": [
+            "Mecanismos móviles funcionales (bisagras, cerraduras, ruedas)",
+            "Fijaciones y anclajes seguros",
+            "Pruebas de carga exitosas en elementos críticos",
+            "Tornillos y remaches de seguridad instalados correctamente",
+        ],
+        "nivelación": [
+            "Barandales y puertas nivelados y aplomados",
+            "Drenaje funcional en piezas expuestas",
+        ],
+        "nivelacion": [
+            "Barandales y puertas nivelados y aplomados",
+            "Drenaje funcional en piezas expuestas",
+        ],
+        "plomeo": [
+            "Barandales y puertas nivelados y aplomados",
+        ],
+        "alineación": [
+            "Dimensiones y alineación conforme a planos",
+            "Buena integración con otros elementos estructurales",
+        ],
+        "alineacion": [
+            "Dimensiones y alineación conforme a planos",
+            "Buena integración con otros elementos estructurales",
+        ],
+    },
+    "ventaneria": {
+        "nivelación": ["Marcos nivelados y plomados correctamente"],
+        "nivelacion": ["Marcos nivelados y plomados correctamente"],
+        "plomeo": ["Marcos nivelados y plomados correctamente"],
+        "sellos de silicón": [
+            "Burletes y sellado perimetral instalados correctamente",
+        ],
+        "sellos de silicon": [
+            "Burletes y sellado perimetral instalados correctamente",
+        ],
+        "vidrios sin daños": [
+            "Vidrios instalados sin daños, rayones ni burbujas",
+        ],
+        "vidrios sin danos": [
+            "Vidrios instalados sin daños, rayones ni burbujas",
+        ],
+        "anclajes correctos": [
+            "Fijación y anclaje realizados al soporte estructural",
+            "Medidas instaladas conforme a lo cotizado",
+        ],
+        "limpieza final": [
+            "Instalación limpia, sin residuos de sellador ni adhesivos",
+        ],
+        "funcionamiento de hojas móviles": [
+            "Mecanismos de apertura y cierre funcionando correctamente",
+        ],
+        "funcionamiento de hojas moviles": [
+            "Mecanismos de apertura y cierre funcionando correctamente",
+        ],
+        "acabados completos": [
+            "Material instalado concuerda con lo cotizado",
+            "Herrajes y accesorios colocados según especificación",
+            "Alineación correcta con otras ventanas del proyecto",
+            "Integración adecuada con acabados contiguos (pintura, yeso)",
+            "Perfiles sin deformaciones visibles por instalación",
+        ],
+    },
+    "tabla_yeso": {
+        "nivelación": [
+            "Paneles alineados y nivelados según diseño",
+            "Nivelación verificada con láser en grandes superficies",
+        ],
+        "nivelacion": [
+            "Paneles alineados y nivelados según diseño",
+            "Nivelación verificada con láser en grandes superficies",
+        ],
+        "plomeo": [
+            "Estructura soporte instalada correctamente (montantes y canales)",
+            "Fijaciones realizadas con separación y cantidad adecuada",
+            "Resistencia estructural del panel comprobada",
+            "Paneles en techos suspendidos presentan estabilidad",
+        ],
+        "uniones tratadas": [
+            "Juntas tratadas con cinta y masilla en todas las uniones",
+            "Insonorización adecuada en paredes divisorias",
+        ],
+        "juntas lijadas": [
+            "Cortes limpios realizados en esquinas, puertas y ventanas",
+        ],
+        "acabado uniforme": [
+            "Materiales empleados cumplen con especificaciones de proyecto",
+            "Integración adecuada con molduras, pisos y otros acabados",
+        ],
+        "ausencia de grietas": [
+            "Refuerzos colocados en puntos críticos según requerimientos",
+        ],
+        "pintura completa": [
+            "Acabado superficial sin fisuras ni imperfecciones",
+        ],
+        "limpieza final": [
+            "Limpieza completa de polvo y residuos previo a acabado final",
+        ],
+    },
+    "pintura": {
+        "cobertura uniforme": [
+            "Aplicación uniforme y con buen acabado",
+            "Compatibilidad entre diferentes pinturas comprobada",
+        ],
+        "color correcto": [
+            "Tipo y color de pintura aplicados según especificaciones",
+        ],
+        "sin manchas": [
+            "Superficie sin escurrimientos, burbujas ni manchas",
+        ],
+        "sin escurrimientos": [
+            "Superficie sin escurrimientos, burbujas ni manchas",
+        ],
+        "preparación adecuada de superficie": [
+            "Adherencia comprobada satisfactoriamente",
+            "Imprimantes y selladores aplicados correctamente",
+            "Compatibilidad de pintura con material base verificada",
+        ],
+        "preparacion adecuada de superficie": [
+            "Adherencia comprobada satisfactoriamente",
+            "Imprimantes y selladores aplicados correctamente",
+            "Compatibilidad de pintura con material base verificada",
+        ],
+        "acabado final aprobado": [
+            "Esquinas, uniones y bordes bien detallados",
+            "Textura y acabado final conforme a lo especificado (mate, satinado, brillante)",
+            "Retoques realizados tras instalación de otros elementos",
+        ],
+        "limpieza final": [
+            "Zonas no deseadas libres de residuos de pintura",
+        ],
+    },
+    "electricidad": {
+        "pruebas de funcionamiento": [
+            "Continuidad y resistencia eléctrica verificadas",
+            "Pruebas de carga y amperaje realizadas con éxito",
+            "Luminarias instaladas y funcionando correctamente",
+            "Conductores con aislamiento verificado en pruebas de resistencia",
+            "Iluminación de emergencia funcional y conforme a diseño",
+        ],
+        "canalización correcta": [
+            "Instalación realizada según planos eléctricos y normativa",
+            "Canalizaciones y cajas ubicadas conforme a diseño",
+            "Bandejas y canalizaciones correctamente fijadas",
+            "Ductos eléctricos con integridad estructural confirmada",
+        ],
+        "canalizacion correcta": [
+            "Instalación realizada según planos eléctricos y normativa",
+            "Canalizaciones y cajas ubicadas conforme a diseño",
+            "Bandejas y canalizaciones correctamente fijadas",
+            "Ductos eléctricos con integridad estructural confirmada",
+        ],
+        "etiquetado de circuitos": [
+            "Circuitos eléctricos rotulados y documentados correctamente",
+        ],
+        "conexiones seguras": [
+            "Cableado instalado con el calibre y tipo especificado",
+            "Conexiones y empalmes revisados en tableros y cajas",
+            "Compatibilidad entre conductores y térmicos verificada",
+            "Fases correctamente conectadas en sistemas trifásicos",
+        ],
+        "tableros identificados": [
+            "Interruptores diferenciales presentes en tableros",
+            "Protecciones contra sobretensiones instalad",
+            "Dispositivos de control energético instalados correctamente",
+        ],
+        "voltajes correctos": [
+            "Polaridad verificada en tomacorrientes y conexiones",
+            "Caída de tensión dentro de rangos aceptables",
+        ],
+        "puesta a tierra": [
+            "Puesta a tierra instalada en equipos y tableros",
+        ],
+        # "Limpieza final" no tiene una línea correspondiente en la
+        # plantilla oficial de Electricidad (ningún punto menciona
+        # limpieza) - se deja sin mapear a propósito, en vez de forzar
+        # una coincidencia que no aplica.
+        "limpieza final": [],
+    },
+}
+
 
 def _values(item):
     """Extract column values from an item as a dictionary."""
@@ -322,12 +538,31 @@ def build_template_points(data):
 
     values = data.get(field) or ""
 
-    points = [
+    selected_options = [
         x.strip()
         for x in values.split(",")
         if x.strip()
         and x.strip().lower() != "otros"
     ]
+
+    option_map = PUNTOS_OPCION_MAP.get(field)
+
+    if option_map:
+        # El texto oficial de la plantilla, expandido desde cada opción
+        # elegida (una opción puede cubrir una o varias líneas) -
+        # deduplicado por si dos opciones comparten la misma línea.
+        points = []
+        seen = set()
+
+        for option in selected_options:
+            for line in option_map.get(option.lower(), [option]):
+                if line not in seen:
+                    seen.add(line)
+                    points.append(line)
+    else:
+        # Todavía no se revisó la plantilla oficial de este rubro -
+        # se usa el texto de la opción tal cual, como antes.
+        points = selected_options
 
     points.extend(split_lines(data.get("otros_revision")))
 
