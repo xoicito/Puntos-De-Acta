@@ -1,0 +1,193 @@
+import base64
+from pathlib import Path
+
+from openpyxl import load_workbook
+
+from config import (
+    ACTA_BOARD_ID,
+    ACTA_OUTPUT_DIR,
+    ACTA_XLSX_COLUMN_ID,
+    GERENTE_FIRMA_ESTADO_COLUMN_ID,
+    GERENTE_FIRMA_ESTADO_FIRMADO,
+    GERENTE_FIRMA_ESTADO_PENDIENTE,
+    GERENTE_FIRMA_PLACEHOLDER,
+    GERENTE_LINK_BASE_URL,
+    GERENTE_LINK_EXPIRATION_HOURS,
+    GERENTE_PERSON_COLUMN_ID,
+    GERENTE_FIRMA_LINK_COLUMN_ID,
+)
+from gerente_link import InvalidLinkError, generate_signing_link, verify_token
+from utils.acta_builder import item_data
+from utils.excel_writer import insert_signature
+from utils.monday_client import (
+    change_status,
+    create_update,
+    get_file_public_url,
+    get_item,
+    get_person,
+    download_file,
+    update_text_column,
+    upload_file,
+)
+
+
+def start_gerente_signing(item_id, board_id):
+    """Called right after a Punto de Acta is generated: resolve the real
+    Gerente de Proyecto from Monday (Person column, not free text), send
+    him a signing link, and notify him inside Monday too.
+
+    No-ops quietly (just logs) if the Person column isn't configured yet or
+    nobody's assigned - this is meant to be safe to call unconditionally
+    from generate_acta.py.
+    """
+
+    if not GERENTE_PERSON_COLUMN_ID:
+        print("GERENTE_FIRMA: GERENTE_PERSON_COLUMN_ID no configurado, se omite")
+        return
+
+    item = get_item(item_id)
+    name, email = get_person(item, GERENTE_PERSON_COLUMN_ID)
+
+    if not email:
+        print(f"GERENTE_FIRMA: item={item_id} sin Gerente de Proyecto asignado, se omite")
+        return
+
+    link = generate_signing_link(item_id, board_id)
+
+    if GERENTE_FIRMA_ESTADO_COLUMN_ID:
+        change_status(item_id, board_id, GERENTE_FIRMA_ESTADO_COLUMN_ID, GERENTE_FIRMA_ESTADO_PENDIENTE)
+
+    if GERENTE_FIRMA_LINK_COLUMN_ID:
+        update_text_column(item_id, board_id, GERENTE_FIRMA_LINK_COLUMN_ID, link)
+
+    try:
+        create_update(
+            item_id,
+            f"El Punto de Acta esta listo para la firma de {name or 'Gerente de Proyecto'}. "
+            f"Enlace de firma (valido {GERENTE_LINK_EXPIRATION_HOURS}h): {link}",
+        )
+    except Exception as e:
+        print(f"GERENTE_FIRMA: no se pudo publicar el update en Monday: {e}")
+
+    print(f"GERENTE_FIRMA: enlace generado para {name} <{email}> item={item_id}")
+
+
+def resolve_signing_context(token):
+    """Validate the token and load what the signing page needs to show.
+
+    Raises InvalidLinkError (bad/expired token) or LookupError (already
+    signed) with a message safe to display to the signer.
+    """
+
+    data = verify_token(token)
+    item_id = data["item_id"]
+    board_id = data["board_id"]
+
+    item = get_item(item_id)
+    data_fields = item_data(item)
+
+    if GERENTE_FIRMA_ESTADO_COLUMN_ID:
+        estado = ""
+        for c in item.get("column_values", []):
+            if c["id"] == GERENTE_FIRMA_ESTADO_COLUMN_ID:
+                estado = (c.get("text") or "").strip()
+                break
+
+        if estado == GERENTE_FIRMA_ESTADO_FIRMADO:
+            raise LookupError("Este Punto de Acta ya fue firmado.")
+
+    return {
+        "item_id": item_id,
+        "board_id": board_id,
+        "proyecto": data_fields.get("proyecto", ""),
+        "no_contrato": data_fields.get("no_contrato", ""),
+        "empresa": data_fields.get("empresa", ""),
+    }
+
+
+def _save_signature_image(output_directory, stem, file_storage=None, data_url=None):
+    if file_storage is not None and file_storage.filename:
+        suffix = Path(file_storage.filename).suffix or ".png"
+        path = str(output_directory / f"{stem}_firma_gerente{suffix}")
+        file_storage.save(path)
+        return path
+
+    if data_url:
+        header, _, encoded = data_url.partition(",")
+        if not encoded:
+            raise ValueError("Firma dibujada vacia")
+        image_bytes = base64.b64decode(encoded)
+        path = str(output_directory / f"{stem}_firma_gerente.png")
+        Path(path).write_bytes(image_bytes)
+        return path
+
+    raise ValueError("No se recibio ninguna firma")
+
+
+def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None):
+    """Verify the token again, insert the signature, upload the result, and
+    mark the item as signed. Meant to run on the POST of the signing page -
+    never trust the GET's validation alone.
+    """
+
+    data = verify_token(token)
+    item_id = data["item_id"]
+    board_id = data["board_id"]
+
+    if GERENTE_FIRMA_ESTADO_COLUMN_ID:
+        item = get_item(item_id)
+        estado = ""
+        for c in item.get("column_values", []):
+            if c["id"] == GERENTE_FIRMA_ESTADO_COLUMN_ID:
+                estado = (c.get("text") or "").strip()
+                break
+
+        if estado == GERENTE_FIRMA_ESTADO_FIRMADO:
+            raise LookupError("Este Punto de Acta ya fue firmado.")
+    else:
+        item = get_item(item_id)
+
+    editable_url = get_file_public_url(item, ACTA_XLSX_COLUMN_ID)
+
+    if not editable_url:
+        raise ValueError("El item no tiene un acta generada todavia")
+
+    output_directory = Path(ACTA_OUTPUT_DIR)
+    output_directory.mkdir(parents=True, exist_ok=True)
+
+    stem = f"item_{item_id}"
+
+    suffix = Path(editable_url.split("?")[0]).suffix or ".xlsx"
+    source_path = str(output_directory / f"{stem}_actual{suffix}")
+    download_file(editable_url, source_path)
+
+    signature_path = _save_signature_image(
+        output_directory, stem, file_storage=file_storage, data_url=data_url
+    )
+
+    wb = load_workbook(source_path)
+    ws = wb["C-9-12"] if "C-9-12" in wb.sheetnames else wb.active
+
+    signed_ok = insert_signature(
+        ws,
+        signature_path,
+        top_left="H128",
+        cols=("H", "I", "J"),
+        rows=(128, 129, 130, 131),
+        placeholder=GERENTE_FIRMA_PLACEHOLDER,
+    )
+
+    if not signed_ok:
+        raise RuntimeError("No se pudo insertar la firma en el documento")
+
+    signed_path = str(output_directory / f"{stem}_firmado.xlsx")
+    wb.save(signed_path)
+
+    upload_file(item_id, ACTA_XLSX_COLUMN_ID, signed_path)
+
+    if GERENTE_FIRMA_ESTADO_COLUMN_ID:
+        change_status(item_id, board_id, GERENTE_FIRMA_ESTADO_COLUMN_ID, GERENTE_FIRMA_ESTADO_FIRMADO)
+
+    print(f"GERENTE_FIRMA: item={item_id} firmado - {audit}")
+
+    return {"item_id": item_id}

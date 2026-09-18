@@ -25,6 +25,7 @@ from utils.monday_client import (
 )
 from utils.acta_builder import build_blocks, display_date, item_data, pct
 from utils.excel_writer import render_excel
+from firma_gerente import start_gerente_signing
 
 
 def _clean(value):
@@ -128,6 +129,11 @@ def generate_acta(item_id):
         upload_file(item_id, ACTA_XLSX_COLUMN_ID, xlsx)
 
         change_status(item_id, board_id, ACTA_STATUS_COLUMN_ID, "Generado")
+
+        try:
+            start_gerente_signing(item_id, board_id)
+        except Exception as e:
+            print(f"GERENTE_FIRMA: no se pudo iniciar el flujo de firma: {e}")
 
         return {"xlsx": xlsx, "name": stem}
 

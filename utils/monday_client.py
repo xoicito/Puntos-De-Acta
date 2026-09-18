@@ -285,3 +285,59 @@ def download_file(url, dest_path):
     Path(dest_path).write_bytes(response.content)
 
     return dest_path
+
+
+def get_person(item, column_id):
+    """Return (name, email) of the first person in a Person-type column, or (None, None).
+
+    Reads the actual registered Monday account behind the column - not the
+    column's display text - so the recipient can't be spoofed by typing a
+    different name/email somewhere else.
+    """
+
+    raw_value = None
+
+    for c in item.get("column_values", []):
+        if c["id"] == column_id:
+            raw_value = c.get("value")
+            break
+
+    if not raw_value:
+        return None, None
+
+    try:
+        parsed = json.loads(raw_value)
+    except (TypeError, ValueError):
+        return None, None
+
+    persons = parsed.get("personsAndTeams") or []
+    person_ids = [str(p["id"]) for p in persons if p.get("kind") == "person"]
+
+    if not person_ids:
+        return None, None
+
+    q = """query ($ids: [ID!]!) {
+        users(ids: $ids) {
+            name
+            email
+        }
+    }"""
+
+    users = graphql(q, {"ids": person_ids})["users"]
+
+    if not users:
+        return None, None
+
+    return users[0]["name"], users[0]["email"]
+
+
+def create_update(item_id, body):
+    """Post an update (comment) on an item - shows in its activity feed."""
+
+    q = """mutation ($item: ID!, $body: String!) {
+        create_update(item_id: $item, body: $body) {
+            id
+        }
+    }"""
+
+    graphql(q, {"item": str(item_id), "body": body})

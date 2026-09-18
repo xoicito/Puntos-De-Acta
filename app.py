@@ -3,10 +3,12 @@ import os
 from flask import Flask, jsonify
 
 from acta_routes import acta_bp
+from firma_gerente_routes import firma_gerente_bp
 
 
 app = Flask(__name__)
 app.register_blueprint(acta_bp)
+app.register_blueprint(firma_gerente_bp)
 
 
 @app.get("/")

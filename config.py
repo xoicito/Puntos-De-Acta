@@ -26,6 +26,37 @@ MELISSA_SIGNATURE_PATH = os.getenv("MELISSA_SIGNATURE_PATH", "assets/firma_melis
 
 MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 
+# Firma del Gerente de Proyecto via enlace único (no requiere sesión de Monday).
+#
+# Flujo: al terminar de generar el acta, se resuelve el correo real del
+# Gerente desde un Person column de Monday (no texto libre - evita que el
+# Lider ponga su propio correo y se autoapruebe), se genera un enlace
+# firmado y con expiracion, y se escribe en GERENTE_FIRMA_LINK_COLUMN_ID -
+# una automatizacion de Monday (configurada en la UI, no en este codigo)
+# envia el correo cuando esa columna cambia. Tambien se publica un update
+# en el item para que le llegue notificacion dentro de Monday.
+#
+# El token no se guarda en ningun lado: es un valor firmado (itsdangerous)
+# que se verifica solo, y expira solo, sin base de datos nueva. Lo unico
+# que se persiste es el estado "Pendiente"/"Firmado" en Monday, que sirve
+# como el control de un solo uso: un token ya firmado se rechaza aunque
+# todavia no haya expirado.
+#
+# TODO: pending real IDs para todo lo de esta seccion.
+GERENTE_PERSON_COLUMN_ID = os.getenv("GERENTE_PERSON_COLUMN_ID", "")
+GERENTE_FIRMA_LINK_COLUMN_ID = os.getenv("GERENTE_FIRMA_LINK_COLUMN_ID", "")
+GERENTE_FIRMA_ESTADO_COLUMN_ID = os.getenv("GERENTE_FIRMA_ESTADO_COLUMN_ID", "")
+GERENTE_FIRMA_ESTADO_PENDIENTE = os.getenv("GERENTE_FIRMA_ESTADO_PENDIENTE", "Pendiente")
+GERENTE_FIRMA_ESTADO_FIRMADO = os.getenv("GERENTE_FIRMA_ESTADO_FIRMADO", "Firmado")
+GERENTE_FIRMA_PLACEHOLDER = os.getenv("GERENTE_FIRMA_PLACEHOLDER", "{{FIRMA_GERENTE}}")
+
+# Debe ser un valor fijo y secreto (no lo genere al azar en cada arranque -
+# eso invalidaria todos los enlaces pendientes en cada despliegue). Config
+# en Render como variable de entorno real, nunca en el codigo.
+GERENTE_LINK_SECRET_KEY = os.getenv("GERENTE_LINK_SECRET_KEY", "")
+GERENTE_LINK_BASE_URL = os.getenv("GERENTE_LINK_BASE_URL", "https://puntos-de-acta.onrender.com")
+GERENTE_LINK_EXPIRATION_HOURS = int(os.getenv("GERENTE_LINK_EXPIRATION_HOURS", "72"))
+
 # "Elegir la manera de firma del Lider de Proyecto" dropdown: "Subir PNG"
 # (SIGNATURE_COLUMN_ID = file80ymdmtg) or "Dibujarla", Monday's built-in
 # signing experience (FIRMA_MONDAY_COLUMN_ID = signature9vmootoj). Both
