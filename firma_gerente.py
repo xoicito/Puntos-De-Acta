@@ -8,13 +8,14 @@ from config import (
     ACTA_BOARD_ID,
     ACTA_OUTPUT_DIR,
     ACTA_XLSX_COLUMN_ID,
+    GERENTE_CONNECT_COLUMN_ID,
+    GERENTE_EMAIL_COLUMN_ID,
     GERENTE_FIRMA_ESTADO_COLUMN_ID,
     GERENTE_FIRMA_ESTADO_FIRMADO,
     GERENTE_FIRMA_ESTADO_PENDIENTE,
     GERENTE_FIRMA_PLACEHOLDER,
     GERENTE_LINK_BASE_URL,
     GERENTE_LINK_EXPIRATION_HOURS,
-    GERENTE_PERSON_COLUMN_ID,
     GERENTE_FIRMA_LINK_COLUMN_ID,
 )
 from gerente_link import InvalidLinkError, generate_signing_link, verify_token
@@ -23,9 +24,9 @@ from utils.excel_writer import insert_signature
 from utils.monday_client import (
     change_status,
     create_update,
+    get_connected_person,
     get_file_public_url,
     get_item,
-    get_person,
     download_file,
     update_text_column,
     upload_file,
@@ -34,20 +35,21 @@ from utils.monday_client import (
 
 def start_gerente_signing(item_id, board_id):
     """Called right after a Punto de Acta is generated: resolve the real
-    Gerente de Proyecto from Monday (Person column, not free text), send
-    him a signing link, and notify him inside Monday too.
+    Gerente de Proyecto through the Connect Boards column (linked to the
+    "Gerentes" board - never free text a Lider could fake), send him a
+    signing link, and notify him inside Monday too.
 
-    No-ops quietly (just logs) if the Person column isn't configured yet or
-    nobody's assigned - this is meant to be safe to call unconditionally
+    No-ops quietly (just logs) if the connect column isn't configured yet
+    or nobody's linked - this is meant to be safe to call unconditionally
     from generate_acta.py.
     """
 
-    if not GERENTE_PERSON_COLUMN_ID:
-        print("GERENTE_FIRMA: GERENTE_PERSON_COLUMN_ID no configurado, se omite")
+    if not GERENTE_CONNECT_COLUMN_ID or not GERENTE_EMAIL_COLUMN_ID:
+        print("GERENTE_FIRMA: columnas de Gerente no configuradas, se omite")
         return
 
     item = get_item(item_id)
-    name, email = get_person(item, GERENTE_PERSON_COLUMN_ID)
+    name, email = get_connected_person(item, GERENTE_CONNECT_COLUMN_ID, GERENTE_EMAIL_COLUMN_ID)
 
     if not email:
         print(f"GERENTE_FIRMA: item={item_id} sin Gerente de Proyecto asignado, se omite")

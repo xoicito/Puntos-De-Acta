@@ -29,12 +29,15 @@ MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 # Firma del Gerente de Proyecto via enlace único (no requiere sesión de Monday).
 #
 # Flujo: al terminar de generar el acta, se resuelve el correo real del
-# Gerente desde un Person column de Monday (no texto libre - evita que el
-# Lider ponga su propio correo y se autoapruebe), se genera un enlace
-# firmado y con expiracion, y se escribe en GERENTE_FIRMA_LINK_COLUMN_ID -
-# una automatizacion de Monday (configurada en la UI, no en este codigo)
-# envia el correo cuando esa columna cambia. Tambien se publica un update
-# en el item para que le llegue notificacion dentro de Monday.
+# Gerente a traves de un Connect Boards column ("Gerente de Proyecto" en
+# el board principal) que apunta a un board "Gerentes" (un item por
+# persona, con su correo). El Lider solo puede elegir entre los items que
+# existan ahi - nunca escribe un correo el mismo - y el equipo puede
+# agregar gerentes nuevos agregando items a ese board, sin tocar codigo.
+# Se genera un enlace firmado y con expiracion, y se escribe en
+# GERENTE_FIRMA_LINK_COLUMN_ID - una automatizacion de Monday (configurada
+# en la UI, no en este codigo) envia el correo cuando esa columna cambia.
+# Tambien se publica un update en el item para notificacion dentro de Monday.
 #
 # El token no se guarda en ningun lado: es un valor firmado (itsdangerous)
 # que se verifica solo, y expira solo, sin base de datos nueva. Lo unico
@@ -43,7 +46,8 @@ MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 # todavia no haya expirado.
 #
 # TODO: pending real IDs para todo lo de esta seccion.
-GERENTE_PERSON_COLUMN_ID = os.getenv("GERENTE_PERSON_COLUMN_ID", "")
+GERENTE_CONNECT_COLUMN_ID = os.getenv("GERENTE_CONNECT_COLUMN_ID", "")  # board principal
+GERENTE_EMAIL_COLUMN_ID = os.getenv("GERENTE_EMAIL_COLUMN_ID", "")  # board "Gerentes"
 GERENTE_FIRMA_LINK_COLUMN_ID = os.getenv("GERENTE_FIRMA_LINK_COLUMN_ID", "")
 GERENTE_FIRMA_ESTADO_COLUMN_ID = os.getenv("GERENTE_FIRMA_ESTADO_COLUMN_ID", "")
 GERENTE_FIRMA_ESTADO_PENDIENTE = os.getenv("GERENTE_FIRMA_ESTADO_PENDIENTE", "Pendiente")
@@ -70,7 +74,7 @@ FIRMA_MONDAY_COLUMN_ID = os.getenv("FIRMA_MONDAY_COLUMN_ID", "signature9vmootoj"
 COLUMN_ALIASES = {
     "plantilla": ["single_selectb2r025a"],
     "lider_proyecto": ["short_textoea3ks5w"],
-    "gerente_proyecto": ["short_textlyk3dimh"],
+    "gerente_proyecto": ["short_textlyk3dimh", GERENTE_CONNECT_COLUMN_ID],
     "acta_id": ["text_mm736ka4"],
     "multas_aplicar": [MULTAS_COLUMN_ID],
     "metodo_firma": [METODO_FIRMA_COLUMN_ID],

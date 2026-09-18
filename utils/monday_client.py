@@ -287,18 +287,21 @@ def download_file(url, dest_path):
     return dest_path
 
 
-def get_person(item, column_id):
-    """Return (name, email) of the first person in a Person-type column, or (None, None).
+def get_connected_person(item, connect_column_id, email_column_id):
+    """Resolve a Connect Boards column to (name, email) of the linked item.
 
-    Reads the actual registered Monday account behind the column - not the
-    column's display text - so the recipient can't be spoofed by typing a
-    different name/email somewhere else.
+    The name comes from the linked item's own name; the email from a
+    column on that linked item (e.g. a "Gerentes" board with one item per
+    person). Returns (None, None) if nothing is linked. Restricting who
+    can be picked is a property of the connected board itself (only items
+    that exist there are selectable) and of who can edit that board - not
+    something this function needs to enforce.
     """
 
     raw_value = None
 
     for c in item.get("column_values", []):
-        if c["id"] == column_id:
+        if c["id"] == connect_column_id:
             raw_value = c.get("value")
             break
 
@@ -310,25 +313,40 @@ def get_person(item, column_id):
     except (TypeError, ValueError):
         return None, None
 
-    persons = parsed.get("personsAndTeams") or []
-    person_ids = [str(p["id"]) for p in persons if p.get("kind") == "person"]
+    linked_ids = [
+        str(p["linkedPulseId"])
+        for p in (parsed.get("linkedPulseIds") or [])
+        if p.get("linkedPulseId")
+    ]
 
-    if not person_ids:
+    if not linked_ids:
         return None, None
 
     q = """query ($ids: [ID!]!) {
-        users(ids: $ids) {
+        items(ids: $ids) {
             name
-            email
+            column_values {
+                id
+                text
+            }
         }
     }"""
 
-    users = graphql(q, {"ids": person_ids})["users"]
+    items = graphql(q, {"ids": linked_ids})["items"]
 
-    if not users:
+    if not items:
         return None, None
 
-    return users[0]["name"], users[0]["email"]
+    linked_item = items[0]
+    name = linked_item.get("name")
+    email = None
+
+    for c in linked_item.get("column_values", []):
+        if c["id"] == email_column_id:
+            email = (c.get("text") or "").strip() or None
+            break
+
+    return name, email
 
 
 def create_update(item_id, body):
