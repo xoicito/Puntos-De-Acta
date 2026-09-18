@@ -29,6 +29,18 @@ FIRMA_PA_FIRMADO_COLUMN_ID = os.getenv("FIRMA_PA_FIRMADO_COLUMN_ID", "file_mm793
 FIRMA_PLACEHOLDER = os.getenv("FIRMA_PLACEHOLDER", "{{FIRMA_MELISSA}}")
 MELISSA_SIGNATURE_PATH = os.getenv("MELISSA_SIGNATURE_PATH", "assets/firma_melissa.jpg")
 
+# Notificados dentro de Monday (actividad del item) cuando Arq. Melissa
+# Alvarenga firma. El correo real a estas mismas personas se maneja aparte,
+# con una automatizacion de Monday (destinatarios fijos, no depende de
+# ninguna columna) - no necesita codigo.
+FIRMA_NOTIFICAR_NOMBRES = [
+    n.strip()
+    for n in os.getenv(
+        "FIRMA_NOTIFICAR_NOMBRES", "Allan Montenegro,Julio Tobar"
+    ).split(",")
+    if n.strip()
+]
+
 MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 
 # Firma del Gerente de Proyecto via enlace único (no requiere sesión de Monday).

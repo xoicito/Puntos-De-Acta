@@ -4,12 +4,14 @@ from openpyxl import load_workbook
 
 from config import (
     ACTA_OUTPUT_DIR,
+    FIRMA_NOTIFICAR_NOMBRES,
     FIRMA_PA_EDITABLE_COLUMN_ID,
     FIRMA_PA_FIRMADO_COLUMN_ID,
     FIRMA_PLACEHOLDER,
     MELISSA_SIGNATURE_PATH,
 )
 from utils.monday_client import (
+    create_update,
     download_file,
     get_file_public_url,
     get_item,
@@ -60,6 +62,17 @@ def sign_document(item_id):
     wb.save(signed_path)
 
     upload_file(item_id, FIRMA_PA_FIRMADO_COLUMN_ID, signed_path)
+
+    if FIRMA_NOTIFICAR_NOMBRES:
+        try:
+            nombres = ", ".join(FIRMA_NOTIFICAR_NOMBRES)
+            create_update(
+                item_id,
+                f"Arq. Melissa Alvarenga firmo el Punto de Acta. "
+                f"Notificando a: {nombres}.",
+            )
+        except Exception as e:
+            print(f"FIRMA_MELISSA: no se pudo publicar la notificacion: {e}")
 
     return {"signed": signed_path}
 
