@@ -16,9 +16,9 @@ SIGNATURE_COLUMN_ID = os.getenv("SIGNATURE_COLUMN_ID", "file80ymdmtg")
 
 # Alcance de Cotizacion: el Lider sube una copia llena de
 # templates/PLANTILLA_ALCANCE_COTIZACION.xlsx a esta columna (tipo
-# archivo) en el board principal, en lugar de capturar renglones en un
-# board aparte. TODO: falta el ID real de esta columna.
-COTIZACION_FILE_COLUMN_ID = os.getenv("COTIZACION_FILE_COLUMN_ID", "")
+# archivo, "Alcance Cotizacion") en el board principal, en lugar de
+# capturar renglones en un board aparte.
+COTIZACION_FILE_COLUMN_ID = os.getenv("COTIZACION_FILE_COLUMN_ID", "filezsaxj0qk")
 
 # Board de Aprobación (firma de Arq. Melissa Alvarenga)
 FIRMA_BOARD_ID = int(os.getenv("FIRMA_BOARD_ID", "18419366411"))
