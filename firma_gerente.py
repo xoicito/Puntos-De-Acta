@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime, timezone
 from pathlib import Path
 
 from openpyxl import load_workbook
@@ -72,6 +73,22 @@ def start_gerente_signing(item_id, board_id):
     print(f"GERENTE_FIRMA: enlace generado para {name} <{email}> item={item_id}")
 
 
+def _current_estado(item):
+    if not GERENTE_FIRMA_ESTADO_COLUMN_ID:
+        return ""
+
+    for c in item.get("column_values", []):
+        if c["id"] == GERENTE_FIRMA_ESTADO_COLUMN_ID:
+            return (c.get("text") or "").strip()
+
+    return ""
+
+
+def _reject_if_already_signed(item):
+    if _current_estado(item) == GERENTE_FIRMA_ESTADO_FIRMADO:
+        raise LookupError("Este Punto de Acta ya fue firmado.")
+
+
 def resolve_signing_context(token):
     """Validate the token and load what the signing page needs to show.
 
@@ -86,15 +103,7 @@ def resolve_signing_context(token):
     item = get_item(item_id)
     data_fields = item_data(item)
 
-    if GERENTE_FIRMA_ESTADO_COLUMN_ID:
-        estado = ""
-        for c in item.get("column_values", []):
-            if c["id"] == GERENTE_FIRMA_ESTADO_COLUMN_ID:
-                estado = (c.get("text") or "").strip()
-                break
-
-        if estado == GERENTE_FIRMA_ESTADO_FIRMADO:
-            raise LookupError("Este Punto de Acta ya fue firmado.")
+    _reject_if_already_signed(item)
 
     return {
         "item_id": item_id,
@@ -134,18 +143,8 @@ def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None)
     item_id = data["item_id"]
     board_id = data["board_id"]
 
-    if GERENTE_FIRMA_ESTADO_COLUMN_ID:
-        item = get_item(item_id)
-        estado = ""
-        for c in item.get("column_values", []):
-            if c["id"] == GERENTE_FIRMA_ESTADO_COLUMN_ID:
-                estado = (c.get("text") or "").strip()
-                break
-
-        if estado == GERENTE_FIRMA_ESTADO_FIRMADO:
-            raise LookupError("Este Punto de Acta ya fue firmado.")
-    else:
-        item = get_item(item_id)
+    item = get_item(item_id)
+    _reject_if_already_signed(item)
 
     editable_url = get_file_public_url(item, ACTA_XLSX_COLUMN_ID)
 
@@ -187,6 +186,21 @@ def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None)
 
     if GERENTE_FIRMA_ESTADO_COLUMN_ID:
         change_status(item_id, board_id, GERENTE_FIRMA_ESTADO_COLUMN_ID, GERENTE_FIRMA_ESTADO_FIRMADO)
+
+    audit = audit or {}
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    # Written into Monday's own activity feed rather than just printed, so
+    # this survives Render's log rotation - it's the actual audit record.
+    try:
+        create_update(
+            item_id,
+            f"Documento firmado por el Gerente de Proyecto el {timestamp}. "
+            f"IP: {audit.get('ip', 'desconocida')} - "
+            f"Dispositivo: {audit.get('user_agent', 'desconocido')}",
+        )
+    except Exception as e:
+        print(f"GERENTE_FIRMA: no se pudo publicar el registro de auditoria: {e}")
 
     print(f"GERENTE_FIRMA: item={item_id} firmado - {audit}")
 

@@ -1,9 +1,43 @@
+import time
+from collections import defaultdict
+from functools import wraps
+
 from flask import Blueprint, request
 
 from firma_gerente import apply_gerente_signature, resolve_signing_context
 from gerente_link import InvalidLinkError
 
 firma_gerente_bp = Blueprint("firma_gerente_bp", __name__)
+
+
+# The signing token itself can't realistically be brute-forced (it's a
+# cryptographically signed value), but this still limits how fast any one
+# IP can hammer the endpoint - basic defense-in-depth against scripted
+# probing or accidental retry loops. In-memory, so it resets per worker
+# process and isn't shared across multiple gunicorn workers - good enough
+# for this app's traffic, not a substitute for a real shared rate limiter
+# if this ever needs to scale beyond a single small deployment.
+_RATE_LIMIT_WINDOW_SECONDS = 60
+_RATE_LIMIT_MAX_REQUESTS = 20
+_request_log = defaultdict(list)
+
+
+def _rate_limited(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        ip = request.headers.get("X-Forwarded-For", request.remote_addr) or "unknown"
+        now = time.time()
+
+        recent = [t for t in _request_log[ip] if now - t < _RATE_LIMIT_WINDOW_SECONDS]
+        recent.append(now)
+        _request_log[ip] = recent
+
+        if len(recent) > _RATE_LIMIT_MAX_REQUESTS:
+            return _error_page("Demasiados intentos. Espere un momento e intente de nuevo."), 429
+
+        return fn(*args, **kwargs)
+
+    return wrapper
 
 
 PAGE_STYLE = """
@@ -156,6 +190,7 @@ def _form_page(ctx):
 
 
 @firma_gerente_bp.get("/firmar-gerente/<token>")
+@_rate_limited
 def firmar_gerente_form(token):
     try:
         ctx = resolve_signing_context(token)
@@ -171,6 +206,7 @@ def firmar_gerente_form(token):
 
 
 @firma_gerente_bp.post("/firmar-gerente/<token>")
+@_rate_limited
 def firmar_gerente_submit(token):
     audit = {
         "ip": request.headers.get("X-Forwarded-For", request.remote_addr),
