@@ -42,8 +42,8 @@ Este es un flujo independiente, en un board distinto (`FIRMA_BOARD_ID`), que no 
 1. Alguien sube el Excel editable del acta a la columna **PA EDITABLE** (`FIRMA_PA_EDITABLE_COLUMN_ID`) de un item en el board de Aprobación.
 2. Melissa cambia **ESTADO DE APROBACIÓN** (`FIRMA_ESTADO_COLUMN_ID`) a `FIRMADO`.
 3. El sistema descarga el archivo de PA EDITABLE, inserta su firma (`MELISSA_SIGNATURE_PATH`) sin deformarla, y sube el resultado a **Dup. of PA FIRMADO PRC** (`FIRMA_PA_FIRMADO_COLUMN_ID`) del mismo item.
-   - La ubicación de la firma se busca primero como un placeholder de texto (`FIRMA_PLACEHOLDER`, por defecto `{{FIRMA_MELISSA}}`) en cualquier celda de la plantilla; si esa celda es parte de un rango combinado, se usa todo el rango. Esto permite que distintas variantes de plantilla coloquen la firma donde necesiten con solo incluir ese texto.
-   - Si la plantilla no tiene el placeholder, se usa como respaldo el recuadro fijo L128:M131.
+   - La ubicación de la firma se busca como un placeholder de texto (`FIRMA_PLACEHOLDER`, por defecto `{{FIRMA_MELISSA}}`) en cualquier celda de la plantilla; si esa celda es parte de un rango combinado, se usa todo el rango. Esto permite que distintas variantes de plantilla coloquen la firma donde necesiten con solo incluir ese texto, y que la firma sobreviva aunque se inserten filas arriba (ej. una cotización larga). Si la plantilla no tiene el placeholder, no se inserta la firma.
+   - El mismo mecanismo aplica a la firma del Líder (`LIDER_FIRMA_PLACEHOLDER`, por defecto `{{FIRMA_LIDER}}`) y del Gerente de Proyecto (`GERENTE_FIRMA_PLACEHOLDER`, por defecto `{{FIRMA_GERENTE}}`).
 
 Todo ocurre dentro del mismo item del board de Aprobación; no requiere relacionarlo con el item del board principal.
 
