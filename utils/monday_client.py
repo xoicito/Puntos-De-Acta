@@ -298,6 +298,59 @@ def get_connected_person(item, connect_column_id, email_column_id):
     return name, email
 
 
+def find_item_by_name(board_id, name, email_column_id):
+    """Resolve (name, email) by matching an item's own name on a lookup
+    board (e.g. "Gerentes" or "Base Datos PMO") against a name picked from
+    a status/dropdown column on the main board.
+
+    Used instead of get_connected_person() because Connect Boards columns
+    aren't supported in Monday's public forms - the Lider picks a name
+    from a fixed list of options instead of a live board connection, so
+    resolving the email means looking that name up by text match instead
+    of following a linked item id. Returns (None, None) if nothing is
+    selected or no item matches.
+    """
+
+    if not name or not board_id:
+        return None, None
+
+    q = """query ($board: [ID!]!) {
+        boards(ids: $board) {
+            items_page(limit: 500) {
+                items {
+                    name
+                    column_values {
+                        id
+                        text
+                    }
+                }
+            }
+        }
+    }"""
+
+    boards = graphql(q, {"board": [str(board_id)]})["boards"]
+
+    if not boards:
+        return None, None
+
+    target = name.strip().lower()
+
+    for item in boards[0]["items_page"]["items"]:
+        if item["name"].strip().lower() != target:
+            continue
+
+        email = None
+
+        for c in item.get("column_values", []):
+            if c["id"] == email_column_id:
+                email = (c.get("text") or "").strip() or None
+                break
+
+        return item["name"], email
+
+    return None, None
+
+
 def create_update(item_id, body):
     """Post an update (comment) on an item - shows in its activity feed."""
 

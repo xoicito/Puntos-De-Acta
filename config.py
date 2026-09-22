@@ -79,9 +79,19 @@ TEST_MODE_SKIP_NOTIFICATIONS = os.getenv("TEST_MODE_SKIP_NOTIFICATIONS", "false"
 #
 # Board "Gerentes" = 18431719434, con columna "e-mail" (text_mm7ayzbv).
 # Columna Connect Boards en el board principal = board_relation_mm7apess
-# ("BASE DATOS GERENTES").
+# ("BASE DATOS GERENTES") - YA NO SE USA para resolver al Gerente (ver
+# GERENTE_NOMBRE_COLUMN_ID mas abajo), Monday no soporta Connect Boards en
+# formularios publicos. Se deja configurada por si se usa el flujo manual
+# (Opcion B: elegir el Gerente entrando al item directo en el board).
 GERENTE_CONNECT_COLUMN_ID = os.getenv("GERENTE_CONNECT_COLUMN_ID", "board_relation_mm7apess")
+GERENTES_BOARD_ID = int(os.getenv("GERENTES_BOARD_ID", "18431719434"))
 GERENTE_EMAIL_COLUMN_ID = os.getenv("GERENTE_EMAIL_COLUMN_ID", "text_mm7ayzbv")  # board "Gerentes"
+# Columna de estado/dropdown en el board principal donde el Lider elige el
+# NOMBRE del Gerente (opciones fijas, mantenidas a mano igual que
+# "Plantilla") - reemplaza a GERENTE_CONNECT_COLUMN_ID para el formulario.
+# El correo se resuelve buscando ese nombre en GERENTES_BOARD_ID
+# (find_item_by_name), no por conexion.
+GERENTE_NOMBRE_COLUMN_ID = os.getenv("GERENTE_NOMBRE_COLUMN_ID", "")
 GERENTE_FIRMA_LINK_COLUMN_ID = os.getenv("GERENTE_FIRMA_LINK_COLUMN_ID", "text_mm7aftw0")  # "Gerente Firma Link"
 # Correo real del Gerente, resuelto por Connect Boards y escrito aqui para
 # que la automatizacion de Monday lo use como destinatario - una columna
@@ -95,19 +105,27 @@ GERENTE_FIRMA_ESTADO_PENDIENTE = os.getenv("GERENTE_FIRMA_ESTADO_PENDIENTE", "Pe
 GERENTE_FIRMA_ESTADO_FIRMADO = os.getenv("GERENTE_FIRMA_ESTADO_FIRMADO", "Firmado")
 GERENTE_FIRMA_PLACEHOLDER = os.getenv("GERENTE_FIRMA_PLACEHOLDER", "{{FIRMA_GERENTE}}")
 
-# PMO: el Lider lo elige por separado (Connect Boards "PMO", hacia el
-# mismo board de Gerentes). No firma nada - el correo se manda hasta que
-# Melissa firma, no cuando el Gerente firma. Como el item que se crea en
-# el board de Aprobacion no tiene la seleccion de PMO (esa vive en el item
-# original del board principal), el correo del PMO se resuelve en el
-# momento en que el Gerente firma (unica vez que el codigo tiene ambos
-# items a mano) y se copia a PMO_EMAIL_APROBACION_COLUMN_ID en el item
-# nuevo de Aprobacion. Una automatizacion de Monday ahi (disparada cuando
-# ESTADO DE APROBACION cambia a FIRMADO, igual que la de Melissa) manda el
-# correo a la direccion que ya quedo en esa columna. Debe ser una columna
-# de texto normal - no una columna Reflejo, esa es de solo lectura para
-# el codigo.
+# PMO: el Lider lo elige por separado, en un board propio "Base Datos PMO"
+# (18432219741). No firma nada - el correo se manda hasta que Melissa
+# firma, no cuando el Gerente firma. Como el item que se crea en el board
+# de Aprobacion no tiene la seleccion de PMO (esa vive en el item original
+# del board principal), el correo del PMO se resuelve en el momento en que
+# el Gerente firma (unica vez que el codigo tiene ambos items a mano) y se
+# copia a PMO_EMAIL_APROBACION_COLUMN_ID en el item nuevo de Aprobacion.
+# Una automatizacion de Monday ahi (disparada cuando ESTADO DE APROBACION
+# cambia a FIRMADO, igual que la de Melissa) manda el correo a la
+# direccion que ya quedo en esa columna. Debe ser una columna de texto
+# normal - no una columna Reflejo, esa es de solo lectura para el codigo.
+#
+# PMO_CONNECT_COLUMN_ID YA NO SE USA para resolver al PMO (mismo motivo
+# que GERENTE_CONNECT_COLUMN_ID - Connect Boards no funciona en
+# formularios publicos); se deja configurada por si se usa el flujo
+# manual. PMO_NOMBRE_COLUMN_ID es la columna de estado/dropdown que la
+# reemplaza para el formulario.
 PMO_CONNECT_COLUMN_ID = os.getenv("PMO_CONNECT_COLUMN_ID", "board_relation_mm7ea612")
+PMO_BOARD_ID = int(os.getenv("PMO_BOARD_ID", "18432219741"))
+PMO_NOMBRE_COLUMN_ID = os.getenv("PMO_NOMBRE_COLUMN_ID", "")
+PMO_EMAIL_COLUMN_ID = os.getenv("PMO_EMAIL_COLUMN_ID", "")  # columna de e-mail en "Base Datos PMO"
 PMO_EMAIL_APROBACION_COLUMN_ID = os.getenv("PMO_EMAIL_APROBACION_COLUMN_ID", "")
 
 # Debe ser un valor fijo y secreto (no lo genere al azar en cada arranque -
@@ -130,7 +148,7 @@ FIRMA_MONDAY_COLUMN_ID = os.getenv("FIRMA_MONDAY_COLUMN_ID", "signature9vmootoj"
 COLUMN_ALIASES = {
     "plantilla": ["single_selectb2r025a"],
     "lider_proyecto": ["short_textoea3ks5w"],
-    "gerente_proyecto": ["short_textlyk3dimh", GERENTE_CONNECT_COLUMN_ID],
+    "gerente_proyecto": [GERENTE_NOMBRE_COLUMN_ID, "short_textlyk3dimh", GERENTE_CONNECT_COLUMN_ID],
     "acta_id": ["text_mm736ka4"],
     "multas_aplicar": [MULTAS_COLUMN_ID],
     "multa_atraso_monto": ["short_textjv7r1s2w"],  # "Multa por atraso de entrega"

@@ -10,7 +10,7 @@ from config import (
     ACTA_XLSX_COLUMN_ID,
     FIRMA_BOARD_ID,
     FIRMA_PA_EDITABLE_COLUMN_ID,
-    GERENTE_CONNECT_COLUMN_ID,
+    GERENTES_BOARD_ID,
     GERENTE_EMAIL_COLUMN_ID,
     GERENTE_EMAIL_LINK_COLUMN_ID,
     GERENTE_FIRMA_ESTADO_COLUMN_ID,
@@ -20,8 +20,11 @@ from config import (
     GERENTE_LINK_BASE_URL,
     GERENTE_LINK_EXPIRATION_HOURS,
     GERENTE_FIRMA_LINK_COLUMN_ID,
-    PMO_CONNECT_COLUMN_ID,
+    GERENTE_NOMBRE_COLUMN_ID,
+    PMO_BOARD_ID,
     PMO_EMAIL_APROBACION_COLUMN_ID,
+    PMO_EMAIL_COLUMN_ID,
+    PMO_NOMBRE_COLUMN_ID,
     TEST_MODE_SKIP_NOTIFICATIONS,
 )
 from gerente_link import InvalidLinkError, generate_signing_link, verify_token
@@ -31,7 +34,7 @@ from utils.monday_client import (
     change_status,
     create_item,
     create_update,
-    get_connected_person,
+    find_item_by_name,
     get_file_public_url,
     get_item,
     download_file,
@@ -40,18 +43,30 @@ from utils.monday_client import (
 )
 
 
+def _column_text(item, column_id):
+    if not column_id:
+        return ""
+
+    for c in item.get("column_values", []):
+        if c["id"] == column_id:
+            return (c.get("text") or "").strip()
+
+    return ""
+
+
 def start_gerente_signing(item_id, board_id):
     """Called right after a Punto de Acta is generated: resolve the real
-    Gerente de Proyecto through the Connect Boards column (linked to the
-    "Gerentes" board - never free text a Lider could fake), send him a
-    signing link, and notify him inside Monday too.
+    Gerente de Proyecto by looking up the name the Lider picked (a fixed
+    dropdown - Connect Boards columns don't work in Monday's public
+    forms) against the "Gerentes" board, send him a signing link, and
+    notify him inside Monday too.
 
-    No-ops quietly (just logs) if the connect column isn't configured yet
-    or nobody's linked - this is meant to be safe to call unconditionally
+    No-ops quietly (just logs) if the name column isn't configured yet
+    or nobody's selected - this is meant to be safe to call unconditionally
     from generate_acta.py.
     """
 
-    if not GERENTE_CONNECT_COLUMN_ID or not GERENTE_EMAIL_COLUMN_ID:
+    if not GERENTE_NOMBRE_COLUMN_ID or not GERENTE_EMAIL_COLUMN_ID:
         print("GERENTE_FIRMA: columnas de Gerente no configuradas, se omite")
         return
 
@@ -60,10 +75,11 @@ def start_gerente_signing(item_id, board_id):
         return
 
     item = get_item(item_id)
-    name, email = get_connected_person(item, GERENTE_CONNECT_COLUMN_ID, GERENTE_EMAIL_COLUMN_ID)
+    selected_name = _column_text(item, GERENTE_NOMBRE_COLUMN_ID)
+    name, email = find_item_by_name(GERENTES_BOARD_ID, selected_name, GERENTE_EMAIL_COLUMN_ID)
 
     if not email:
-        print(f"GERENTE_FIRMA: item={item_id} sin Gerente de Proyecto asignado, se omite")
+        print(f"GERENTE_FIRMA: item={item_id} sin Gerente de Proyecto asignado (o '{selected_name}' no encontrado), se omite")
         return
 
     link = generate_signing_link(item_id, board_id)
@@ -155,10 +171,10 @@ def _send_to_procurement(item_id, item, signed_path, data_fields):
     board) for review. Creates a new item there and attaches the doubly-
     signed file to PA EDITABLE - this replaces the old manual upload step.
 
-    Also carries over the PMO's email (resolved here, from the Connect
-    Boards selection on the *original* item - the new Procurement item has
-    no such column of its own) into PMO_EMAIL_APROBACION_COLUMN_ID on the
-    new item. The PMO isn't notified yet at this point - that only happens
+    Also carries over the PMO's email (resolved here, from the name the
+    Lider picked on the *original* item - the new Procurement item has no
+    such column of its own) into PMO_EMAIL_APROBACION_COLUMN_ID on the new
+    item. The PMO isn't notified yet at this point - that only happens
     once Melissa signs, via a Monday automation on the Procurement board
     watching that column, same pattern as everywhere else.
     """
@@ -176,14 +192,15 @@ def _send_to_procurement(item_id, item, signed_path, data_fields):
 
     upload_file(new_item_id, FIRMA_PA_EDITABLE_COLUMN_ID, signed_path)
 
-    if PMO_CONNECT_COLUMN_ID and PMO_EMAIL_APROBACION_COLUMN_ID:
-        pmo_name, pmo_email = get_connected_person(item, PMO_CONNECT_COLUMN_ID, GERENTE_EMAIL_COLUMN_ID)
+    if PMO_NOMBRE_COLUMN_ID and PMO_EMAIL_COLUMN_ID and PMO_EMAIL_APROBACION_COLUMN_ID:
+        pmo_selected = _column_text(item, PMO_NOMBRE_COLUMN_ID)
+        pmo_name, pmo_email = find_item_by_name(PMO_BOARD_ID, pmo_selected, PMO_EMAIL_COLUMN_ID)
 
         if pmo_email:
             update_text_column(new_item_id, FIRMA_BOARD_ID, PMO_EMAIL_APROBACION_COLUMN_ID, pmo_email)
             print(f"PMO: correo resuelto para {pmo_name} <{pmo_email}>, copiado a item={new_item_id}")
         else:
-            print(f"PMO: item={item_id} sin PMO asignado, se omite")
+            print(f"PMO: item={item_id} sin PMO asignado (o '{pmo_selected}' no encontrado), se omite")
 
     print(f"GERENTE_FIRMA: enviado a Procurement, item={new_item_id} ({name})")
 
