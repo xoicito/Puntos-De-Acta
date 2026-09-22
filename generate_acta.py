@@ -13,6 +13,8 @@ from config import (
     ACTA_XLSX_COLUMN_ID,
     COTIZACION_FILE_COLUMN_ID,
     FIRMA_MONDAY_COLUMN_ID,
+    GERENTE_CONNECT_COLUMN_ID,
+    GERENTE_EMAIL_COLUMN_ID,
     METODO_FIRMA_MONDAY_LABEL,
     SIGNATURE_COLUMN_ID,
 )
@@ -21,6 +23,7 @@ from utils.monday_client import (
     create_update,
     download_file,
     generate_acta_id,
+    get_connected_person,
     get_file_public_url,
     get_item,
     upload_file,
@@ -94,6 +97,12 @@ def generate_acta(item_id):
 
         rubrics = json.loads((base / "rubros.json").read_text(encoding="utf-8"))
 
+        # gerente_proyecto via COLUMN_ALIASES lee .text de la columna Connect
+        # Boards, que no siempre viene poblado de forma confiable - se
+        # resuelve el nombre real de la misma forma que ya se usa para su
+        # correo (get_connected_person, via la API de items conectados).
+        gerente_nombre, _ = get_connected_person(item, GERENTE_CONNECT_COLUMN_ID, GERENTE_EMAIL_COLUMN_ID)
+
         replacements = {
             "{{PROYECTO}}": data["proyecto"].upper(),
             "{{LIDER}}": data.get("lider_proyecto", "").upper(),
@@ -103,7 +112,7 @@ def generate_acta(item_id):
             "{{CONTACTO}}": data["contacto"].upper(),
             "{{TELEFONO}}": data["telefono"],
             "{{NIT}}": data["nit"],
-            "{{GERENTE_PROYECTO}}":data.get("gerente_proyecto","").upper(),
+            "{{GERENTE_PROYECTO}}": (gerente_nombre or "").upper(),
             "{{NO_COTIZACION}}": data["no_cotizacion"],
             "{{ANTICIPO}}": pct(data["anticipo"]),
             "{{ESTIMACIONES}}": pct(data["estimaciones"]),

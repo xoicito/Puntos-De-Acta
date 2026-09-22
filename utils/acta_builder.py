@@ -791,6 +791,7 @@ def build_services(data):
             ","
         ).split(",")
         if x.strip()
+        and x.strip().lower() != "otros"
     ]
 
     other = (
