@@ -1,8 +1,7 @@
-from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+from itsdangerous import BadSignature, URLSafeTimedSerializer
 
 from config import (
     GERENTE_LINK_BASE_URL,
-    GERENTE_LINK_EXPIRATION_HOURS,
     GERENTE_LINK_SECRET_KEY,
 )
 
@@ -30,19 +29,17 @@ def generate_signing_link(item_id, board_id):
 
 
 def verify_token(token):
-    """Return {"item_id", "board_id"} if the token is valid and unexpired.
+    """Return {"item_id", "board_id"} if the token's signature is valid.
+
+    No expiration - these links are meant to stay usable indefinitely
+    until the item is actually signed (the single-use "Firmado?" status
+    check is what actually invalidates a used link, not time).
 
     Raises InvalidLinkError with a message safe to show the signer.
     """
 
     try:
-        data = _serializer().loads(
-            token, max_age=GERENTE_LINK_EXPIRATION_HOURS * 3600
-        )
-    except SignatureExpired:
-        raise InvalidLinkError(
-            "Este enlace ya expiro. Pida que le generen uno nuevo."
-        )
+        data = _serializer().loads(token)
     except BadSignature:
         raise InvalidLinkError("Este enlace no es valido.")
 

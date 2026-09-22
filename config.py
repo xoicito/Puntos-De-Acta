@@ -133,7 +133,6 @@ PMO_EMAIL_APROBACION_COLUMN_ID = os.getenv("PMO_EMAIL_APROBACION_COLUMN_ID", "")
 # en Render como variable de entorno real, nunca en el codigo.
 GERENTE_LINK_SECRET_KEY = os.getenv("GERENTE_LINK_SECRET_KEY", "")
 GERENTE_LINK_BASE_URL = os.getenv("GERENTE_LINK_BASE_URL", "https://puntos-de-acta.onrender.com")
-GERENTE_LINK_EXPIRATION_HOURS = int(os.getenv("GERENTE_LINK_EXPIRATION_HOURS", "72"))
 
 # "Elegir la manera de firma del Lider de Proyecto" dropdown: "Subir PNG"
 # (SIGNATURE_COLUMN_ID = file80ymdmtg) or "Dibujarla", Monday's built-in

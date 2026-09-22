@@ -18,7 +18,6 @@ from config import (
     GERENTE_FIRMA_ESTADO_PENDIENTE,
     GERENTE_FIRMA_PLACEHOLDER,
     GERENTE_LINK_BASE_URL,
-    GERENTE_LINK_EXPIRATION_HOURS,
     GERENTE_FIRMA_LINK_COLUMN_ID,
     GERENTE_NOMBRE_COLUMN_ID,
     PMO_BOARD_ID,
@@ -97,7 +96,7 @@ def start_gerente_signing(item_id, board_id):
         create_update(
             item_id,
             f"El Punto de Acta esta listo para la firma de {name or 'Gerente de Proyecto'}. "
-            f"Enlace de firma (valido {GERENTE_LINK_EXPIRATION_HOURS}h): {link}",
+            f"Enlace de firma: {link}",
         )
     except Exception as e:
         print(f"GERENTE_FIRMA: no se pudo publicar el update en Monday: {e}")
