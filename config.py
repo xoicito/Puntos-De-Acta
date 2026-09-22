@@ -90,6 +90,19 @@ GERENTE_FIRMA_ESTADO_PENDIENTE = os.getenv("GERENTE_FIRMA_ESTADO_PENDIENTE", "Pe
 GERENTE_FIRMA_ESTADO_FIRMADO = os.getenv("GERENTE_FIRMA_ESTADO_FIRMADO", "Firmado")
 GERENTE_FIRMA_PLACEHOLDER = os.getenv("GERENTE_FIRMA_PLACEHOLDER", "{{FIRMA_GERENTE}}")
 
+# PMO: el Lider tambien elige un PMO, del mismo board "Gerentes" (el usuario
+# va a agregar ahi una columna de estado para diferenciar Gerentes de PMOs -
+# no afecta este codigo, que solo necesita nombre+correo del item elegido).
+# El PMO no firma nada - solo recibe un correo cuando el Gerente firma. En
+# vez de un enlace, aqui se escribe directamente su correo resuelto en
+# PMO_EMAIL_COLUMN_ID; una automatizacion de Monday (configurada en la UI)
+# envia el correo a esa direccion cuando corresponda.
+#
+# PMO_CONNECT_COLUMN_ID no tiene valor por defecto porque la columna Connect
+# Boards todavia no existe en Monday - crearla ahi y poner su id aqui.
+PMO_CONNECT_COLUMN_ID = os.getenv("PMO_CONNECT_COLUMN_ID", "")
+PMO_EMAIL_COLUMN_ID = os.getenv("PMO_EMAIL_COLUMN_ID", "")
+
 # Debe ser un valor fijo y secreto (no lo genere al azar en cada arranque -
 # eso invalidaria todos los enlaces pendientes en cada despliegue). Config
 # en Render como variable de entorno real, nunca en el codigo.
