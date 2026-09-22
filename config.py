@@ -90,19 +90,6 @@ GERENTE_FIRMA_ESTADO_PENDIENTE = os.getenv("GERENTE_FIRMA_ESTADO_PENDIENTE", "Pe
 GERENTE_FIRMA_ESTADO_FIRMADO = os.getenv("GERENTE_FIRMA_ESTADO_FIRMADO", "Firmado")
 GERENTE_FIRMA_PLACEHOLDER = os.getenv("GERENTE_FIRMA_PLACEHOLDER", "{{FIRMA_GERENTE}}")
 
-# PMO: el Lider lo elige por separado (Connect Boards "PMO",
-# board_relation_mm7ea612, hacia el mismo board de Gerentes). El PMO no
-# firma nada - Monday resuelve su correo solo, con una columna Reflejo
-# que espeja el e-mail del item conectado (misma idea que ya usan para el
-# Gerente). Lo unico que hace este codigo es marcar PMO_NOTIFICAR_COLUMN_ID
-# (un status) cuando el Gerente firma, que es lo que dispara la
-# automatizacion de Monday ("cuando esta columna cambie, envia un correo a
-# la direccion en Reflejo 2") - asi el interruptor de encendido/apagado
-# vive aqui, no hay que entrar a desactivar la automatizacion en Monday.
-PMO_NOTIFICATIONS_ENABLED = os.getenv("PMO_NOTIFICATIONS_ENABLED", "true").strip().lower() == "true"
-PMO_NOTIFICAR_COLUMN_ID = os.getenv("PMO_NOTIFICAR_COLUMN_ID", "")
-PMO_NOTIFICAR_LABEL = os.getenv("PMO_NOTIFICAR_LABEL", "Notificar")
-
 # Debe ser un valor fijo y secreto (no lo genere al azar en cada arranque -
 # eso invalidaria todos los enlaces pendientes en cada despliegue). Config
 # en Render como variable de entorno real, nunca en el codigo.
