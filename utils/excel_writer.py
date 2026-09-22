@@ -2,11 +2,13 @@ import copy
 import math
 import re
 from datetime import datetime
+from io import BytesIO
 
 from openpyxl import load_workbook
 from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Alignment
 from openpyxl.utils import column_index_from_string, get_column_letter
+from PIL import Image as PILImage
 
 from config import LIDER_FIRMA_PLACEHOLDER
 
@@ -115,6 +117,49 @@ def _find_placeholder_box(ws, placeholder):
     return None
 
 
+def _autocrop_signature(path, padding=6, white_threshold=245):
+    """Crop away the blank margin around a signature image before it gets
+    scaled to fit its box.
+
+    Monday's "Dibujarla" (draw-your-signature) export in particular has a
+    lot of empty canvas around the actual drawn strokes - scaling that
+    whole canvas to fit the signature box makes the visible signature
+    look tiny, since the box-fit math has no way to know how much of the
+    image is actually blank. Cropping to the real content first fixes
+    that regardless of source (transparent PNG, white-background PNG/JPG).
+
+    Returns a BytesIO with the cropped image, or the original path
+    unchanged if nothing sensible was found to crop.
+    """
+
+    img = PILImage.open(path)
+
+    if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+        bbox = img.convert("RGBA").split()[-1].getbbox()
+    else:
+        grayscale = img.convert("L")
+        # Invert so the (dark) ink becomes non-zero and the (light)
+        # background becomes 0 - getbbox() finds the box of non-zero
+        # pixels, i.e. exactly the drawn content.
+        inverted = grayscale.point(lambda p: 255 if p < white_threshold else 0)
+        bbox = inverted.getbbox()
+
+    if not bbox:
+        return path
+
+    left, top, right, bottom = bbox
+    left = max(0, left - padding)
+    top = max(0, top - padding)
+    right = min(img.width, right + padding)
+    bottom = min(img.height, bottom + padding)
+
+    buf = BytesIO()
+    img.crop((left, top, right, bottom)).save(buf, format="PNG")
+    buf.seek(0)
+
+    return buf
+
+
 def insert_signature(ws, signature_path, placeholder):
     """Insert an image scaled to fit, without distortion, inside the cell (or
     merged range) that holds `placeholder`, and clear the placeholder text.
@@ -140,7 +185,7 @@ def insert_signature(ws, signature_path, placeholder):
     top_left, cols, rows = found
 
     try:
-        img = XLImage(signature_path)
+        img = XLImage(_autocrop_signature(signature_path))
 
         box_w = sum(_col_width_px(ws, c) for c in cols)
         box_h = sum(_row_height_px(ws, r) for r in rows)
