@@ -5,7 +5,7 @@ from datetime import datetime
 from openpyxl import load_workbook
 from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Alignment
-from openpyxl.utils import get_column_letter
+from openpyxl.utils import column_index_from_string, get_column_letter
 
 from config import LIDER_FIRMA_PLACEHOLDER
 
@@ -292,6 +292,44 @@ def ensure_cotizacion_capacity(ws, needed_rows):
     return extra
 
 
+def ensure_simple_list_capacity(ws, first_row, base_capacity, needed_rows, number_column="D", merge_cols=("E", "P")):
+    """Insert extra rows into a simple one-item-per-row section (a number in
+    `number_column`, text merged across `merge_cols`) if there are more
+    items than the template's built-in rows can hold - same shift/style
+    corrections as ensure_cotizacion_capacity, minus the formula rewriting
+    (these sections have no totals below them).
+
+    The template's own rows are numbered 1..base_capacity as static
+    values, so inserted rows get their own number written here too.
+
+    Returns how many rows were inserted.
+    """
+
+    extra = max(0, needed_rows - base_capacity)
+
+    if not extra:
+        return 0
+
+    last_template_row = first_row + base_capacity - 1
+    insert_at = last_template_row + 1
+    start_col = column_index_from_string(merge_cols[0])
+    end_col = column_index_from_string(merge_cols[1])
+
+    ws.insert_rows(insert_at, extra)
+    _shift_row_dimensions(ws, insert_at, extra)
+    _shift_merged_ranges(ws, insert_at, extra)
+    _shift_print_layout(ws, insert_at, extra)
+
+    for i in range(extra):
+        target_row = insert_at + i
+
+        _copy_row_style(ws, last_template_row, target_row)
+        ws.merge_cells(start_row=target_row, start_column=start_col, end_row=target_row, end_column=end_col)
+        ws[f"{number_column}{target_row}"] = base_capacity + i + 1
+
+    return extra
+
+
 def write_cotizacion_rows(ws, rows):
 
     for offset, row in enumerate(rows):
@@ -418,8 +456,19 @@ def render_excel(template_path, output_path, replacements):
 
     _write_programacion(ws, replacements.get("__PROGRAMACION_ROWS__", []), row_shift)
 
-    _write_list(ws, TRABAJOS_FIRST_ROW, SHORT_LIST_CAPACITY, _as_lines(replacements.get("{{TRABAJOS_PREVIOS}}")), row_shift=row_shift)
-    _write_list(ws, SERVICIOS_FIRST_ROW, SHORT_LIST_CAPACITY, _as_lines(replacements.get("{{SERVICIOS_BASICOS}}")), row_shift=row_shift)
+    # Trabajos Previos and Servicios Basicos grow the same way the
+    # quotation table does - each insertion shifts everything below it, so
+    # row_shift accumulates as we move down the sheet.
+    trabajos_items = _as_lines(replacements.get("{{TRABAJOS_PREVIOS}}"))
+    trabajos_extra = ensure_simple_list_capacity(ws, TRABAJOS_FIRST_ROW + row_shift, SHORT_LIST_CAPACITY, len(trabajos_items))
+    _write_list(ws, TRABAJOS_FIRST_ROW, SHORT_LIST_CAPACITY + trabajos_extra, trabajos_items, row_shift=row_shift)
+    row_shift += trabajos_extra
+
+    servicios_items = _as_lines(replacements.get("{{SERVICIOS_BASICOS}}"))
+    servicios_extra = ensure_simple_list_capacity(ws, SERVICIOS_FIRST_ROW + row_shift, SHORT_LIST_CAPACITY, len(servicios_items))
+    _write_list(ws, SERVICIOS_FIRST_ROW, SHORT_LIST_CAPACITY + servicios_extra, servicios_items, row_shift=row_shift)
+    row_shift += servicios_extra
+
     _write_list(ws, PUNTOS_FIRST_ROW, PUNTOS_CAPACITY, _as_lines(replacements.get("{{PUNTOS_REVISION}}")), row_shift=row_shift)
 
     _replace_text_placeholders(ws, replacements)
