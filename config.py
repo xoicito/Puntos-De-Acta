@@ -27,7 +27,7 @@ FIRMA_TRIGGER_LABEL = os.getenv("FIRMA_TRIGGER_LABEL", "FIRMADO")
 FIRMA_PA_EDITABLE_COLUMN_ID = os.getenv("FIRMA_PA_EDITABLE_COLUMN_ID", "file_mm4vcga3")
 FIRMA_PA_FIRMADO_COLUMN_ID = os.getenv("FIRMA_PA_FIRMADO_COLUMN_ID", "file_mm7936qy")
 FIRMA_PLACEHOLDER = os.getenv("FIRMA_PLACEHOLDER", "{{FIRMA_MELISSA}}")
-MELISSA_SIGNATURE_PATH = os.getenv("MELISSA_SIGNATURE_PATH", "assets/firma_melissa.jpg")
+MELISSA_SIGNATURE_PATH = os.getenv("MELISSA_SIGNATURE_PATH", "assets/firma_melissa.png")
 
 # Firma del Lider de Proyecto en el documento generado - igual que las de
 # Gerente y Melissa, se ubica buscando este texto en la plantilla (celda o
