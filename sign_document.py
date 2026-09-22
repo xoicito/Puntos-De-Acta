@@ -18,6 +18,7 @@ from utils.monday_client import (
     upload_file,
 )
 from utils.excel_writer import insert_signature
+from utils.pdf_convert import convert_to_pdf
 
 
 def sign_document(item_id):
@@ -55,6 +56,12 @@ def sign_document(item_id):
     wb.save(signed_path)
 
     upload_file(item_id, FIRMA_PA_FIRMADO_COLUMN_ID, signed_path)
+
+    try:
+        pdf_path = convert_to_pdf(signed_path, output_directory)
+        upload_file(item_id, FIRMA_PA_FIRMADO_COLUMN_ID, pdf_path)
+    except Exception as e:
+        print(f"FIRMA_MELISSA: no se pudo generar/subir el PDF: {e}")
 
     if FIRMA_NOTIFICAR_NOMBRES:
         try:
