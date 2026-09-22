@@ -235,9 +235,6 @@ def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None)
 
     upload_file(item_id, ACTA_XLSX_COLUMN_ID, signed_path)
 
-    if GERENTE_FIRMA_ESTADO_COLUMN_ID:
-        change_status(item_id, board_id, GERENTE_FIRMA_ESTADO_COLUMN_ID, GERENTE_FIRMA_ESTADO_FIRMADO)
-
     try:
         _send_to_procurement(item_id, signed_path, item_data(item))
     except Exception as e:
@@ -247,6 +244,13 @@ def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None)
         _notify_pmo(item_id, board_id, item)
     except Exception as e:
         print(f"PMO: no se pudo notificar: {e}")
+
+    # GERENTE_FIRMA_ESTADO_COLUMN_ID se cambia al final a proposito: la
+    # automatizacion de Monday que manda el correo al PMO dispara con este
+    # cambio, y necesita que PMO_EMAIL_COLUMN_ID ya tenga el valor correcto
+    # (escrito arriba en _notify_pmo) antes de que eso pase.
+    if GERENTE_FIRMA_ESTADO_COLUMN_ID:
+        change_status(item_id, board_id, GERENTE_FIRMA_ESTADO_COLUMN_ID, GERENTE_FIRMA_ESTADO_FIRMADO)
 
     audit = audit or {}
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
