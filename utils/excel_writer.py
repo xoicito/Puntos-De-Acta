@@ -1,4 +1,5 @@
 import copy
+import math
 import re
 from datetime import datetime
 
@@ -356,24 +357,56 @@ def _as_lines(value):
     return [str(item) for item in items if str(item).strip()]
 
 
-def _write_list(ws, first_row, capacity, items, column=LIST_COLUMN, row_shift=0):
+def _estimate_row_height(ws, text, cols, font_size=14, min_height=24.9):
+    """Rough heuristic for how tall a row needs to be to show wrapped text
+    without clipping.
+
+    Excel only auto-fits a wrap_text row's height live in the app when
+    that row's height was never explicitly set. These template rows
+    already have one baked in (sized for short one-line bullets), so
+    longer text - the fixed contract-term paragraphs, mainly - gets
+    visually clipped on export unless the height is recalculated here
+    based on how many lines it will actually wrap into at the row's real
+    merged width.
+    """
+
+    if not text:
+        return min_height
+
+    width_px = sum(_col_width_px(ws, c) for c in cols)
+    avg_char_px = font_size * 0.55  # rough estimate for a proportional sans-serif font
+    chars_per_line = max(10, int(width_px / avg_char_px))
+    lines_needed = max(1, math.ceil(len(str(text)) / chars_per_line))
+
+    return max(min_height, lines_needed * font_size * 1.35 + 4)
+
+
+def _write_list(ws, first_row, capacity, items, column=LIST_COLUMN, row_shift=0, merge_cols=None):
     """Fill `capacity` consecutive rows of one column with `items`.
 
     Every row in the range is written, empty ones included, so a placeholder
     left over from the template can never show up in the finished document
     when there are fewer items than rows (or none at all). Items beyond the
     table's capacity are dropped, with a log line.
+
+    If `merge_cols` (the columns the row's text actually spans) is given,
+    each row's height is recalculated to fit its own text instead of
+    keeping the template's fixed height - see _estimate_row_height.
     """
 
     if len(items) > capacity:
         print(f"AVISO: {len(items)} lineas para {capacity} filas en {column}{first_row}, se omiten {len(items) - capacity}")
 
     for i in range(capacity):
-        cell = ws[f"{column}{first_row + row_shift + i}"]
+        row_num = first_row + row_shift + i
+        cell = ws[f"{column}{row_num}"]
 
         if i < len(items):
             cell.value = str(items[i])
             cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+
+            if merge_cols:
+                ws.row_dimensions[row_num].height = _estimate_row_height(ws, items[i], merge_cols)
         else:
             cell.value = None
 
@@ -459,17 +492,20 @@ def render_excel(template_path, output_path, replacements):
     # Trabajos Previos and Servicios Basicos grow the same way the
     # quotation table does - each insertion shifts everything below it, so
     # row_shift accumulates as we move down the sheet.
+    wide_row_cols = tuple("EFGHIJKLMNOP")  # Trabajos Previos / Servicios Basicos merge E:P
+    puntos_row_cols = tuple("EFGHIJKLM")  # Puntos de Revision merges E:M
+
     trabajos_items = _as_lines(replacements.get("{{TRABAJOS_PREVIOS}}"))
     trabajos_extra = ensure_simple_list_capacity(ws, TRABAJOS_FIRST_ROW + row_shift, SHORT_LIST_CAPACITY, len(trabajos_items))
-    _write_list(ws, TRABAJOS_FIRST_ROW, SHORT_LIST_CAPACITY + trabajos_extra, trabajos_items, row_shift=row_shift)
+    _write_list(ws, TRABAJOS_FIRST_ROW, SHORT_LIST_CAPACITY + trabajos_extra, trabajos_items, row_shift=row_shift, merge_cols=wide_row_cols)
     row_shift += trabajos_extra
 
     servicios_items = _as_lines(replacements.get("{{SERVICIOS_BASICOS}}"))
     servicios_extra = ensure_simple_list_capacity(ws, SERVICIOS_FIRST_ROW + row_shift, SHORT_LIST_CAPACITY, len(servicios_items))
-    _write_list(ws, SERVICIOS_FIRST_ROW, SHORT_LIST_CAPACITY + servicios_extra, servicios_items, row_shift=row_shift)
+    _write_list(ws, SERVICIOS_FIRST_ROW, SHORT_LIST_CAPACITY + servicios_extra, servicios_items, row_shift=row_shift, merge_cols=wide_row_cols)
     row_shift += servicios_extra
 
-    _write_list(ws, PUNTOS_FIRST_ROW, PUNTOS_CAPACITY, _as_lines(replacements.get("{{PUNTOS_REVISION}}")), row_shift=row_shift)
+    _write_list(ws, PUNTOS_FIRST_ROW, PUNTOS_CAPACITY, _as_lines(replacements.get("{{PUNTOS_REVISION}}")), row_shift=row_shift, merge_cols=puntos_row_cols)
 
     _replace_text_placeholders(ws, replacements)
 
