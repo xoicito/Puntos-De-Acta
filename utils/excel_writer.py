@@ -357,7 +357,7 @@ def _as_lines(value):
     return [str(item) for item in items if str(item).strip()]
 
 
-def _estimate_row_height(ws, text, cols, font_size=14, min_height=24.9):
+def _estimate_row_height(ws, text, cols, font_size=12, min_height=24.9):
     """Rough heuristic for how tall a row needs to be to show wrapped text
     without clipping.
 
