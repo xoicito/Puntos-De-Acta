@@ -19,8 +19,6 @@ from config import (
     GERENTE_LINK_BASE_URL,
     GERENTE_LINK_EXPIRATION_HOURS,
     GERENTE_FIRMA_LINK_COLUMN_ID,
-    PMO_CONNECT_COLUMN_ID,
-    PMO_EMAIL_COLUMN_ID,
     TEST_MODE_SKIP_NOTIFICATIONS,
 )
 from gerente_link import InvalidLinkError, generate_signing_link, verify_token
@@ -168,29 +166,6 @@ def _send_to_procurement(item_id, signed_path, data_fields):
     print(f"GERENTE_FIRMA: enviado a Procurement, item={new_item_id} ({name})")
 
 
-def _notify_pmo(item_id, board_id, item):
-    """The PMO the Lider picked (Connect Boards, same "Gerentes" board)
-    doesn't sign anything - it just gets an email once the Gerente signs.
-    Resolves the PMO's email the same way as the Gerente's and writes it
-    into PMO_EMAIL_COLUMN_ID; a Monday automation (set up in the UI) sends
-    the actual email to that address.
-    """
-
-    if not PMO_CONNECT_COLUMN_ID or not PMO_EMAIL_COLUMN_ID:
-        print("PMO: columnas no configuradas, se omite")
-        return
-
-    name, email = get_connected_person(item, PMO_CONNECT_COLUMN_ID, GERENTE_EMAIL_COLUMN_ID)
-
-    if not email:
-        print(f"PMO: item={item_id} sin PMO asignado, se omite")
-        return
-
-    update_text_column(item_id, board_id, PMO_EMAIL_COLUMN_ID, email)
-
-    print(f"PMO: correo resuelto para {name} <{email}> item={item_id}")
-
-
 def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None):
     """Verify the token again, insert the signature, upload the result, and
     mark the item as signed. Meant to run on the POST of the signing page -
@@ -242,11 +217,6 @@ def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None)
         _send_to_procurement(item_id, signed_path, item_data(item))
     except Exception as e:
         print(f"GERENTE_FIRMA: no se pudo enviar a Procurement: {e}")
-
-    try:
-        _notify_pmo(item_id, board_id, item)
-    except Exception as e:
-        print(f"PMO: no se pudo notificar: {e}")
 
     audit = audit or {}
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")

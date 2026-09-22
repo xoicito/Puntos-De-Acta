@@ -90,17 +90,6 @@ GERENTE_FIRMA_ESTADO_PENDIENTE = os.getenv("GERENTE_FIRMA_ESTADO_PENDIENTE", "Pe
 GERENTE_FIRMA_ESTADO_FIRMADO = os.getenv("GERENTE_FIRMA_ESTADO_FIRMADO", "Firmado")
 GERENTE_FIRMA_PLACEHOLDER = os.getenv("GERENTE_FIRMA_PLACEHOLDER", "{{FIRMA_GERENTE}}")
 
-# PMO: el Lider lo elige por separado (Connect Boards "PMO", hacia el
-# mismo board de Gerentes). No firma nada - cuando el Gerente firma, el
-# codigo resuelve su correo real (Connect Boards -> item conectado ->
-# columna de e-mail, igual que para el Gerente) y lo escribe en
-# PMO_EMAIL_COLUMN_ID; una automatizacion de Monday (configurada en la UI)
-# manda el correo a la direccion que quede en esa columna. PMO_EMAIL_COLUMN_ID
-# tiene que ser una columna de texto normal - no la columna Reflejo, esa es
-# de solo lectura para el codigo.
-PMO_CONNECT_COLUMN_ID = os.getenv("PMO_CONNECT_COLUMN_ID", "board_relation_mm7ea612")
-PMO_EMAIL_COLUMN_ID = os.getenv("PMO_EMAIL_COLUMN_ID", "")
-
 # Debe ser un valor fijo y secreto (no lo genere al azar en cada arranque -
 # eso invalidaria todos los enlaces pendientes en cada despliegue). Config
 # en Render como variable de entorno real, nunca en el codigo.
