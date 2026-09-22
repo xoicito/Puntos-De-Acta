@@ -91,15 +91,19 @@ GERENTE_FIRMA_ESTADO_FIRMADO = os.getenv("GERENTE_FIRMA_ESTADO_FIRMADO", "Firmad
 GERENTE_FIRMA_PLACEHOLDER = os.getenv("GERENTE_FIRMA_PLACEHOLDER", "{{FIRMA_GERENTE}}")
 
 # PMO: el Lider lo elige por separado (Connect Boards "PMO", hacia el
-# mismo board de Gerentes). No firma nada - cuando el Gerente firma, el
-# codigo resuelve su correo real (Connect Boards -> item conectado ->
-# columna de e-mail, igual que para el Gerente) y lo escribe en
-# PMO_EMAIL_COLUMN_ID; una automatizacion de Monday (configurada en la UI)
-# manda el correo a la direccion que quede en esa columna. PMO_EMAIL_COLUMN_ID
-# tiene que ser una columna de texto normal - no la columna Reflejo, esa es
-# de solo lectura para el codigo.
+# mismo board de Gerentes). No firma nada - el correo se manda hasta que
+# Melissa firma, no cuando el Gerente firma. Como el item que se crea en
+# el board de Aprobacion no tiene la seleccion de PMO (esa vive en el item
+# original del board principal), el correo del PMO se resuelve en el
+# momento en que el Gerente firma (unica vez que el codigo tiene ambos
+# items a mano) y se copia a PMO_EMAIL_APROBACION_COLUMN_ID en el item
+# nuevo de Aprobacion. Una automatizacion de Monday ahi (disparada cuando
+# ESTADO DE APROBACION cambia a FIRMADO, igual que la de Melissa) manda el
+# correo a la direccion que ya quedo en esa columna. Debe ser una columna
+# de texto normal - no una columna Reflejo, esa es de solo lectura para
+# el codigo.
 PMO_CONNECT_COLUMN_ID = os.getenv("PMO_CONNECT_COLUMN_ID", "board_relation_mm7ea612")
-PMO_EMAIL_COLUMN_ID = os.getenv("PMO_EMAIL_COLUMN_ID", "")
+PMO_EMAIL_APROBACION_COLUMN_ID = os.getenv("PMO_EMAIL_APROBACION_COLUMN_ID", "")
 
 # Debe ser un valor fijo y secreto (no lo genere al azar en cada arranque -
 # eso invalidaria todos los enlaces pendientes en cada despliegue). Config

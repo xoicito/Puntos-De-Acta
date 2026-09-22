@@ -20,7 +20,7 @@ from config import (
     GERENTE_LINK_EXPIRATION_HOURS,
     GERENTE_FIRMA_LINK_COLUMN_ID,
     PMO_CONNECT_COLUMN_ID,
-    PMO_EMAIL_COLUMN_ID,
+    PMO_EMAIL_APROBACION_COLUMN_ID,
     TEST_MODE_SKIP_NOTIFICATIONS,
 )
 from gerente_link import InvalidLinkError, generate_signing_link, verify_token
@@ -145,11 +145,18 @@ def _save_signature_image(output_directory, stem, file_storage=None, data_url=No
     raise ValueError("No se recibio ninguna firma")
 
 
-def _send_to_procurement(item_id, signed_path, data_fields):
+def _send_to_procurement(item_id, item, signed_path, data_fields):
     """Per the approval policy, once both Lider and Gerente have signed (the
     'PA Inicial'), the request moves to Procurement (Arq. Melissa Alvarenga's
     board) for review. Creates a new item there and attaches the doubly-
     signed file to PA EDITABLE - this replaces the old manual upload step.
+
+    Also carries over the PMO's email (resolved here, from the Connect
+    Boards selection on the *original* item - the new Procurement item has
+    no such column of its own) into PMO_EMAIL_APROBACION_COLUMN_ID on the
+    new item. The PMO isn't notified yet at this point - that only happens
+    once Melissa signs, via a Monday automation on the Procurement board
+    watching that column, same pattern as everywhere else.
     """
 
     if not FIRMA_BOARD_ID or not FIRMA_PA_EDITABLE_COLUMN_ID:
@@ -165,30 +172,16 @@ def _send_to_procurement(item_id, signed_path, data_fields):
 
     upload_file(new_item_id, FIRMA_PA_EDITABLE_COLUMN_ID, signed_path)
 
+    if PMO_CONNECT_COLUMN_ID and PMO_EMAIL_APROBACION_COLUMN_ID:
+        pmo_name, pmo_email = get_connected_person(item, PMO_CONNECT_COLUMN_ID, GERENTE_EMAIL_COLUMN_ID)
+
+        if pmo_email:
+            update_text_column(new_item_id, FIRMA_BOARD_ID, PMO_EMAIL_APROBACION_COLUMN_ID, pmo_email)
+            print(f"PMO: correo resuelto para {pmo_name} <{pmo_email}>, copiado a item={new_item_id}")
+        else:
+            print(f"PMO: item={item_id} sin PMO asignado, se omite")
+
     print(f"GERENTE_FIRMA: enviado a Procurement, item={new_item_id} ({name})")
-
-
-def _notify_pmo(item_id, board_id, item):
-    """The PMO the Lider picked (Connect Boards, same "Gerentes" board)
-    doesn't sign anything - it just gets an email once the Gerente signs.
-    Resolves the PMO's email the same way as the Gerente's and writes it
-    into PMO_EMAIL_COLUMN_ID; a Monday automation (set up in the UI) sends
-    the actual email to that address.
-    """
-
-    if not PMO_CONNECT_COLUMN_ID or not PMO_EMAIL_COLUMN_ID:
-        print("PMO: columnas no configuradas, se omite")
-        return
-
-    name, email = get_connected_person(item, PMO_CONNECT_COLUMN_ID, GERENTE_EMAIL_COLUMN_ID)
-
-    if not email:
-        print(f"PMO: item={item_id} sin PMO asignado, se omite")
-        return
-
-    update_text_column(item_id, board_id, PMO_EMAIL_COLUMN_ID, email)
-
-    print(f"PMO: correo resuelto para {name} <{email}> item={item_id}")
 
 
 def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None):
@@ -236,19 +229,10 @@ def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None)
     upload_file(item_id, ACTA_XLSX_COLUMN_ID, signed_path)
 
     try:
-        _send_to_procurement(item_id, signed_path, item_data(item))
+        _send_to_procurement(item_id, item, signed_path, item_data(item))
     except Exception as e:
         print(f"GERENTE_FIRMA: no se pudo enviar a Procurement: {e}")
 
-    try:
-        _notify_pmo(item_id, board_id, item)
-    except Exception as e:
-        print(f"PMO: no se pudo notificar: {e}")
-
-    # GERENTE_FIRMA_ESTADO_COLUMN_ID se cambia al final a proposito: la
-    # automatizacion de Monday que manda el correo al PMO dispara con este
-    # cambio, y necesita que PMO_EMAIL_COLUMN_ID ya tenga el valor correcto
-    # (escrito arriba en _notify_pmo) antes de que eso pase.
     if GERENTE_FIRMA_ESTADO_COLUMN_ID:
         change_status(item_id, board_id, GERENTE_FIRMA_ESTADO_COLUMN_ID, GERENTE_FIRMA_ESTADO_FIRMADO)
 
