@@ -123,10 +123,14 @@ COLUMN_ALIASES = {
     "cielo_falso": ["multi_selectvb0m3pot"],
     "aluminio_vidrio": ["multi_selectjxfvgjx3"],
     "hidrosanitaria": ["multi_selectqy93bkwp"],
-    "aac": ["multi_select2kmk23ve"],
-    "sci": ["multi_selectics6jahz"],
+    # aac/sci/mobiliario each have an orphaned duplicate column on the board
+    # (multi_select2kmk23ve, multi_selectics6jahz, multi_selectehkiwsw3 -
+    # not on the live form) - confirmed against the actual form 2026-09-21,
+    # do not swap back to those.
+    "aac": ["multi_selectq09u0es1"],
+    "sci": ["multi_select4wdu7jby"],
     "carpinteria": ["multi_select9nnochog"],
-    "mobiliario": ["multi_selectehkiwsw3"],
+    "mobiliario": ["multi_selectzqvpeduy"],
     "mamposteria": ["multi_selectbtv82pt7"],
     "obra_civil": ["multi_selectgs2drrw0"],
     "topografia": ["multi_select08qjt1im"],
