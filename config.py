@@ -87,7 +87,7 @@ GERENTE_FIRMA_LINK_COLUMN_ID = os.getenv("GERENTE_FIRMA_LINK_COLUMN_ID", "text_m
 # que la automatizacion de Monday lo use como destinatario - una columna
 # Reflejo no sirve para esto, Monday no la acepta como destinatario dinamico
 # en la automatizacion de enviar correo (confirmado probandolo con el PMO).
-GERENTE_EMAIL_LINK_COLUMN_ID = os.getenv("GERENTE_EMAIL_LINK_COLUMN_ID", "")
+GERENTE_EMAIL_LINK_COLUMN_ID = os.getenv("GERENTE_EMAIL_LINK_COLUMN_ID", "text_mm7ewxvw")  # "Gerente Correo"
 GERENTE_FIRMA_ESTADO_COLUMN_ID = os.getenv("GERENTE_FIRMA_ESTADO_COLUMN_ID", "color_mm7a8c8q")  # "Firmado?"
 # TODO: confirmar las etiquetas reales de "Firmado?" - asumiendo Pendiente/Firmado,
 # pero si es un status Si/No hay que ajustar estos dos valores para que coincidan.
@@ -183,7 +183,7 @@ COLUMN_ALIASES = {
     "estimaciones": ["numeric_mm6zdq6z", "short_text80nbowy8", "numeric_mm6zd1c6"],
     "contra_entrega": ["numeric_mm6zjs66", "short_textvvf82xfb", "numeric_mm6zj65b"],
     "retenido": ["numeric_mm6znatn", "short_text5h7ohigh", "numeric_mm6zj3gq"],
-    "trabajos_previos": ["short_text2kl0cen0", "long_text_mm6z536e"],
+    "trabajos_previos": ["long_textbzq1myqd", "short_text2kl0cen0"],
     "servicios_basicos": ["dropdown_mm6zmjj0", "multi_selectwd6nkr5w", "dropdown_mm6z5pp1"],
     "otro_servicio_basico": ["short_text1uon0zlm", "text_mm6zhxm8"],
         "puntos_generales": [
