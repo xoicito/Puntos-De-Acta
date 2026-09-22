@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_file
 
 from acta_routes import acta_bp
 from firma_gerente_routes import firma_gerente_bp
@@ -19,6 +19,18 @@ def health_check():
             "status": "ok",
             "service": "Puntos de Acta E4",
         }
+    )
+
+
+@app.get("/plantilla-alcance-cotizacion")
+def plantilla_alcance_cotizacion():
+    """Direct download link for the Lider to fill and upload back as their
+    Alcance de Cotizacion - linked from that question's description in the
+    Monday form."""
+    return send_file(
+        "templates/PLANTILLA_ALCANCE_COTIZACION.xlsx",
+        as_attachment=True,
+        download_name="PLANTILLA_ALCANCE_COTIZACION.xlsx",
     )
 
 
