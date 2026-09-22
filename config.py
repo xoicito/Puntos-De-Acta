@@ -113,6 +113,10 @@ COLUMN_ALIASES = {
     "gerente_proyecto": ["short_textlyk3dimh", GERENTE_CONNECT_COLUMN_ID],
     "acta_id": ["text_mm736ka4"],
     "multas_aplicar": [MULTAS_COLUMN_ID],
+    "multa_atraso_monto": ["short_textjv7r1s2w"],  # "Multa por atraso de entrega"
+    "multa_orden_monto": ["short_textt2l4xfsm"],  # "Multa por orden y limpieza"
+    "multa_seguridad_monto": ["short_textih9093ma"],  # "Multa por incumplimiento de Seguridad Industrial"
+    "multa_reporteria_monto": ["short_texthyqsd3r3"],  # "Multa por incumplimiento de reportería semanal"
     "metodo_firma": [METODO_FIRMA_COLUMN_ID],
     "herreria": ["multi_select3i0wzl2b"],
     "ventaneria": ["multi_selectv1jxlsfg"],

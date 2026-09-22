@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from config import COLUMN_ALIASES, SUBITEM_COLUMNS
 
@@ -8,14 +9,30 @@ IMMUTABLE_POINTS = [
     "El proveedor se compromete a cumplir con todas las normas del ACUERDO GUBERNATIVO 229-204 Y SUS REFORMAS 33-2016. De no cumplir con las normativas del acuerdo o las internas del proyecto, se podrá dar por terminado el contrato.",
 ]
 
-# Default amounts, taken from the original template (cells P30-P33) - used
-# whenever the corresponding multa is selected in the MULTAS_COLUMN_ID
-# dropdown. Anything not selected renders as "N/A".
+# Fallback amounts, taken from the original template (cells P30-P33) - used
+# only if the multa is selected but the Lider left its monto field blank.
 MULTAS_DEFAULTS = {
     "atraso": "1% POR DIA",
     "orden": "Q.25 POR EVENTO",
     "seguridad": "Q.50 POR PERSONA",
     "reporteria": "Q.25 POR EVENTO",
+}
+
+# The Lider only types a plain number in each "Multa por ..." field; this
+# formats it with the unit that multa actually uses in the template.
+MULTAS_FORMAT = {
+    "atraso": "{monto}% POR DIA",
+    "orden": "Q.{monto} POR EVENTO",
+    "seguridad": "Q.{monto} POR PERSONA",
+    "reporteria": "Q.{monto} POR EVENTO",
+}
+
+# Field name (from COLUMN_ALIASES) holding that typed number, per multa.
+MULTAS_MONTO_FIELDS = {
+    "atraso": "multa_atraso_monto",
+    "orden": "multa_orden_monto",
+    "seguridad": "multa_seguridad_monto",
+    "reporteria": "multa_reporteria_monto",
 }
 
 # Maps each "Multas a Aplicar" dropdown option label (lowercase) to the
@@ -700,7 +717,6 @@ def display_date(value):
 
 def rubric_code(rubro):
     """Extract the rubric code (1XX pattern) from a rubric string."""
-    import re
 
     m = re.search(
         r"\b(1\d{2})\b",
@@ -1008,8 +1024,11 @@ def parse_multi(value):
 def build_multas(data):
     """Resolve which multas apply from the MULTAS_COLUMN_ID dropdown selection.
 
-    A selected multa renders with its default amount (from the original
-    template); anything not selected renders as "N/A".
+    A selected multa renders as its typed monto (a plain number the Lider
+    enters in its own "Multa por ..." field) formatted with that multa's
+    unit - e.g. "5" becomes "5% POR DIA" for atraso, "Q.30 POR EVENTO" for
+    orden. Falls back to the original template's fixed default if selected
+    but left blank. Anything not selected renders as "N/A".
     """
 
     selected_options = parse_multi(data.get("multas_aplicar"))
@@ -1022,7 +1041,15 @@ def build_multas(data):
     }
 
     def value_for(key):
-        return MULTAS_DEFAULTS[key] if key in selected_keys else "N/A"
+        if key not in selected_keys:
+            return "N/A"
+
+        match = re.search(r"\d+(?:\.\d+)?", data.get(MULTAS_MONTO_FIELDS[key]) or "")
+
+        if match:
+            return MULTAS_FORMAT[key].format(monto=match.group())
+
+        return MULTAS_DEFAULTS[key]
 
     return {
         "{{MULTA_ATRASO}}": value_for("atraso"),
