@@ -12,6 +12,7 @@ from config import (
     FIRMA_PA_EDITABLE_COLUMN_ID,
     GERENTE_CONNECT_COLUMN_ID,
     GERENTE_EMAIL_COLUMN_ID,
+    GERENTE_EMAIL_LINK_COLUMN_ID,
     GERENTE_FIRMA_ESTADO_COLUMN_ID,
     GERENTE_FIRMA_ESTADO_FIRMADO,
     GERENTE_FIRMA_ESTADO_PENDIENTE,
@@ -72,6 +73,9 @@ def start_gerente_signing(item_id, board_id):
 
     if GERENTE_FIRMA_LINK_COLUMN_ID:
         update_text_column(item_id, board_id, GERENTE_FIRMA_LINK_COLUMN_ID, link)
+
+    if GERENTE_EMAIL_LINK_COLUMN_ID:
+        update_text_column(item_id, board_id, GERENTE_EMAIL_LINK_COLUMN_ID, email)
 
     try:
         create_update(

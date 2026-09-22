@@ -83,6 +83,11 @@ TEST_MODE_SKIP_NOTIFICATIONS = os.getenv("TEST_MODE_SKIP_NOTIFICATIONS", "false"
 GERENTE_CONNECT_COLUMN_ID = os.getenv("GERENTE_CONNECT_COLUMN_ID", "board_relation_mm7apess")
 GERENTE_EMAIL_COLUMN_ID = os.getenv("GERENTE_EMAIL_COLUMN_ID", "text_mm7ayzbv")  # board "Gerentes"
 GERENTE_FIRMA_LINK_COLUMN_ID = os.getenv("GERENTE_FIRMA_LINK_COLUMN_ID", "text_mm7aftw0")  # "Gerente Firma Link"
+# Correo real del Gerente, resuelto por Connect Boards y escrito aqui para
+# que la automatizacion de Monday lo use como destinatario - una columna
+# Reflejo no sirve para esto, Monday no la acepta como destinatario dinamico
+# en la automatizacion de enviar correo (confirmado probandolo con el PMO).
+GERENTE_EMAIL_LINK_COLUMN_ID = os.getenv("GERENTE_EMAIL_LINK_COLUMN_ID", "")
 GERENTE_FIRMA_ESTADO_COLUMN_ID = os.getenv("GERENTE_FIRMA_ESTADO_COLUMN_ID", "color_mm7a8c8q")  # "Firmado?"
 # TODO: confirmar las etiquetas reales de "Firmado?" - asumiendo Pendiente/Firmado,
 # pero si es un status Si/No hay que ajustar estos dos valores para que coincidan.
