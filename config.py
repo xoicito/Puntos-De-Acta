@@ -29,6 +29,12 @@ FIRMA_PA_FIRMADO_COLUMN_ID = os.getenv("FIRMA_PA_FIRMADO_COLUMN_ID", "file_mm793
 FIRMA_PLACEHOLDER = os.getenv("FIRMA_PLACEHOLDER", "{{FIRMA_MELISSA}}")
 MELISSA_SIGNATURE_PATH = os.getenv("MELISSA_SIGNATURE_PATH", "assets/firma_melissa.jpg")
 
+# Firma del Lider de Proyecto en el documento generado - igual que las de
+# Gerente y Melissa, se ubica buscando este texto en la plantilla (celda o
+# rango combinado) en vez de una coordenada fija, para que sobreviva a
+# cualquier fila que se inserte arriba (ej. renglones extra de cotizacion).
+LIDER_FIRMA_PLACEHOLDER = os.getenv("LIDER_FIRMA_PLACEHOLDER", "{{FIRMA_LIDER}}")
+
 # Notificados dentro de Monday (actividad del item) cuando Arq. Melissa
 # Alvarenga firma. El correo real a estas mismas personas se maneja aparte,
 # con una automatizacion de Monday (destinatarios fijos, no depende de

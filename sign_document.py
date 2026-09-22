@@ -43,14 +43,7 @@ def sign_document(item_id):
     wb = load_workbook(source_path)
     ws = wb["C-9-12"] if "C-9-12" in wb.sheetnames else wb.active
 
-    signed_ok = insert_signature(
-        ws,
-        str(base / MELISSA_SIGNATURE_PATH),
-        top_left="L128",
-        cols=("L", "M"),
-        rows=(128, 129, 130, 131),
-        placeholder=FIRMA_PLACEHOLDER,
-    )
+    signed_ok = insert_signature(ws, str(base / MELISSA_SIGNATURE_PATH), FIRMA_PLACEHOLDER)
 
     if not signed_ok:
         raise RuntimeError(

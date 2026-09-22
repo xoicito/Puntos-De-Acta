@@ -200,14 +200,7 @@ def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None)
     wb = load_workbook(source_path)
     ws = wb["C-9-12"] if "C-9-12" in wb.sheetnames else wb.active
 
-    signed_ok = insert_signature(
-        ws,
-        signature_path,
-        top_left="H128",
-        cols=("H", "I", "J"),
-        rows=(128, 129, 130, 131),
-        placeholder=GERENTE_FIRMA_PLACEHOLDER,
-    )
+    signed_ok = insert_signature(ws, signature_path, GERENTE_FIRMA_PLACEHOLDER)
 
     if not signed_ok:
         raise RuntimeError("No se pudo insertar la firma en el documento")

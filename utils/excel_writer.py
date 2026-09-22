@@ -1,9 +1,63 @@
 import copy
+import re
+from datetime import datetime
 
 from openpyxl import load_workbook
 from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Alignment
 from openpyxl.utils import get_column_letter
+
+from config import LIDER_FIRMA_PLACEHOLDER
+
+SHEET_NAME = "C-9-12"
+
+# Fixed layout of templates/100_PUNTO_DE_ACTA_PLANTILLA.xlsx. render_excel
+# fills everything below at these template rows first and only then inserts
+# any extra quotation rows, which pushes the rest of the sheet down - so
+# nothing here ever needs adjusting for a long quotation.
+COTIZACION_FIRST_ROW = 50
+COTIZACION_CAPACITY = 6
+PROGRAMACION_FIRST_ROW = 62
+PROGRAMACION_CAPACITY = 5
+TRABAJOS_FIRST_ROW = 69
+SERVICIOS_FIRST_ROW = 76
+SHORT_LIST_CAPACITY = 5
+PUNTOS_FIRST_ROW = 84
+PUNTOS_CAPACITY = 28
+LIST_COLUMN = "E"
+
+SI_NO_CELLS = {
+    "{{PG_BITACORA}}": "J30",
+    "{{PG_SEGURIDAD}}": "J31",
+    "{{PG_PROTOCOLO}}": "J32",
+    "{{PG_REUNION}}": "J33",
+    "{{PG_SUPERVISOR}}": "J34",
+    "{{PG_ENCARGADO}}": "J35",
+    "{{PL_ARQ}}": "J38",
+    "{{PL_COTAS}}": "J39",
+    "{{PL_ELEV}}": "J40",
+    "{{PL_HIDRO}}": "J41",
+    "{{PL_ELEC}}": "J42",
+    "{{PL_ACAB}}": "J43",
+    "{{PL_ESTR_PRIN}}": "J44",
+    "{{PL_ESTR_SEC}}": "J45",
+    "{{PL_OBRAS}}": "J46",
+}
+
+MULTA_CELLS = {
+    "{{MULTA_ATRASO}}": "P30",
+    "{{MULTA_ORDEN}}": "P31",
+    "{{MULTA_SEGURIDAD}}": "P32",
+    "{{MULTA_REPORTERIA}}": "P33",
+}
+
+# Written row by row by the functions below, never by plain text replacement.
+LIST_PLACEHOLDERS = {
+    "{{PROGRAMACION}}",
+    "{{TRABAJOS_PREVIOS}}",
+    "{{SERVICIOS_BASICOS}}",
+    "{{PUNTOS_REVISION}}",
+}
 
 DEFAULT_COL_WIDTH = 8.43
 DEFAULT_ROW_HEIGHT = 15.0
@@ -60,16 +114,13 @@ def _find_placeholder_box(ws, placeholder):
     return None
 
 
-def insert_signature(ws, signature_path, top_left, cols, rows, placeholder=None):
-    """Insert an image scaled to fit inside a box without distorting it.
+def insert_signature(ws, signature_path, placeholder):
+    """Insert an image scaled to fit, without distortion, inside the cell (or
+    merged range) that holds `placeholder`, and clear the placeholder text.
 
-    If `placeholder` is given and found somewhere in the sheet, its cell (or
-    merged range) is used as the box instead of the fixed top_left/cols/rows
-    arguments, and the placeholder text is cleared. This lets different
-    template variants place the signature wherever they need to just by
-    containing that placeholder text, instead of relying on a fixed cell
-    range that only matches one template layout. If the placeholder isn't
-    found (or isn't given), the fixed box is used as-is.
+    Finding the box by its text - instead of by fixed cell coordinates -
+    keeps the signature in the right place no matter how many rows were
+    inserted above it.
 
     Returns True if the image was inserted, False otherwise. Callers that treat
     the signature as a required step (e.g. an approval signing flow) should
@@ -79,10 +130,13 @@ def insert_signature(ws, signature_path, top_left, cols, rows, placeholder=None)
     if not signature_path:
         return False
 
-    if placeholder:
-        found = _find_placeholder_box(ws, placeholder)
-        if found:
-            top_left, cols, rows = found
+    found = _find_placeholder_box(ws, placeholder)
+
+    if not found:
+        print(f"ERROR FIRMA_IMAGEN: no se encontro el marcador {placeholder}")
+        return False
+
+    top_left, cols, rows = found
 
     try:
         img = XLImage(signature_path)
@@ -122,12 +176,9 @@ def _copy_row_style(ws, source_row, target_row, min_col=2, max_col=18):
 
 def _shift_row_dimensions(ws, insert_at, amount):
     """openpyxl's insert_rows() only moves cell content - it does NOT move
-    row-level properties (height, hidden, customFormat), which live in
-    ws.row_dimensions keyed by row number. Left alone, a hidden row (e.g.
-    Condiciones Especiales) would stay hidden at its OLD row number - which
-    now holds different content - while the content that moved into its old
-    slot loses the hidden flag entirely. Shift those records by hand so they
-    follow their row's actual content.
+    row-level properties (height, hidden), which live in ws.row_dimensions
+    keyed by row number. Shift those records by hand so they follow their
+    row's actual content.
     """
 
     existing_rows = sorted(
@@ -173,38 +224,54 @@ def _shift_merged_ranges(ws, insert_at, amount):
         )
 
 
-def ensure_cotizacion_capacity(ws, needed_rows, first_row=50, template_capacity=6):
+def _shift_print_layout(ws, insert_at, amount):
+    """Keep the print area and manual page breaks in step with inserted
+    rows - otherwise the bottom of the document (the signature block) falls
+    outside the print area and the page-3 break lands in the wrong place.
+    """
+
+    for page_break in ws.row_breaks.brk:
+        if page_break.id >= insert_at:
+            page_break.id += amount
+
+    match = re.search(r"\$([A-Z]+)\$(\d+):\$([A-Z]+)\$(\d+)$", ws.print_area or "")
+
+    if match:
+        first_col, first_row, last_col, last_row = match.groups()
+        ws.print_area = f"{first_col}{first_row}:{last_col}{int(last_row) + amount}"
+
+
+def ensure_cotizacion_capacity(ws, needed_rows):
     """Insert extra rows into the Alcance de Cotizacion table if there are more
     quotation lines than the template's built-in rows can hold, and fix up the
     SUBTOTAL/IVA/TOTAL formulas that sit right below the table.
 
     openpyxl's insert_rows() only moves cell content - it does NOT rewrite
     formula text (so SUM(N50:N55) would silently keep pointing at the old
-    range), and it does NOT shift row-level properties or merged cell
-    ranges. All three are corrected by hand here - see
-    _shift_row_dimensions and _shift_merged_ranges.
+    range), and it does NOT shift row-level properties, merged cell ranges,
+    the print area or page breaks. All of those are corrected by hand here.
 
-    Returns how many rows were inserted (0 if the template's built-in rows
-    already covered `needed_rows`), so the caller can shift every hardcoded
-    row number for everything below this table by the same amount.
+    Returns how many rows were inserted.
     """
 
-    extra = max(0, needed_rows - template_capacity)
+    extra = max(0, needed_rows - COTIZACION_CAPACITY)
 
     if not extra:
         return 0
 
-    last_template_row = first_row + template_capacity - 1  # 55
-    insert_at = last_template_row + 1  # 56
+    first_row = COTIZACION_FIRST_ROW
+    last_template_row = first_row + COTIZACION_CAPACITY - 1
+    insert_at = last_template_row + 1
 
     ws.insert_rows(insert_at, extra)
     _shift_row_dimensions(ws, insert_at, extra)
     _shift_merged_ranges(ws, insert_at, extra)
+    _shift_print_layout(ws, insert_at, extra)
 
     for i in range(extra):
         target_row = insert_at + i
 
-        # Rows 50-55 alternate between two banding styles by row-number
+        # The template rows alternate between two banding styles by row-number
         # parity (zebra striping) - keep extending that same pattern rather
         # than flattening every new row to one look.
         style_source_row = first_row if target_row % 2 == 0 else first_row + 1
@@ -214,9 +281,9 @@ def ensure_cotizacion_capacity(ws, needed_rows, first_row=50, template_capacity=
         ws.merge_cells(start_row=target_row, start_column=14, end_row=target_row, end_column=15)  # N:O
 
     new_last_row = last_template_row + extra
-    subtotal_row = insert_at + extra  # was 56
-    iva_row = subtotal_row + 1  # was 57
-    total_row = subtotal_row + 2  # was 58
+    subtotal_row = insert_at + extra
+    iva_row = subtotal_row + 1
+    total_row = subtotal_row + 2
 
     ws[f"N{subtotal_row}"] = f"=SUM(N{first_row}:N{new_last_row})"
     ws[f"N{iva_row}"] = f"=+N{subtotal_row}*0.12"
@@ -228,365 +295,137 @@ def ensure_cotizacion_capacity(ws, needed_rows, first_row=50, template_capacity=
 def write_cotizacion_rows(ws, rows):
 
     for offset, row in enumerate(rows):
+        excel_row = COTIZACION_FIRST_ROW + offset
 
-        excel_row = 50 + offset
-
-        values = [
-            (f"D{excel_row}", offset + 1),
-            (f"E{excel_row}", row.get("descripcion", "")),
-            (f"K{excel_row}", row.get("unidad", "")),
-            (f"L{excel_row}", row.get("cantidad", "")),
-            (f"M{excel_row}", row.get("precio", "")),
-            (f"P{excel_row}", row.get("observaciones", "")),
-        ]
-
-        for cell_ref, value in values:
-
-            try:
-                ws[cell_ref] = value
-            except Exception as e:
-                print(f"ERROR_COTIZACION {cell_ref} -> {e}")
-                raise
-
-        try:
-
-            subtotal = (
-                float(row.get("cantidad", 0))
-                *
-                float(row.get("precio", 0))
-            )
-
-            ws[f"N{excel_row}"] = subtotal
-            try:
-                ws[f"N{excel_row}"] = subtotal
-            except Exception:
-                ws[f"O{excel_row}"] = subtotal
-
-        except Exception as e:
-
-            print(
-                f"ERROR_SUBTOTAL N{excel_row} -> {e}"
-            )
-
-            raise
+        ws[f"D{excel_row}"] = offset + 1
+        ws[f"E{excel_row}"] = row.get("descripcion", "")
+        ws[f"K{excel_row}"] = row.get("unidad", "")
+        ws[f"L{excel_row}"] = row.get("cantidad", "")
+        ws[f"M{excel_row}"] = row.get("precio", "")
+        ws[f"N{excel_row}"] = float(row.get("cantidad") or 0) * float(row.get("precio") or 0)
+        ws[f"P{excel_row}"] = row.get("observaciones", "")
 
 
-def write_list_to_range(ws, start_row, end_row, column, items):
-    """Write list items to a range of cells, respecting the boundaries."""
+def _as_lines(value):
+    """Normalize a list, a newline-separated string or None into a list of
+    non-empty strings."""
 
-    for i, item in enumerate(items):
+    if not value:
+        return []
 
-        row = start_row + i
+    items = value if isinstance(value, list) else str(value).split("\n")
 
-        if row > end_row:
-            break
+    return [str(item) for item in items if str(item).strip()]
 
-        try:
 
-            cell = ws.cell(row=row, column=column)
+def _write_list(ws, first_row, capacity, items, column=LIST_COLUMN, row_shift=0):
+    """Fill `capacity` consecutive rows of one column with `items`.
 
-            print(
-                f"INTENTANDO row={row} col={column} tipo={type(cell).__name__}"
-            )
+    Every row in the range is written, empty ones included, so a placeholder
+    left over from the template can never show up in the finished document
+    when there are fewer items than rows (or none at all). Items beyond the
+    table's capacity are dropped, with a log line.
+    """
 
-            cell.value = str(item)
+    if len(items) > capacity:
+        print(f"AVISO: {len(items)} lineas para {capacity} filas en {column}{first_row}, se omiten {len(items) - capacity}")
 
-            cell.alignment = Alignment(
-                wrap_text=True,
-                vertical="top"
-            )
+    for i in range(capacity):
+        cell = ws[f"{column}{first_row + row_shift + i}"]
 
-        except Exception as e:
+        if i < len(items):
+            cell.value = str(items[i])
+            cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+        else:
+            cell.value = None
 
-            print(
-                f"ERROR CELDA row={row} col={column} "
-                f"tipo={type(cell).__name__} "
-                f"item={item} "
-                f"error={e}"
-            )
 
-            raise
+def _days_between(inicio, fin):
+    """Inclusive number of days between two DD/MM/YYYY dates, or None if
+    either is missing or malformed."""
 
-def write_list_to_rows(ws, rows, column, items):
+    try:
+        start = datetime.strptime(inicio, "%d/%m/%Y")
+        end = datetime.strptime(fin, "%d/%m/%Y")
+    except (TypeError, ValueError):
+        return None
 
-    for row, item in zip(rows, items):
+    return (end - start).days + 1
 
-        cell = ws.cell(row=row, column=column)
 
-        cell.value = str(item)
+def _write_programacion(ws, rows, row_shift=0):
+    """Programacion de Fechas: AREA (D), INICIO (G), TERMINA (I), DIAS (K),
+    OBSERVACIONES (M). Unused rows are cleared, same as _write_list."""
 
-        cell.alignment = Alignment(
-            wrap_text=True,
-            vertical="top"
-        )
+    if len(rows) > PROGRAMACION_CAPACITY:
+        print(f"AVISO: {len(rows)} filas de programacion para {PROGRAMACION_CAPACITY}, se omiten las sobrantes")
 
-def write_programacion_row(ws, row_num, area, inicio, fin, obs):
-    """Write a single programacion row to the specified columns."""
-    ws.cell(row=row_num, column=4).value = area  # D
-    ws.cell(row=row_num, column=7).value = inicio  # G
-    ws.cell(row=row_num, column=10).value = fin  # J
-    ws.cell(row=row_num, column=13).value = obs  # M
+    for i in range(PROGRAMACION_CAPACITY):
+        row_num = PROGRAMACION_FIRST_ROW + row_shift + i
+        fila = rows[i] if i < len(rows) else {}
 
-    for col in [4, 7, 10, 13]:
-        ws.cell(row=row_num, column=col).alignment = Alignment(
-            wrap_text=True,
-            vertical="top"
-        )
+        ws[f"D{row_num}"] = fila.get("area") or None
+        ws[f"G{row_num}"] = fila.get("inicio") or None
+        ws[f"I{row_num}"] = fila.get("fin") or None
+        ws[f"K{row_num}"] = _days_between(fila.get("inicio"), fila.get("fin"))
+        ws[f"M{row_num}"] = fila.get("obs") or None
+
+
+def _replace_text_placeholders(ws, replacements):
+    """Replace {{PLACEHOLDER}} text wherever it appears, leaving each cell's
+    own formatting (e.g. centered percentages) untouched."""
+
+    text_placeholders = {
+        placeholder: value
+        for placeholder, value in replacements.items()
+        if placeholder.startswith("{{")
+        and placeholder.endswith("}}")
+        and placeholder not in LIST_PLACEHOLDERS
+    }
+
+    for row in ws.iter_rows():
+        for cell in row:
+            if not isinstance(cell.value, str) or "{{" not in cell.value:
+                continue
+
+            for placeholder, value in text_placeholders.items():
+                if placeholder not in cell.value:
+                    continue
+
+                text = "\n".join(str(v) for v in value) if isinstance(value, list) else str(value or "")
+                cell.value = cell.value.replace(placeholder, text)
 
 
 def render_excel(template_path, output_path, replacements):
 
-    print("=== RENDER EXCEL INICIADO ===")
-
     wb = load_workbook(template_path)
-
-    ws = wb["C-9-12"]
+    ws = wb[SHEET_NAME]
 
     print(f"IMAGENES CARGADAS DE LA PLANTILLA: {len(ws._images)}")
 
+    for placeholder, cell in SI_NO_CELLS.items():
+        ws[cell] = replacements.get(placeholder, "NO")
+
+    for placeholder, cell in MULTA_CELLS.items():
+        ws[cell] = replacements.get(placeholder, "")
+
+    # First on purpose: the quotation table sits above everything else this
+    # function writes, so growing it shifts every row number below.
     cotizacion_rows = replacements.get("__COTIZACION_ROWS__", [])
-
     row_shift = ensure_cotizacion_capacity(ws, len(cotizacion_rows))
-
-    print(f"COTIZACION_ROW_SHIFT: {row_shift}")
-
+    print(f"COTIZACION_FILAS_EXTRA: {row_shift}")
     write_cotizacion_rows(ws, cotizacion_rows)
-    # PUNTOS GENERALES
 
-    ws["J30"] = replacements.get("{{PG_BITACORA}}", "NO")
-    ws["J31"] = replacements.get("{{PG_SEGURIDAD}}", "NO")
-    ws["J32"] = replacements.get("{{PG_PROTOCOLO}}", "NO")
-    ws["J33"] = replacements.get("{{PG_REUNION}}", "NO")
-    ws["J34"] = replacements.get("{{PG_SUPERVISOR}}", "NO")
-    ws["J35"] = replacements.get("{{PG_ENCARGADO}}", "NO")
+    _write_programacion(ws, replacements.get("__PROGRAMACION_ROWS__", []), row_shift)
 
-    # PLANOS ENTREGADOS
+    _write_list(ws, TRABAJOS_FIRST_ROW, SHORT_LIST_CAPACITY, _as_lines(replacements.get("{{TRABAJOS_PREVIOS}}")), row_shift=row_shift)
+    _write_list(ws, SERVICIOS_FIRST_ROW, SHORT_LIST_CAPACITY, _as_lines(replacements.get("{{SERVICIOS_BASICOS}}")), row_shift=row_shift)
+    _write_list(ws, PUNTOS_FIRST_ROW, PUNTOS_CAPACITY, _as_lines(replacements.get("{{PUNTOS_REVISION}}")), row_shift=row_shift)
 
-    ws["J38"] = replacements.get("{{PL_ARQ}}", "NO")
-    ws["J39"] = replacements.get("{{PL_COTAS}}", "NO")
-    ws["J40"] = replacements.get("{{PL_ELEV}}", "NO")
-    ws["J41"] = replacements.get("{{PL_HIDRO}}", "NO")
-    ws["J42"] = replacements.get("{{PL_ELEC}}", "NO")
-    ws["J43"] = replacements.get("{{PL_ACAB}}", "NO")
-    ws["J44"] = replacements.get("{{PL_ESTR_PRIN}}", "NO")
-    ws["J45"] = replacements.get("{{PL_ESTR_SEC}}", "NO")
-    ws["J46"] = replacements.get("{{PL_OBRAS}}", "NO")
+    _replace_text_placeholders(ws, replacements)
 
-    # -------------------------
-    # PUNTOS GENERALES
-    # -------------------------
-
-    ws["J30"] = replacements.get(
-        "{{PG_BITACORA}}",
-        "NO"
-    )
-
-    ws["J31"] = replacements.get(
-        "{{PG_SEGURIDAD}}",
-        "NO"
-    )
-
-    ws["J32"] = replacements.get(
-        "{{PG_PROTOCOLO}}",
-        "NO"
-    )
-
-    ws["J33"] = replacements.get(
-        "{{PG_REUNION}}",
-        "NO"
-    )
-
-    ws["J34"] = replacements.get(
-        "{{PG_SUPERVISOR}}",
-        "NO"
-    )
-
-    ws["J35"] = replacements.get(
-        "{{PG_ENCARGADO}}",
-        "NO"
-    )
-
-    ws["P30"] = replacements.get("{{MULTA_ATRASO}}", "")
-    ws["P31"] = replacements.get("{{MULTA_ORDEN}}", "")
-    ws["P32"] = replacements.get("{{MULTA_SEGURIDAD}}", "")
-    ws["P33"] = replacements.get("{{MULTA_REPORTERIA}}", "")
-
-    # -------------------------
-    # PLANOS ENTREGADOS
-    # -------------------------
-
-    ws["J38"] = replacements.get(
-        "{{PL_ARQ}}",
-        "NO"
-    )
-
-    ws["J39"] = replacements.get(
-        "{{PL_COTAS}}",
-        "NO"
-    )
-
-    ws["J40"] = replacements.get(
-        "{{PL_ELEV}}",
-        "NO"
-    )
-
-    ws["J41"] = replacements.get(
-        "{{PL_HIDRO}}",
-        "NO"
-    )
-
-    ws["J42"] = replacements.get(
-        "{{PL_ELEC}}",
-        "NO"
-    )
-
-    ws["J43"] = replacements.get(
-        "{{PL_ACAB}}",
-        "NO"
-    )
-
-    ws["J44"] = replacements.get(
-        "{{PL_ESTR_PRIN}}",
-        "NO"
-    )
-
-    ws["J45"] = replacements.get(
-        "{{PL_ESTR_SEC}}",
-        "NO"
-    )
-
-    ws["J46"] = replacements.get(
-        "{{PL_OBRAS}}",
-        "NO"
-    )
-
-    programacion_rows = replacements.get(
-        "__PROGRAMACION_ROWS__",
-        []
-    )
-
-    # The {{PROGRAMACION}} placeholder lives in D62 (first row of this
-    # table) and is only overwritten below when there's at least one
-    # subitem - clear it explicitly so it never shows as raw text.
-    ws[f"D{62 + row_shift}"] = ""
-
-    for offset, fila in enumerate(programacion_rows[:5]):
-
-        row_num = 62 + row_shift + offset
-
-        for celda, valor in [
-            (f"D{row_num}", fila.get("area", "")),
-            (f"G{row_num}", fila.get("inicio", "")),
-            (f"I{row_num}", fila.get("fin", "")),
-        ]:
-
-            try:
-                ws[celda] = valor
-            except Exception as e:
-                print(f"ERROR PROGRAMACION {celda}: {e}")
-                raise
-
-        try:
-            from datetime import datetime
-
-            inicio = datetime.strptime(
-                fila.get("inicio", ""),
-                "%d/%m/%Y"
-            )
-
-            fin = datetime.strptime(
-                fila.get("fin", ""),
-                "%d/%m/%Y"
-            )
-
-            ws[f"K{row_num}"] = (fin - inicio).days + 1
-
-        except Exception as e:
-            print(f"ERROR PROGRAMACION K{row_num}: {e}")
-            raise
-
-        try:
-            ws[f"M{row_num}"] = fila.get("obs", "")
-        except Exception as e:
-            print(f"ERROR PROGRAMACION M{row_num}: {e}")
-            raise
-
-    # TRABAJOS PREVIOS - E69:E73 (5 rows)
-    print("TRABAJOS_PREVIOS")
-    trabajos = replacements.get("{{TRABAJOS_PREVIOS}}", [])
-    if isinstance(trabajos, list):
-        write_list_to_range(ws, 69 + row_shift, 73 + row_shift, 5, trabajos)
-    elif isinstance(trabajos, str):
-        write_list_to_range(ws, 69 + row_shift, 73 + row_shift, 5, trabajos.split('\n'))
-
-    # SERVICIOS BASICOS - E76:E80 (5 rows)
-    servicios = replacements.get("{{SERVICIOS_BASICOS}}", [])
-    if isinstance(servicios, list):
-        write_list_to_range(ws, 76 + row_shift, 80 + row_shift, 5, servicios)
-    elif isinstance(servicios, str):
-        write_list_to_range(ws, 76 + row_shift, 80 + row_shift, 5, servicios.split('\n'))
-
-    # PUNTOS REVISION - E84:E98 (15 rows)
-    puntos = replacements.get("{{PUNTOS_REVISION}}", [])
-
-    write_list_to_rows(
-        ws,
-        list(range(84 + row_shift, 112 + row_shift)),
-        5,
-        puntos
-    )
-
-    # REEMPLAZOS NORMALES - Text placeholders in cells
-    for row in ws.iter_rows():
-        for cell in row:
-            if not isinstance(cell.value, str):
-                continue
-
-            for placeholder, value in replacements.items():
-                # Skip list placeholders and special keys
-                if placeholder.startswith("{{") and placeholder.endswith("}}"):
-                    if placeholder in ["{{PROGRAMACION}}", "{{TRABAJOS_PREVIOS}}",
-                                     "{{SERVICIOS_BASICOS}}", "{{PUNTOS_REVISION}}"]:
-                        continue
-
-                    if placeholder in cell.value:
-                        if isinstance(value, list):
-                            cell.value = cell.value.replace(
-                                placeholder,
-                                "\n".join(str(v) for v in value)
-                            )
-                        else:
-                            cell.value = cell.value.replace(
-                                placeholder,
-                                str(value or "")
-                            )
-
-                        # Alignment intentionally left untouched here so the
-                        # template's own per-cell formatting (e.g. centered
-                        # percentage fields) survives the replacement.
-
-    ws[f"D{133 + row_shift}"].alignment = Alignment(
-        horizontal="center",
-        vertical="center"
-    )
-
-    ws[f"O{133 + row_shift}"].alignment = Alignment(
-        horizontal="center",
-        vertical="center"
-    )
-
-    ws[f"H{133 + row_shift}"].alignment = Alignment(
-        horizontal="center",
-        vertical="center"
-    )
-
-    insert_signature(
-        ws,
-        replacements.get("__SIGNATURE_PATH__"),
-        top_left=f"D{128 + row_shift}",
-        cols=("D", "E", "F"),
-        rows=(128 + row_shift, 129 + row_shift, 130 + row_shift, 131 + row_shift),
-    )
+    # Placeholder-based, so it's found wherever it landed - no row_shift needed.
+    insert_signature(ws, replacements.get("__SIGNATURE_PATH__"), LIDER_FIRMA_PLACEHOLDER)
 
     wb.save(output_path)
 
