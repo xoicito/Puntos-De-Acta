@@ -560,6 +560,52 @@ PUNTOS_OPCION_MAP = {
             "Proceso de perforación ejecutado con limpieza de escombros.",
         ],
     },
+    "acabados": {
+        "color correcto": ["Textura y tonalidad uniformes en toda la superficie"],
+        "textura uniforme": ["Textura y tonalidad uniformes en toda la superficie"],
+        "acabado limpio": [
+            "Superficie limpia y debidamente protegida",
+            "Bordes y esquinas bien definidos",
+        ],
+        "sin daños visibles": [
+            "Superficie sin fisuras, grietas ni defectos visibles",
+            "Sin eflorescencias ni manchas visibles",
+        ],
+        "sin danos visibles": [
+            "Superficie sin fisuras, grietas ni defectos visibles",
+            "Sin eflorescencias ni manchas visibles",
+        ],
+        "conforme a muestras aprobadas": [
+            "Nivelación y espesores verificados según especificaciones",
+            "Buena adherencia del acabado sobre la base comprobada",
+            "Juntas de dilatación correctamente aplicadas",
+            "Curado adecuado realizado para evitar contracción",
+            "Impermeabilización aplicada en zonas húmedas",
+            "Selladores correctamente aplicados",
+        ],
+        "limpieza final": ["Registro fotográfico del estado final completo"],
+    },
+    "impermeabilizacion": {
+        "superficie preparada": [
+            "Adherencia adecuada en esquinas y juntas críticas.",
+            "Refuerzos correctamente colocados en puntos de mayor desgaste.",
+        ],
+        "aplicación completa": ["Aplicación uniforme verificada en toda la superficie."],
+        "aplicacion completa": ["Aplicación uniforme verificada en toda la superficie."],
+        "espesor uniforme": [
+            "Espesor de la capa impermeabilizante cumple con especificaciones del sistema aplicado.",
+        ],
+        "prueba de estanqueidad": [
+            "No se evidencian grietas, burbujas ni desprendimientos en la capa impermeabilizante.",
+            "Material expuesto al clima mantiene sus propiedades sin deterioro visible.",
+            "Sellos en bordes y uniones sin signos de desgaste ni separación.",
+        ],
+        "ausencia de filtraciones": ["No se presentan filtraciones de agua en las áreas tratadas."],
+        # "Limpieza final" no tiene una linea correspondiente en la plantilla
+        # oficial de Impermeabilizantes - mismo caso que Electricidad, se
+        # deja sin mapear a proposito.
+        "limpieza final": [],
+    },
 }
 
 
