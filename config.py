@@ -91,7 +91,7 @@ GERENTE_EMAIL_COLUMN_ID = os.getenv("GERENTE_EMAIL_COLUMN_ID", "text_mm7ayzbv") 
 # "Plantilla") - reemplaza a GERENTE_CONNECT_COLUMN_ID para el formulario.
 # El correo se resuelve buscando ese nombre en GERENTES_BOARD_ID
 # (find_item_by_name), no por conexion.
-GERENTE_NOMBRE_COLUMN_ID = os.getenv("GERENTE_NOMBRE_COLUMN_ID", "")
+GERENTE_NOMBRE_COLUMN_ID = os.getenv("GERENTE_NOMBRE_COLUMN_ID", "single_select1bxlj8p")  # "Gerente"
 GERENTE_FIRMA_LINK_COLUMN_ID = os.getenv("GERENTE_FIRMA_LINK_COLUMN_ID", "text_mm7aftw0")  # "Gerente Firma Link"
 # Correo real del Gerente, resuelto por Connect Boards y escrito aqui para
 # que la automatizacion de Monday lo use como destinatario - una columna
@@ -124,8 +124,8 @@ GERENTE_FIRMA_PLACEHOLDER = os.getenv("GERENTE_FIRMA_PLACEHOLDER", "{{FIRMA_GERE
 # reemplaza para el formulario.
 PMO_CONNECT_COLUMN_ID = os.getenv("PMO_CONNECT_COLUMN_ID", "board_relation_mm7ea612")
 PMO_BOARD_ID = int(os.getenv("PMO_BOARD_ID", "18432219741"))
-PMO_NOMBRE_COLUMN_ID = os.getenv("PMO_NOMBRE_COLUMN_ID", "")
-PMO_EMAIL_COLUMN_ID = os.getenv("PMO_EMAIL_COLUMN_ID", "")  # columna de e-mail en "Base Datos PMO"
+PMO_NOMBRE_COLUMN_ID = os.getenv("PMO_NOMBRE_COLUMN_ID", "single_selectd8eed12")  # "PMO"
+PMO_EMAIL_COLUMN_ID = os.getenv("PMO_EMAIL_COLUMN_ID", "text_mm7ayzbv")  # "e-mail" en "Base Datos PMO"
 PMO_EMAIL_APROBACION_COLUMN_ID = os.getenv("PMO_EMAIL_APROBACION_COLUMN_ID", "")
 
 # Debe ser un valor fijo y secreto (no lo genere al azar en cada arranque -
