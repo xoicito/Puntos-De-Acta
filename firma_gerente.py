@@ -19,6 +19,9 @@ from config import (
     GERENTE_LINK_BASE_URL,
     GERENTE_LINK_EXPIRATION_HOURS,
     GERENTE_FIRMA_LINK_COLUMN_ID,
+    PMO_NOTIFICATIONS_ENABLED,
+    PMO_NOTIFICAR_COLUMN_ID,
+    PMO_NOTIFICAR_LABEL,
     TEST_MODE_SKIP_NOTIFICATIONS,
 )
 from gerente_link import InvalidLinkError, generate_signing_link, verify_token
@@ -166,6 +169,28 @@ def _send_to_procurement(item_id, signed_path, data_fields):
     print(f"GERENTE_FIRMA: enviado a Procurement, item={new_item_id} ({name})")
 
 
+def _notify_pmo(item_id, board_id):
+    """Trigger the PMO notification once the Gerente signs. The PMO's email
+    itself is resolved entirely on Monday's side (a Reflejo/mirror column
+    on the "PMO" Connect Boards selection) - this only flips a status
+    column that a Monday automation watches to send that email, so
+    PMO_NOTIFICATIONS_ENABLED is a real on/off switch without having to
+    touch the automation in Monday.
+    """
+
+    if not PMO_NOTIFICATIONS_ENABLED:
+        print("PMO: notificaciones desactivadas (PMO_NOTIFICATIONS_ENABLED=false), se omite")
+        return
+
+    if not PMO_NOTIFICAR_COLUMN_ID:
+        print("PMO: columna de notificacion no configurada, se omite")
+        return
+
+    change_status(item_id, board_id, PMO_NOTIFICAR_COLUMN_ID, PMO_NOTIFICAR_LABEL)
+
+    print(f"PMO: disparada notificacion item={item_id}")
+
+
 def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None):
     """Verify the token again, insert the signature, upload the result, and
     mark the item as signed. Meant to run on the POST of the signing page -
@@ -217,6 +242,11 @@ def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None)
         _send_to_procurement(item_id, signed_path, item_data(item))
     except Exception as e:
         print(f"GERENTE_FIRMA: no se pudo enviar a Procurement: {e}")
+
+    try:
+        _notify_pmo(item_id, board_id)
+    except Exception as e:
+        print(f"PMO: no se pudo disparar la notificacion: {e}")
 
     audit = audit or {}
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
