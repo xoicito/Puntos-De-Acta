@@ -11,8 +11,9 @@ IMMUTABLE_POINTS = [
 
 # Fallback amounts, taken from the original template (cells P30-P33) - used
 # only if the multa is selected but the Lider left its monto field blank.
+# "atraso" isn't here - it's resolved separately by build_multas(), from
+# its own fixed-choice dropdown rather than a free-typed number.
 MULTAS_DEFAULTS = {
-    "atraso": "1% POR DIA",
     "orden": "Q.25 POR EVENTO",
     "seguridad": "Q.50 POR PERSONA",
     "reporteria": "Q.25 POR EVENTO",
@@ -21,7 +22,6 @@ MULTAS_DEFAULTS = {
 # The Lider only types a plain number in each "Multa por ..." field; this
 # formats it with the unit that multa actually uses in the template.
 MULTAS_FORMAT = {
-    "atraso": "{monto}% POR DIA",
     "orden": "Q.{monto} POR EVENTO",
     "seguridad": "Q.{monto} POR PERSONA",
     "reporteria": "Q.{monto} POR EVENTO",
@@ -29,7 +29,6 @@ MULTAS_FORMAT = {
 
 # Field name (from COLUMN_ALIASES) holding that typed number, per multa.
 MULTAS_MONTO_FIELDS = {
-    "atraso": "multa_atraso_monto",
     "orden": "multa_orden_monto",
     "seguridad": "multa_seguridad_monto",
     "reporteria": "multa_reporteria_monto",
@@ -38,10 +37,9 @@ MULTAS_MONTO_FIELDS = {
 # Maps each "Multas a Aplicar" dropdown option label (lowercase) to the
 # multa key it selects. Matches the exact option text configured in Monday
 # (multi_select278mnjmn), accents included, plus a couple of forgiving
-# fallback variants.
+# fallback variants. "Por atraso de entrega" was removed from this
+# checkbox list - atraso now has its own dropdown, resolved separately.
 MULTAS_OPTION_MAP = {
-    "por atraso de entrega": "atraso",
-    "atraso": "atraso",
     "por órden y limpieza": "orden",
     "por orden y limpieza": "orden",
     "orden y limpieza": "orden",
@@ -1023,13 +1021,18 @@ def parse_multi(value):
 
 
 def build_multas(data):
-    """Resolve which multas apply from the MULTAS_COLUMN_ID dropdown selection.
+    """Resolve which multas apply.
 
-    A selected multa renders as its typed monto (a plain number the Lider
-    enters in its own "Multa por ..." field) formatted with that multa's
-    unit - e.g. "5" becomes "5% POR DIA" for atraso, "Q.30 POR EVENTO" for
-    orden. Falls back to the original template's fixed default if selected
-    but left blank. Anything not selected renders as "N/A".
+    Orden/Seguridad/Reporteria: from the MULTAS_COLUMN_ID checkbox
+    selection - a selected one renders as its typed monto (a plain number
+    the Lider enters in its own "Multa por ..." field) formatted with
+    that multa's unit, e.g. "30" becomes "Q.30 POR EVENTO". Falls back to
+    the original template's fixed default if selected but left blank.
+    Anything not selected renders as "N/A".
+
+    Atraso: independent of that checkbox - its own fixed-choice dropdown
+    (N/A, .15, .30, .45, .60, .75, 1) selects the percentage directly, no
+    free typing involved.
     """
 
     selected_options = parse_multi(data.get("multas_aplicar"))
@@ -1052,8 +1055,15 @@ def build_multas(data):
 
         return MULTAS_DEFAULTS[key]
 
+    atraso_pct = (data.get("multa_atraso_pct") or "").strip()
+    atraso_value = (
+        f"{atraso_pct}% POR DIA"
+        if atraso_pct and atraso_pct.upper() != "N/A"
+        else "N/A"
+    )
+
     return {
-        "{{MULTA_ATRASO}}": value_for("atraso"),
+        "{{MULTA_ATRASO}}": atraso_value,
         "{{MULTA_ORDEN}}": value_for("orden"),
         "{{MULTA_SEGURIDAD}}": value_for("seguridad"),
         "{{MULTA_REPORTERIA}}": value_for("reporteria"),
