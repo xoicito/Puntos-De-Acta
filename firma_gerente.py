@@ -83,14 +83,18 @@ def start_gerente_signing(item_id, board_id):
 
     link = generate_signing_link(item_id, board_id)
 
-    if GERENTE_FIRMA_ESTADO_COLUMN_ID:
-        change_status(item_id, board_id, GERENTE_FIRMA_ESTADO_COLUMN_ID, GERENTE_FIRMA_ESTADO_PENDIENTE)
-
     if GERENTE_FIRMA_LINK_COLUMN_ID:
         update_text_column(item_id, board_id, GERENTE_FIRMA_LINK_COLUMN_ID, link)
 
     if GERENTE_EMAIL_LINK_COLUMN_ID:
         update_text_column(item_id, board_id, GERENTE_EMAIL_LINK_COLUMN_ID, email)
+
+    # Se marca hasta el final, ya con el link y el correo escritos - la
+    # automatizacion que le avisa al Gerente debe disparar sobre este
+    # cambio, para no mandar el correo antes de que "Gerente Correo"
+    # tenga la direccion (mismo problema que ya se arreglo para PMO).
+    if GERENTE_FIRMA_ESTADO_COLUMN_ID:
+        change_status(item_id, board_id, GERENTE_FIRMA_ESTADO_COLUMN_ID, GERENTE_FIRMA_ESTADO_PENDIENTE)
 
     try:
         create_update(
