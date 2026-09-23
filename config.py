@@ -135,7 +135,7 @@ PMO_CONNECT_COLUMN_ID = os.getenv("PMO_CONNECT_COLUMN_ID", "board_relation_mm7ea
 PMO_BOARD_ID = int(os.getenv("PMO_BOARD_ID", "18432219741"))
 PMO_NOMBRE_COLUMN_ID = os.getenv("PMO_NOMBRE_COLUMN_ID", "single_selectd8eed12")  # "PMO"
 PMO_EMAIL_COLUMN_ID = os.getenv("PMO_EMAIL_COLUMN_ID", "text_mm7ayzbv")  # "e-mail" en "Base Datos PMO"
-PMO_EMAIL_APROBACION_COLUMN_ID = os.getenv("PMO_EMAIL_APROBACION_COLUMN_ID", "")
+PMO_EMAIL_APROBACION_COLUMN_ID = os.getenv("PMO_EMAIL_APROBACION_COLUMN_ID", "text_mm7fe2dx")  # "PMO Correo"
 
 # La automatizacion que le manda el correo a PMO (adjuntando el archivo
 # firmado) no puede disparar directo sobre ESTADO DE APROBACION -> FIRMADO,
@@ -149,7 +149,7 @@ PMO_EMAIL_APROBACION_COLUMN_ID = os.getenv("PMO_EMAIL_APROBACION_COLUMN_ID", "")
 # FIRMA_DOCUMENTO_LISTO_LABEL hasta que YA subio ambos archivos - la
 # automatizacion de PMO debe reapuntarse para disparar sobre esta columna,
 # no sobre ESTADO DE APROBACION.
-FIRMA_DOCUMENTO_LISTO_COLUMN_ID = os.getenv("FIRMA_DOCUMENTO_LISTO_COLUMN_ID", "color_mm7fs7na")  # "Enviado a PMO"
+FIRMA_DOCUMENTO_LISTO_COLUMN_ID = os.getenv("FIRMA_DOCUMENTO_LISTO_COLUMN_ID", "color_mm7fzd1v")  # "Enviado a PMO"
 FIRMA_DOCUMENTO_LISTO_LABEL = os.getenv("FIRMA_DOCUMENTO_LISTO_LABEL", "Listo")
 
 # Debe ser un valor fijo y secreto (no lo genere al azar en cada arranque -
