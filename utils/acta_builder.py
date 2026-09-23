@@ -1057,7 +1057,7 @@ def build_multas(data):
 
     atraso_pct = (data.get("multa_atraso_pct") or "").strip()
     atraso_value = (
-        f"{atraso_pct}% POR DIA"
+        f"{atraso_pct} POR DIA"
         if atraso_pct and atraso_pct.upper() != "N/A"
         else "N/A"
     )
