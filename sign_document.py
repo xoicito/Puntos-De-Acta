@@ -4,6 +4,9 @@ from openpyxl import load_workbook
 
 from config import (
     ACTA_OUTPUT_DIR,
+    FIRMA_BOARD_ID,
+    FIRMA_DOCUMENTO_LISTO_COLUMN_ID,
+    FIRMA_DOCUMENTO_LISTO_LABEL,
     FIRMA_NOTIFICAR_NOMBRES,
     FIRMA_PA_EDITABLE_COLUMN_ID,
     FIRMA_PA_FIRMADO_COLUMN_ID,
@@ -11,6 +14,7 @@ from config import (
     MELISSA_SIGNATURE_PATH,
 )
 from utils.monday_client import (
+    change_status,
     create_update,
     download_file,
     get_file_public_url,
@@ -62,6 +66,14 @@ def sign_document(item_id):
         upload_file(item_id, FIRMA_PA_FIRMADO_COLUMN_ID, pdf_path)
     except Exception as e:
         print(f"FIRMA_MELISSA: no se pudo generar/subir el PDF: {e}")
+
+    # Se marca hasta el final, ya con el Excel (y el PDF, si no fallo) ya
+    # subidos - la automatizacion que le manda el correo a PMO con el
+    # adjunto debe disparar sobre este cambio, no sobre ESTADO DE
+    # APROBACION (ver config.py), para no mandar el correo antes de que
+    # el archivo este listo.
+    if FIRMA_DOCUMENTO_LISTO_COLUMN_ID:
+        change_status(item_id, FIRMA_BOARD_ID, FIRMA_DOCUMENTO_LISTO_COLUMN_ID, FIRMA_DOCUMENTO_LISTO_LABEL)
 
     if FIRMA_NOTIFICAR_NOMBRES:
         try:

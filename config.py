@@ -137,6 +137,21 @@ PMO_NOMBRE_COLUMN_ID = os.getenv("PMO_NOMBRE_COLUMN_ID", "single_selectd8eed12")
 PMO_EMAIL_COLUMN_ID = os.getenv("PMO_EMAIL_COLUMN_ID", "text_mm7ayzbv")  # "e-mail" en "Base Datos PMO"
 PMO_EMAIL_APROBACION_COLUMN_ID = os.getenv("PMO_EMAIL_APROBACION_COLUMN_ID", "")
 
+# La automatizacion que le manda el correo a PMO (adjuntando el archivo
+# firmado) no puede disparar directo sobre ESTADO DE APROBACION -> FIRMADO,
+# porque ese es el mismo evento que arranca sign_document() via webhook, y
+# subir el Excel + convertir/subir el PDF tarda mas que lo instantaneo que
+# tarda Monday en disparar la automatizacion. El resultado es una carrera:
+# el correo sale antes de que el archivo este listo.
+#
+# La solucion es la misma que ya se uso para el correo de Gerente/PMO: una
+# columna de estado SEPARADA que el codigo solo pone en
+# FIRMA_DOCUMENTO_LISTO_LABEL hasta que YA subio ambos archivos - la
+# automatizacion de PMO debe reapuntarse para disparar sobre esta columna,
+# no sobre ESTADO DE APROBACION.
+FIRMA_DOCUMENTO_LISTO_COLUMN_ID = os.getenv("FIRMA_DOCUMENTO_LISTO_COLUMN_ID", "color_mm7fs7na")  # "Enviado a PMO"
+FIRMA_DOCUMENTO_LISTO_LABEL = os.getenv("FIRMA_DOCUMENTO_LISTO_LABEL", "Listo")
+
 # Debe ser un valor fijo y secreto (no lo genere al azar en cada arranque -
 # eso invalidaria todos los enlaces pendientes en cada despliegue). Config
 # en Render como variable de entorno real, nunca en el codigo.
