@@ -6,6 +6,10 @@ MONDAY_API_VERSION = os.getenv("MONDAY_API_VERSION", "2026-01")
 MONDAY_TOKEN = os.getenv("MONDAY_TOKEN", "")
 ACTA_BOARD_ID = int(os.getenv("ACTA_BOARD_ID", "18429803408"))
 ACTA_TEMPLATE = os.getenv("ACTA_TEMPLATE", "templates/100_PUNTO_DE_ACTA_PLANTILLA.xlsx")
+# Misma estructura, solo cambia el color/logos - se usa cuando el Lider
+# elige "Reforma" en vez de "Constructora E4" en ACTA_TIPO_COLUMN_ID.
+ACTA_TEMPLATE_REFORMA = os.getenv("ACTA_TEMPLATE_REFORMA", "templates/100_PUNTO_DE_ACTA_PLANTILLA_REFORMA.xlsx")
+ACTA_TIPO_COLUMN_ID = os.getenv("ACTA_TIPO_COLUMN_ID", "single_selectr2k7mfa")  # "Reforma" / "Constructora E4"
 ACTA_OUTPUT_DIR = os.getenv("ACTA_OUTPUT_DIR", "/tmp/puntos_acta")
 ACTA_XLSX_COLUMN_ID = os.getenv("ACTA_XLSX_COLUMN_ID", "")
 ACTA_PDF_COLUMN_ID = os.getenv("ACTA_PDF_COLUMN_ID", "")
@@ -52,7 +56,7 @@ MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 # entrega" (N/A, .15, .30, .45, .60, .75, 1) - reemplaza al checkbox de
 # "Multas a Aplicar" + campo de texto que se usaba antes para esta multa
 # especifica. Sin valor por defecto porque la columna todavia no existe.
-MULTA_ATRASO_COLUMN_ID = os.getenv("MULTA_ATRASO_COLUMN_ID", "")
+MULTA_ATRASO_COLUMN_ID = os.getenv("MULTA_ATRASO_COLUMN_ID", "single_selectp4i5ctf")
 
 # Interruptor temporal para pruebas: cuando esta en "true", se genera el
 # documento normalmente pero se omite el envio del enlace de firma al
@@ -151,6 +155,7 @@ FIRMA_MONDAY_COLUMN_ID = os.getenv("FIRMA_MONDAY_COLUMN_ID", "signature9vmootoj"
 # IDs del board actual. Se aceptan alias de la versión anterior para facilitar migraciones.
 COLUMN_ALIASES = {
     "plantilla": ["single_selectb2r025a"],
+    "tipo_plantilla": [ACTA_TIPO_COLUMN_ID],  # "Reforma" / "Constructora E4"
     "lider_proyecto": ["short_textoea3ks5w"],
     "gerente_proyecto": [GERENTE_NOMBRE_COLUMN_ID, "short_textlyk3dimh", GERENTE_CONNECT_COLUMN_ID],
     "acta_id": ["text_mm736ka4"],

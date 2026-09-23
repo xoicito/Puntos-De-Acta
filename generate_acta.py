@@ -10,6 +10,7 @@ from config import (
     ACTA_OUTPUT_DIR,
     ACTA_STATUS_COLUMN_ID,
     ACTA_TEMPLATE,
+    ACTA_TEMPLATE_REFORMA,
     ACTA_XLSX_COLUMN_ID,
     COTIZACION_FILE_COLUMN_ID,
     FIRMA_MONDAY_COLUMN_ID,
@@ -170,7 +171,10 @@ def generate_acta(item_id):
 
         replacements["__SIGNATURE_PATH__"] = signature_path
 
-        render_excel(base / ACTA_TEMPLATE, xlsx, replacements)
+        tipo_plantilla = (data.get("tipo_plantilla") or "").strip().lower()
+        template = ACTA_TEMPLATE_REFORMA if tipo_plantilla == "reforma" else ACTA_TEMPLATE
+
+        render_excel(base / template, xlsx, replacements)
 
         upload_file(item_id, ACTA_XLSX_COLUMN_ID, xlsx)
 

@@ -402,7 +402,7 @@ def _as_lines(value):
     return [str(item) for item in items if str(item).strip()]
 
 
-def _estimate_row_height(ws, text, cols, font_size=12, min_height=24.9):
+def _estimate_row_height(ws, text, cols, font_size=12, min_height=27.6):
     """Rough heuristic for how tall a row needs to be to show wrapped text
     without clipping.
 
@@ -423,7 +423,7 @@ def _estimate_row_height(ws, text, cols, font_size=12, min_height=24.9):
     chars_per_line = max(10, int(width_px / avg_char_px))
     lines_needed = max(1, math.ceil(len(str(text)) / chars_per_line))
 
-    return max(min_height, lines_needed * font_size * 1.35 + 4)
+    return max(min_height, lines_needed * font_size * 1.6 + 10)
 
 
 def _write_list(ws, first_row, capacity, items, column=LIST_COLUMN, row_shift=0, merge_cols=None):
