@@ -142,7 +142,21 @@ def resolve_signing_context(token):
         "proyecto": data_fields.get("proyecto", ""),
         "no_contrato": data_fields.get("no_contrato", ""),
         "empresa": data_fields.get("empresa", ""),
+        "tipo_plantilla": (data_fields.get("tipo_plantilla") or "").strip().lower(),
     }
+
+
+def get_current_document_url(token):
+    """Resolve a fresh public URL for the acta as the Lider left it, so
+    the signing page can offer a "download before you sign" link. Re-runs
+    the token check so this can't be used to peek at a document the
+    caller never had a valid link for.
+    """
+
+    data = verify_token(token)
+    item = get_item(data["item_id"])
+
+    return get_file_public_url(item, ACTA_XLSX_COLUMN_ID)
 
 
 def _save_signature_image(output_directory, stem, file_storage=None, data_url=None):
@@ -273,4 +287,9 @@ def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None)
 
     print(f"GERENTE_FIRMA: item={item_id} firmado - {audit}")
 
-    return {"item_id": item_id}
+    data_fields = item_data(item)
+
+    return {
+        "item_id": item_id,
+        "tipo_plantilla": (data_fields.get("tipo_plantilla") or "").strip().lower(),
+    }
