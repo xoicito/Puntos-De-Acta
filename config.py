@@ -31,6 +31,11 @@ FIRMA_TRIGGER_LABEL = os.getenv("FIRMA_TRIGGER_LABEL", "FIRMADO")
 FIRMA_PA_EDITABLE_COLUMN_ID = os.getenv("FIRMA_PA_EDITABLE_COLUMN_ID", "file_mm4vcga3")
 FIRMA_PA_FIRMADO_COLUMN_ID = os.getenv("FIRMA_PA_FIRMADO_COLUMN_ID", "file_mm7936qy")
 FIRMA_PLACEHOLDER = os.getenv("FIRMA_PLACEHOLDER", "{{FIRMA_MELISSA}}")
+# Columna especifica de Rubro (texto) en el board principal, para el
+# nombre del item de Procurement - no la resolucion generica de "rubro"
+# en COLUMN_ALIASES, que prueba varias columnas en orden y podria agarrar
+# otra distinta a esta.
+RUBRO_TEXT_COLUMN_ID = os.getenv("RUBRO_TEXT_COLUMN_ID", "short_textprskoevj")
 MELISSA_SIGNATURE_PATH = os.getenv("MELISSA_SIGNATURE_PATH", "assets/firma_melissa.png")
 
 # Firma del Lider de Proyecto en el documento generado - igual que las de

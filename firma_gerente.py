@@ -24,6 +24,7 @@ from config import (
     PMO_EMAIL_APROBACION_COLUMN_ID,
     PMO_EMAIL_COLUMN_ID,
     PMO_NOMBRE_COLUMN_ID,
+    RUBRO_TEXT_COLUMN_ID,
     TEST_MODE_SKIP_NOTIFICATIONS,
 )
 from gerente_link import InvalidLinkError, generate_signing_link, verify_token
@@ -202,11 +203,12 @@ def _send_to_procurement(item_id, item, signed_path, data_fields):
 
     acta_id = data_fields.get("acta_id") or f"item-{item_id}"
     proyecto = data_fields.get("proyecto") or ""
-    rubro = data_fields.get("rubro") or ""
+    rubro = _column_text(item, RUBRO_TEXT_COLUMN_ID)
 
     # El board de Aprobacion no tiene una columna "Rubro" propia - el
-    # Rubro elegido en el Forms PA se refleja en el nombre del item
-    # (la columna "name"), igual que Acta ID y Proyecto.
+    # Rubro del Forms PA (columna short_textprskoevj especificamente, no
+    # la resolucion generica de COLUMN_ALIASES) se refleja en el nombre
+    # del item (la columna "name"), igual que Acta ID y Proyecto.
     name = " - ".join(part for part in (acta_id, proyecto, rubro) if part)
 
     new_item_id = create_item(FIRMA_BOARD_ID, name)
