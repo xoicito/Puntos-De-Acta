@@ -29,7 +29,7 @@ FIRMA_BOARD_ID = int(os.getenv("FIRMA_BOARD_ID", "18419366411"))
 FIRMA_ESTADO_COLUMN_ID = os.getenv("FIRMA_ESTADO_COLUMN_ID", "color_mm4t50")
 FIRMA_TRIGGER_LABEL = os.getenv("FIRMA_TRIGGER_LABEL", "FIRMADO")
 FIRMA_PA_EDITABLE_COLUMN_ID = os.getenv("FIRMA_PA_EDITABLE_COLUMN_ID", "file_mm4vcga3")
-FIRMA_PA_FIRMADO_COLUMN_ID = os.getenv("FIRMA_PA_FIRMADO_COLUMN_ID", "file_mm7936qy")
+FIRMA_PA_FIRMADO_COLUMN_ID = os.getenv("FIRMA_PA_FIRMADO_COLUMN_ID", "file_mm4n19yn")  # "PA FIRMADO PRC" (la "Dup. of..." se borro)
 FIRMA_PLACEHOLDER = os.getenv("FIRMA_PLACEHOLDER", "{{FIRMA_MELISSA}}")
 # Columna especifica de Rubro (texto) en el board principal, para el
 # nombre del item de Procurement - no la resolucion generica de "rubro"

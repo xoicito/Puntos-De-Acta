@@ -130,6 +130,11 @@ def upload_file(item_id, column_id, file_path):
     response.raise_for_status()
     payload = response.json()
 
+    if payload.get("errors"):
+        raise MondayError(json.dumps(payload["errors"], ensure_ascii=False))
+
+    return payload["data"]["add_file_to_column"]
+
 
 import random
 import string
