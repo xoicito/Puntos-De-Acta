@@ -122,9 +122,13 @@ GERENTE_FIRMA_LINK_COLUMN_ID = os.getenv("GERENTE_FIRMA_LINK_COLUMN_ID", "text_m
 # en la automatizacion de enviar correo (confirmado probandolo con el PMO).
 GERENTE_EMAIL_LINK_COLUMN_ID = os.getenv("GERENTE_EMAIL_LINK_COLUMN_ID", "text_mm7ewxvw")  # "Gerente Correo"
 GERENTE_FIRMA_ESTADO_COLUMN_ID = os.getenv("GERENTE_FIRMA_ESTADO_COLUMN_ID", "color_mm7a8c8q")  # "Firmado?"
-# TODO: confirmar las etiquetas reales de "Firmado?" - asumiendo Pendiente/Firmado,
-# pero si es un status Si/No hay que ajustar estos dos valores para que coincidan.
-GERENTE_FIRMA_ESTADO_PENDIENTE = os.getenv("GERENTE_FIRMA_ESTADO_PENDIENTE", "Pendiente")
+# "Link Enviado" (no "Pendiente") es a proposito: la automatizacion de
+# Outlook que le avisa al Gerente debe disparar sobre este cambio
+# especifico, una vez que el link y el correo ya estan escritos - usar
+# el mismo valor para "listo para firmar" y para cualquier otro estado
+# intermedio hacia "Firmado" hacia confuso cual cambio debia disparar la
+# automatizacion.
+GERENTE_FIRMA_ESTADO_PENDIENTE = os.getenv("GERENTE_FIRMA_ESTADO_PENDIENTE", "Link Enviado")
 GERENTE_FIRMA_ESTADO_FIRMADO = os.getenv("GERENTE_FIRMA_ESTADO_FIRMADO", "Firmado")
 GERENTE_FIRMA_PLACEHOLDER = os.getenv("GERENTE_FIRMA_PLACEHOLDER", "{{FIRMA_GERENTE}}")
 

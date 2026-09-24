@@ -503,7 +503,15 @@ def _write_programacion(ws, rows, row_shift=0):
         ws[f"D{row_num}"] = fila.get("area") or None
         ws[f"G{row_num}"] = fila.get("inicio") or None
         ws[f"I{row_num}"] = fila.get("fin") or None
-        ws[f"K{row_num}"] = _days_between(fila.get("inicio"), fila.get("fin"))
+
+        dias_cell = ws[f"K{row_num}"]
+        dias_cell.value = _days_between(fila.get("inicio"), fila.get("fin"))
+        # Algunas filas de la plantilla traen "0.00" horneado en el formato
+        # (ej. K63/K64), lo que muestra "4.00" en vez de "4" aunque el valor
+        # ya sea un entero - se fuerza el formato en vez de confiar en el
+        # que traiga la plantilla.
+        dias_cell.number_format = "0"
+
         ws[f"M{row_num}"] = fila.get("obs") or None
 
 

@@ -795,7 +795,7 @@ def build_services(data):
             ","
         ).split(",")
         if x.strip()
-        and x.strip().lower() != "otros"
+        and x.strip().lower() not in ("otro", "otros")
     ]
 
     existing_lower = {x.lower() for x in values}
