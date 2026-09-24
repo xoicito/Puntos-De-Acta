@@ -12,6 +12,7 @@ from config import (
     FIRMA_PA_FIRMADO_COLUMN_ID,
     FIRMA_PLACEHOLDER,
     MELISSA_SIGNATURE_PATH,
+    TIPO_CONTRATO_MENSAJE_PLACEHOLDER,
 )
 from utils.monday_client import (
     change_status,
@@ -21,11 +22,11 @@ from utils.monday_client import (
     get_item,
     upload_file,
 )
-from utils.excel_writer import insert_signature
+from utils.excel_writer import insert_signature, insert_text_placeholder
 from utils.pdf_convert import convert_to_pdf
 
 
-def sign_document(item_id):
+def sign_document(item_id, tipo_contrato_mensaje=""):
     item = get_item(item_id)
 
     editable_url = get_file_public_url(item, FIRMA_PA_EDITABLE_COLUMN_ID)
@@ -55,6 +56,9 @@ def sign_document(item_id):
             f"No se pudo insertar la firma en el item {item_id}; "
             "no se sube el archivo a PA FIRMADO PRC"
         )
+
+    if tipo_contrato_mensaje:
+        insert_text_placeholder(ws, tipo_contrato_mensaje, TIPO_CONTRATO_MENSAJE_PLACEHOLDER)
 
     signed_path = str(output_directory / f"PA_FIRMADO_{item_id}.xlsx")
     wb.save(signed_path)

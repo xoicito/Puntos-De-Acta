@@ -27,7 +27,23 @@ COTIZACION_FILE_COLUMN_ID = os.getenv("COTIZACION_FILE_COLUMN_ID", "filezsaxj0qk
 # Board de Aprobación (firma de Arq. Melissa Alvarenga)
 FIRMA_BOARD_ID = int(os.getenv("FIRMA_BOARD_ID", "18419366411"))
 FIRMA_ESTADO_COLUMN_ID = os.getenv("FIRMA_ESTADO_COLUMN_ID", "color_mm4t50")
-FIRMA_TRIGGER_LABEL = os.getenv("FIRMA_TRIGGER_LABEL", "FIRMADO")
+
+# Melissa ya no elige un solo "FIRMADO" generico - elige uno de estos 3,
+# segun que tipo de contrato acompana el Punto de Acta. Cada uno dispara
+# el mismo flujo de firma, pero ademas imprime una nota distinta al
+# final del documento (ver TIPO_CONTRATO_MENSAJE_PLACEHOLDER) sobre que
+# se debe adjuntar en el ingreso de factura. El "FIRMADO" original queda
+# retirado (la automatizacion vieja se borra en Monday).
+FIRMA_TRIGGER_LABELS = {
+    os.getenv("FIRMA_TRIGGER_LABEL_SIN_CONTRATO", "FIRMADO SIN CONTRATO"):
+        "En el ingreso de factura de este Punto de Acta, no debe de llevar adjunto ningún contrato.",
+    os.getenv("FIRMA_TRIGGER_LABEL_LEGAL", "FIRMADO LEGAL"):
+        "En el ingreso de factura de este Punto de Acta, debe llevar adjunto el Contrato Legalizado.",
+    os.getenv("FIRMA_TRIGGER_LABEL_FASTTRACK", "FIRMADO FASTTRACK"):
+        "En el ingreso de factura de este Punto de Acta, debe llevar adjunto el Contrato Fast Track.",
+}
+TIPO_CONTRATO_MENSAJE_PLACEHOLDER = os.getenv("TIPO_CONTRATO_MENSAJE_PLACEHOLDER", "{{TIPO_CONTRATO_MENSAJE}}")
+
 FIRMA_PA_EDITABLE_COLUMN_ID = os.getenv("FIRMA_PA_EDITABLE_COLUMN_ID", "file_mm4vcga3")
 FIRMA_PA_FIRMADO_COLUMN_ID = os.getenv("FIRMA_PA_FIRMADO_COLUMN_ID", "file_mm4n19yn")  # "PA FIRMADO PRC" (la "Dup. of..." se borro)
 FIRMA_PLACEHOLDER = os.getenv("FIRMA_PLACEHOLDER", "{{FIRMA_MELISSA}}")

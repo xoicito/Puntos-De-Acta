@@ -7,7 +7,7 @@ from config import (
     ACTA_TRIGGER_LABEL,
     FIRMA_BOARD_ID,
     FIRMA_ESTADO_COLUMN_ID,
-    FIRMA_TRIGGER_LABEL,
+    FIRMA_TRIGGER_LABELS,
 )
 from generate_acta import generate_acta
 from sign_document import sign_document
@@ -26,9 +26,9 @@ def _run(item_id):
         )
 
 
-def _run_signature(item_id):
+def _run_signature(item_id, tipo_contrato_mensaje):
     try:
-        sign_document(item_id)
+        sign_document(item_id, tipo_contrato_mensaje)
     except Exception as exc:
         print(
             f"[FIRMA_MELISSA] item={item_id} error={exc}",
@@ -144,11 +144,11 @@ def firma_melissa_webhook():
         str(FIRMA_BOARD_ID) == board_id
         and item_id
         and (not column_id or column_id == FIRMA_ESTADO_COLUMN_ID)
-        and label == FIRMA_TRIGGER_LABEL
+        and label in FIRMA_TRIGGER_LABELS
     ):
         threading.Thread(
             target=_run_signature,
-            args=(str(item_id),),
+            args=(str(item_id), FIRMA_TRIGGER_LABELS[label]),
             daemon=True,
         ).start()
 

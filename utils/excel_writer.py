@@ -163,6 +163,27 @@ def _autocrop_signature(path, padding=6, white_threshold=245):
     return buf
 
 
+def insert_text_placeholder(ws, text, placeholder):
+    """Replace a {{PLACEHOLDER}} that was deliberately left untouched by
+    the initial render (like the signature placeholders) with plain text,
+    once it's actually known - e.g. Melissa's contract-type note, which
+    depends on which "FIRMADO ..." status she picks and so can't be
+    resolved until sign time. Returns True if the placeholder was found.
+    """
+
+    found = _find_placeholder_box(ws, placeholder)
+
+    if not found:
+        print(f"ERROR TEXTO_PLACEHOLDER: no se encontro el marcador {placeholder}")
+        return False
+
+    top_left, _cols, _rows = found
+
+    ws[top_left] = text
+
+    return True
+
+
 def insert_signature(ws, signature_path, placeholder):
     """Insert an image scaled to fit, without distortion, inside the cell (or
     merged range) that holds `placeholder`, and clear the placeholder text.
