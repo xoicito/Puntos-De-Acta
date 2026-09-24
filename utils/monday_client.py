@@ -230,6 +230,51 @@ def get_file_public_url(item, column_id):
     return assets[0]["public_url"] if assets else None
 
 
+def get_file_public_urls(item, column_id):
+    """Return [(file_name, public_url), ...] for every file uploaded to a
+    file-type column - unlike get_file_public_url, which only looks at the
+    first one. Used for columns where a Lider can attach more than one
+    document (e.g. documentacion extra)."""
+
+    raw_value = None
+
+    for c in item.get("column_values", []):
+        if c["id"] == column_id:
+            raw_value = c.get("value")
+            break
+
+    if not raw_value:
+        return []
+
+    try:
+        parsed = json.loads(raw_value)
+    except (TypeError, ValueError):
+        return []
+
+    files = [f for f in (parsed.get("files") or []) if f.get("assetId") or f.get("asset_id")]
+
+    if not files:
+        return []
+
+    asset_ids = [str(f.get("assetId") or f.get("asset_id")) for f in files]
+
+    q = """query ($ids: [ID!]!) {
+        assets(ids: $ids) {
+            id
+            name
+            public_url
+        }
+    }"""
+
+    assets = {a["id"]: a for a in graphql(q, {"ids": asset_ids})["assets"]}
+
+    return [
+        (a["name"], a["public_url"])
+        for aid in asset_ids
+        if (a := assets.get(aid))
+    ]
+
+
 def download_file(url, dest_path):
     """Download a file from a public URL to a local path."""
 

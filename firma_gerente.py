@@ -9,6 +9,7 @@ from config import (
     ACTA_OUTPUT_DIR,
     ACTA_XLSX_COLUMN_ID,
     FIRMA_BOARD_ID,
+    FIRMA_DOCUMENTACION_COLUMN_ID,
     FIRMA_PA_EDITABLE_COLUMN_ID,
     GERENTES_BOARD_ID,
     GERENTE_EMAIL_COLUMN_ID,
@@ -20,6 +21,7 @@ from config import (
     GERENTE_LINK_BASE_URL,
     GERENTE_FIRMA_LINK_COLUMN_ID,
     GERENTE_NOMBRE_COLUMN_ID,
+    LIDER_DOCUMENTACION_COLUMN_ID,
     PMO_BOARD_ID,
     PMO_EMAIL_APROBACION_COLUMN_ID,
     PMO_EMAIL_COLUMN_ID,
@@ -36,6 +38,7 @@ from utils.monday_client import (
     create_update,
     find_item_by_name,
     get_file_public_url,
+    get_file_public_urls,
     get_item,
     download_file,
     update_text_column,
@@ -183,6 +186,34 @@ def _save_signature_image(output_directory, stem, file_storage=None, data_url=No
     raise ValueError("No se recibio ninguna firma")
 
 
+def _copy_documentacion_extra(item, new_item_id):
+    """Copy every file the Lider attached to the "Archivo" column on the
+    original item into "DOCUMENTACIÓN" on the new Procurement item.
+
+    Monday has no item-to-item file copy - each one has to be downloaded
+    from its public URL and re-uploaded. Failures here are logged and
+    skipped one file at a time rather than aborting the whole hand-off,
+    since the PA EDITABLE file (the actual thing Melissa needs to sign)
+    already went through by this point.
+    """
+
+    files = get_file_public_urls(item, LIDER_DOCUMENTACION_COLUMN_ID)
+
+    if not files:
+        return
+
+    output_directory = Path(ACTA_OUTPUT_DIR)
+    output_directory.mkdir(parents=True, exist_ok=True)
+
+    for name, url in files:
+        try:
+            local_path = str(output_directory / f"doc_extra_{new_item_id}_{name}")
+            download_file(url, local_path)
+            upload_file(new_item_id, FIRMA_DOCUMENTACION_COLUMN_ID, local_path)
+        except Exception as e:
+            print(f"GERENTE_FIRMA: no se pudo copiar documentacion extra '{name}': {e}")
+
+
 def _send_to_procurement(item_id, item, signed_path, data_fields):
     """Per the approval policy, once both Lider and Gerente have signed (the
     'PA Inicial'), the request moves to Procurement (Arq. Melissa Alvarenga's
@@ -214,6 +245,9 @@ def _send_to_procurement(item_id, item, signed_path, data_fields):
     new_item_id = create_item(FIRMA_BOARD_ID, name)
 
     upload_file(new_item_id, FIRMA_PA_EDITABLE_COLUMN_ID, signed_path)
+
+    if LIDER_DOCUMENTACION_COLUMN_ID and FIRMA_DOCUMENTACION_COLUMN_ID:
+        _copy_documentacion_extra(item, new_item_id)
 
     if PMO_NOMBRE_COLUMN_ID and PMO_EMAIL_COLUMN_ID and PMO_EMAIL_APROBACION_COLUMN_ID:
         pmo_selected = _column_text(item, PMO_NOMBRE_COLUMN_ID)

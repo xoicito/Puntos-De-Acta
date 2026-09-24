@@ -38,6 +38,15 @@ FIRMA_PLACEHOLDER = os.getenv("FIRMA_PLACEHOLDER", "{{FIRMA_MELISSA}}")
 RUBRO_TEXT_COLUMN_ID = os.getenv("RUBRO_TEXT_COLUMN_ID", "short_textprskoevj")
 MELISSA_SIGNATURE_PATH = os.getenv("MELISSA_SIGNATURE_PATH", "assets/firma_melissa.png")
 
+# Documentacion extra: el Lider puede adjuntar uno o mas archivos aparte
+# del acta misma (columna "Archivo" en el board principal). Al pasar a
+# Procurement se copian todos a la columna "DOCUMENTACIÓN" del board de
+# Aprobacion - Monday no tiene una forma de "copiar" un archivo entre
+# items de boards distintos, asi que el codigo descarga cada uno y lo
+# vuelve a subir.
+LIDER_DOCUMENTACION_COLUMN_ID = os.getenv("LIDER_DOCUMENTACION_COLUMN_ID", "filegfa0h128")
+FIRMA_DOCUMENTACION_COLUMN_ID = os.getenv("FIRMA_DOCUMENTACION_COLUMN_ID", "file_mm4ng4bc")  # "DOCUMENTACIÓN"
+
 # Firma del Lider de Proyecto en el documento generado - igual que las de
 # Gerente y Melissa, se ubica buscando este texto en la plantilla (celda o
 # rango combinado) en vez de una coordenada fija, para que sobreviva a
