@@ -221,7 +221,7 @@ COLUMN_ALIASES = {
     "senalizacion": ["multi_selectwztghp45"],
     "acabados": ["multi_selectyyqp6yzb"],
     "otros_revision": ["long_text175tw0mw"],
-    "proyecto": ["short_textgd8bvdab", "dropdown_mm6z545g"],
+    "proyecto": ["single_selectwyfgzjm", "short_textgd8bvdab", "dropdown_mm6z545g"],
     "rubro": ["dropdown_mm6z1ghm", "short_textprskoevj", "dropdown_mm6zg6a9"],
     "no_contrato": ["short_text4mhsudnr", "text_mm6zdt3q"],
     "tipo_contrato": ["dropdown_mm6zs4b6", "single_selectx8edjlf", "dropdown_mm6zhe47"],
@@ -241,7 +241,7 @@ COLUMN_ALIASES = {
     "retenido": ["numeric_mm6znatn", "short_text5h7ohigh", "numeric_mm6zj3gq"],
     "trabajos_previos": ["long_textbzq1myqd", "short_text2kl0cen0"],
     "servicios_basicos": ["dropdown_mm6zmjj0", "multi_selectwd6nkr5w", "dropdown_mm6z5pp1"],
-    "otro_servicio_basico": ["short_text1uon0zlm", "text_mm6zhxm8"],
+    "otro_servicio_basico": ["long_textu2mzaeqt", "short_text1uon0zlm", "text_mm6zhxm8"],
         "puntos_generales": [
         "multi_selectyys0fxzb"
     ],

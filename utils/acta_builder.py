@@ -776,7 +776,13 @@ def build_programacion(subitems):
 
 
 def build_services(data):
-    """Build a list of basic services from comma/semicolon-separated values."""
+    """Build a list of basic services from comma/semicolon-separated values.
+
+    "otro_servicio_basico" is a free-text long_text field where the Lider
+    can press Enter to list more than one extra service - each line
+    becomes its own row (same as trabajos_previos), instead of dumping
+    the whole multi-line block into a single list item.
+    """
     values = [
         x.strip()
         for x in (
@@ -792,23 +798,12 @@ def build_services(data):
         and x.strip().lower() != "otros"
     ]
 
-    other = (
-        data.get(
-            "otro_servicio_basico",
-            ""
-        )
-        .strip()
-    )
+    existing_lower = {x.lower() for x in values}
 
-    if (
-        other
-        and other.lower()
-        not in {
-            x.lower()
-            for x in values
-        }
-    ):
-        values.append(other)
+    for line in split_lines(data.get("otro_servicio_basico")):
+        if line.lower() not in existing_lower:
+            values.append(line)
+            existing_lower.add(line.lower())
 
     return values
 
