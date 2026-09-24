@@ -59,19 +59,18 @@ def sign_document(item_id):
     signed_path = str(output_directory / f"PA_FIRMADO_{item_id}.xlsx")
     wb.save(signed_path)
 
-    upload_file(item_id, FIRMA_PA_FIRMADO_COLUMN_ID, signed_path)
+    # Solo el PDF final va a PA FIRMADO PRC - el Excel ya no se sube ahi.
+    # No esta envuelto en try/except a proposito: si la conversion falla,
+    # sign_document() debe fallar tambien (nada que subir), en vez de
+    # dejar la columna vacia y de todos modos marcar "Enviado a PMO"
+    # como Listo mas abajo.
+    pdf_path = convert_to_pdf(signed_path, output_directory)
+    upload_file(item_id, FIRMA_PA_FIRMADO_COLUMN_ID, pdf_path)
 
-    try:
-        pdf_path = convert_to_pdf(signed_path, output_directory)
-        upload_file(item_id, FIRMA_PA_FIRMADO_COLUMN_ID, pdf_path)
-    except Exception as e:
-        print(f"FIRMA_MELISSA: no se pudo generar/subir el PDF: {e}")
-
-    # Se marca hasta el final, ya con el Excel (y el PDF, si no fallo) ya
-    # subidos - la automatizacion que le manda el correo a PMO con el
-    # adjunto debe disparar sobre este cambio, no sobre ESTADO DE
-    # APROBACION (ver config.py), para no mandar el correo antes de que
-    # el archivo este listo.
+    # Se marca hasta el final, ya con el PDF subido - la automatizacion
+    # que le manda el correo a PMO con el adjunto debe disparar sobre
+    # este cambio, no sobre ESTADO DE APROBACION (ver config.py), para
+    # no mandar el correo antes de que el archivo este listo.
     if FIRMA_DOCUMENTO_LISTO_COLUMN_ID:
         change_status(item_id, FIRMA_BOARD_ID, FIRMA_DOCUMENTO_LISTO_COLUMN_ID, FIRMA_DOCUMENTO_LISTO_LABEL)
 

@@ -915,7 +915,7 @@ def build_template_points(data):
         x.strip()
         for x in values.split(",")
         if x.strip()
-        and x.strip().lower() != "otros"
+        and x.strip().lower() not in ("otro", "otros")
     ]
 
     option_map = PUNTOS_OPCION_MAP.get(field)
