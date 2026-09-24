@@ -6,8 +6,11 @@ from io import BytesIO
 
 from openpyxl import load_workbook
 from openpyxl.drawing.image import Image as XLImage
+from openpyxl.drawing.spreadsheet_drawing import AnchorMarker, OneCellAnchor
+from openpyxl.drawing.xdr import XDRPositiveSize2D
 from openpyxl.styles import Alignment
 from openpyxl.utils import column_index_from_string, get_column_letter
+from openpyxl.utils.units import pixels_to_EMU
 from PIL import Image as PILImage
 
 from config import LIDER_FIRMA_PLACEHOLDER
@@ -195,7 +198,24 @@ def insert_signature(ws, signature_path, placeholder):
         img.width = int(img.width * scale)
         img.height = int(img.height * scale)
 
-        ws.add_image(img, top_left)
+        # Center the (uniformly-scaled) image inside the box instead of
+        # pinning it to the top-left corner - it rarely fills both
+        # dimensions exactly, so anchoring at top-left left it visibly
+        # off-center whenever the box was wider or taller than the image.
+        off_x = max((box_w - img.width) / 2, 0)
+        off_y = max((box_h - img.height) / 2, 0)
+
+        marker = AnchorMarker(
+            col=column_index_from_string(cols[0]) - 1,
+            colOff=pixels_to_EMU(off_x),
+            row=rows[0] - 1,
+            rowOff=pixels_to_EMU(off_y),
+        )
+        img.anchor = OneCellAnchor(
+            _from=marker,
+            ext=XDRPositiveSize2D(cx=pixels_to_EMU(img.width), cy=pixels_to_EMU(img.height)),
+        )
+        ws.add_image(img)
 
         return True
 
