@@ -744,6 +744,13 @@ def build_programacion(subitems):
             s.get("name") or ""
         ).strip()
 
+        # Monday nombra "Incoming form answer" a un subitem creado pero
+        # nunca renombrado (ej. el Lider le dio "agregar subitem" sin
+        # llenarlo) - ese texto no es un area real, nunca debe imprimirse
+        # como si lo fuera.
+        if area.lower() == "incoming form answer":
+            area = ""
+
         ini = display_date(
             v.get(
                 SUBITEM_COLUMNS["fecha_inicio"],
@@ -763,7 +770,11 @@ def build_programacion(subitems):
             ""
         )
 
-        if any((area, ini, fin, obs)):
+        # Un subitem vacio (sin fechas ni observaciones, solo el nombre
+        # por defecto que le puso Monday) no cuenta como una fila real -
+        # se necesita al menos una fecha o una observacion, no basta con
+        # el area sola.
+        if any((ini, fin, obs)):
 
             rows.append({
                 "area": area,
