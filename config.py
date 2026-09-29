@@ -203,7 +203,7 @@ FIRMA_DOCUMENTO_LISTO_LABEL = os.getenv("FIRMA_DOCUMENTO_LISTO_LABEL", "Listo")
 # copio explicitamente en _send_to_procurement(). Se escribe una sola vez,
 # al crear el item, y lo usa control_facturas.py para volver a leer esos
 # datos del item original cuando Melissa firma.
-FIRMA_PA_ITEM_ID_COLUMN_ID = os.getenv("FIRMA_PA_ITEM_ID_COLUMN_ID", "text_mm7nh2d8")  # "PA ID"
+FIRMA_PA_ITEM_ID_COLUMN_ID = os.getenv("FIRMA_PA_ITEM_ID_COLUMN_ID", "text_mm7nxxpj")  # "PA ID" (board Aprobacion/Melissa)
 
 # CONTROL INGRESO DE FACTURAS (Procurement): cuando Melissa firma, se crea
 # aqui el item de anticipo correspondiente, dentro del grupo semanal (el
