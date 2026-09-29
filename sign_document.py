@@ -22,6 +22,7 @@ from utils.monday_client import (
     get_item,
     upload_file,
 )
+from control_facturas import registrar_en_control_facturas
 from utils.excel_writer import insert_signature, insert_text_placeholder
 from utils.pdf_convert import convert_to_pdf
 
@@ -70,6 +71,14 @@ def sign_document(item_id, tipo_contrato_mensaje=""):
     # como Listo mas abajo.
     pdf_path = convert_to_pdf(signed_path, output_directory)
     upload_file(item_id, FIRMA_PA_FIRMADO_COLUMN_ID, pdf_path)
+
+    # Registro contable en CONTROL INGRESO DE FACTURAS - no debe tumbar la
+    # firma de Melissa si algo falla aqui (board fuera de servicio, item
+    # viejo sin referencia al PA original, etc.), asi que va aislado.
+    try:
+        registrar_en_control_facturas(item_id, pdf_path)
+    except Exception as e:
+        print(f"CONTROL_FACTURAS: no se pudo registrar item={item_id}: {e}")
 
     # Se marca hasta el final, ya con el PDF subido - la automatizacion
     # que le manda el correo a PMO con el adjunto debe disparar sobre

@@ -11,6 +11,7 @@ from config import (
     FIRMA_BOARD_ID,
     FIRMA_DOCUMENTACION_COLUMN_ID,
     FIRMA_PA_EDITABLE_COLUMN_ID,
+    FIRMA_PA_ITEM_ID_COLUMN_ID,
     GERENTES_BOARD_ID,
     GERENTE_EMAIL_COLUMN_ID,
     GERENTE_EMAIL_LINK_COLUMN_ID,
@@ -243,6 +244,9 @@ def _send_to_procurement(item_id, item, signed_path, data_fields):
     name = " - ".join(part for part in (acta_id, proyecto, rubro) if part)
 
     new_item_id = create_item(FIRMA_BOARD_ID, name)
+
+    if FIRMA_PA_ITEM_ID_COLUMN_ID:
+        update_text_column(new_item_id, FIRMA_BOARD_ID, FIRMA_PA_ITEM_ID_COLUMN_ID, str(item_id))
 
     upload_file(new_item_id, FIRMA_PA_EDITABLE_COLUMN_ID, signed_path)
 

@@ -198,6 +198,27 @@ PMO_EMAIL_APROBACION_COLUMN_ID = os.getenv("PMO_EMAIL_APROBACION_COLUMN_ID", "te
 FIRMA_DOCUMENTO_LISTO_COLUMN_ID = os.getenv("FIRMA_DOCUMENTO_LISTO_COLUMN_ID", "color_mm7fzd1v")  # "Enviado a PMO"
 FIRMA_DOCUMENTO_LISTO_LABEL = os.getenv("FIRMA_DOCUMENTO_LISTO_LABEL", "Listo")
 
+# Enlace de vuelta al Punto de Acta original desde el item de Aprobacion -
+# ese item no tiene empresa/NIT/tipo/cotizacion propios, solo lo que se
+# copio explicitamente en _send_to_procurement(). Se escribe una sola vez,
+# al crear el item, y lo usa control_facturas.py para volver a leer esos
+# datos del item original cuando Melissa firma.
+FIRMA_PA_ITEM_ID_COLUMN_ID = os.getenv("FIRMA_PA_ITEM_ID_COLUMN_ID", "text_mm7nh2d8")  # "PA ID"
+
+# CONTROL INGRESO DE FACTURAS (Procurement): cuando Melissa firma, se crea
+# aqui el item de anticipo correspondiente, dentro del grupo semanal (el
+# lunes de la semana en curso - ver control_facturas.py). MONTO CONTRATADO
+# se calcula sumando cantidad x precio de la cotizacion subida (sin IVA).
+# STATUS e INGRESO se dejan sin tocar, los llena Procurement a mano.
+CONTROL_FACTURAS_BOARD_ID = os.getenv("CONTROL_FACTURAS_BOARD_ID", "18394844285")
+CONTROL_FACTURAS_PA_COLUMN_ID = os.getenv("CONTROL_FACTURAS_PA_COLUMN_ID", "file_mm28ds9w")  # "PA (PRC)"
+CONTROL_FACTURAS_DIVISION_COLUMN_ID = os.getenv("CONTROL_FACTURAS_DIVISION_COLUMN_ID", "color_mm2p1m4h")  # "DIVISIÓN (PRC)"
+CONTROL_FACTURAS_EMPRESA_COLUMN_ID = os.getenv("CONTROL_FACTURAS_EMPRESA_COLUMN_ID", "text_mm1qtfjh")  # "EMPRESA / PROVEEDOR (PRC)"
+CONTROL_FACTURAS_NIT_COLUMN_ID = os.getenv("CONTROL_FACTURAS_NIT_COLUMN_ID", "text_mm1s9ttf")  # "NIT PROV."
+CONTROL_FACTURAS_PROYECTO_COLUMN_ID = os.getenv("CONTROL_FACTURAS_PROYECTO_COLUMN_ID", "status")  # "PROYECTO"
+CONTROL_FACTURAS_MONTO_COLUMN_ID = os.getenv("CONTROL_FACTURAS_MONTO_COLUMN_ID", "numeric_mm1389bs")  # "MONTO CONTRATADO (Q.)"
+CONTROL_FACTURAS_ANTICIPO_COLUMN_ID = os.getenv("CONTROL_FACTURAS_ANTICIPO_COLUMN_ID", "numeric_mm13vyvb")  # "ANTICIPO (%)"
+
 # Debe ser un valor fijo y secreto (no lo genere al azar en cada arranque -
 # eso invalidaria todos los enlaces pendientes en cada despliegue). Config
 # en Render como variable de entorno real, nunca en el codigo.

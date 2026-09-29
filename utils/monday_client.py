@@ -440,15 +440,78 @@ def create_column(board_id, title, labels):
     return result["create_column"]["id"]
 
 
-def create_item(board_id, item_name):
-    """Create a new item on a board. Returns the new item's id."""
+def create_item(board_id, item_name, group_id=None):
+    """Create a new item on a board, optionally inside a specific group.
+    Returns the new item's id."""
 
-    q = """mutation ($board: ID!, $name: String!) {
-        create_item(board_id: $board, item_name: $name) {
+    q = """mutation ($board: ID!, $name: String!, $group: String) {
+        create_item(board_id: $board, item_name: $name, group_id: $group) {
             id
         }
     }"""
 
-    result = graphql(q, {"board": str(board_id), "name": item_name})
+    result = graphql(
+        q,
+        {"board": str(board_id), "name": item_name, "group": group_id},
+    )
 
     return result["create_item"]["id"]
+
+
+def list_groups(board_id):
+    """Return [{"id": ..., "title": ...}, ...] for every group on a board."""
+
+    q = """query ($board: [ID!]!) {
+        boards(ids: $board) {
+            groups { id title }
+        }
+    }"""
+
+    boards = graphql(q, {"board": [str(board_id)]})["boards"]
+
+    return boards[0]["groups"] if boards else []
+
+
+def create_group(board_id, title):
+    """Create a new group on a board. Returns the new group's id."""
+
+    q = """mutation ($board: ID!, $name: String!) {
+        create_group(board_id: $board, group_name: $name) {
+            id
+        }
+    }"""
+
+    result = graphql(q, {"board": str(board_id), "name": title})
+
+    return result["create_group"]["id"]
+
+
+def change_multiple_column_values(item_id, board_id, column_values, create_labels_if_missing=False):
+    """Set several columns on an item in one mutation. `column_values` is a
+    dict of {column_id: value} in Monday's per-type JSON shape (e.g. a
+    plain string for text, {"label": "..."} for status). `file` columns
+    can't be set this way - use upload_file() for those."""
+
+    if not column_values:
+        return
+
+    q = """mutation ($board: ID!, $item: ID!, $values: JSON!, $createLabels: Boolean) {
+        change_multiple_column_values(
+            board_id: $board,
+            item_id: $item,
+            column_values: $values,
+            create_labels_if_missing: $createLabels
+        ) {
+            id
+        }
+    }"""
+
+    graphql(
+        q,
+        {
+            "board": str(board_id),
+            "item": str(item_id),
+            "values": json.dumps(column_values),
+            "createLabels": create_labels_if_missing,
+        },
+    )
