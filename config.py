@@ -100,13 +100,14 @@ MULTAS_COLUMN_ID = os.getenv("MULTAS_COLUMN_ID", "multi_select278mnjmn")
 # especifica. Sin valor por defecto porque la columna todavia no existe.
 MULTA_ATRASO_COLUMN_ID = os.getenv("MULTA_ATRASO_COLUMN_ID", "single_selectp4i5ctf")
 
-# Interruptor temporal para pruebas: cuando esta en "true", se genera el
-# documento normalmente pero se omite el envio del enlace de firma al
-# Gerente (y por lo tanto tambien todo lo que depende de que el Gerente
-# firme - el paso a Procurement, Melissa, Allan y Julio - ya que nada de
-# eso ocurre sin ese enlace). Util para mostrar el formulario/documento
-# sin notificar a nadie real. Dejar en "false" (o sin configurar) en uso
-# normal.
+# Interruptor temporal para pruebas: cuando esta en "true", el link de
+# firma del Gerente SI se genera y se escribe en Monday (Gerente Firma
+# Link / Gerente Correo) - solo se omite el cambio de estado que dispara
+# la automatizacion de Outlook, para que no salga el correo real. El
+# resto del flujo (firmar como Gerente abriendo el link a mano, pasar a
+# Procurement, firmar como Melissa, etc.) sigue funcionando normal, asi
+# se puede probar de punta a punta sin notificar a nadie real. Dejar en
+# "false" (o sin configurar) en uso normal.
 TEST_MODE_SKIP_NOTIFICATIONS = os.getenv("TEST_MODE_SKIP_NOTIFICATIONS", "false").strip().lower() == "true"
 
 # Firma del Gerente de Proyecto via enlace único (no requiere sesión de Monday).

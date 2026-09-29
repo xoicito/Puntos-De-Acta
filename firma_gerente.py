@@ -74,10 +74,6 @@ def start_gerente_signing(item_id, board_id):
         print("GERENTE_FIRMA: columnas de Gerente no configuradas, se omite")
         return
 
-    if TEST_MODE_SKIP_NOTIFICATIONS:
-        print("GERENTE_FIRMA: TEST_MODE_SKIP_NOTIFICATIONS activo, se omite enlace de firma y todo lo posterior")
-        return
-
     item = get_item(item_id)
     selected_name = _column_text(item, GERENTE_NOMBRE_COLUMN_ID)
     name, email = find_item_by_name(GERENTES_BOARD_ID, selected_name, GERENTE_EMAIL_COLUMN_ID)
@@ -98,8 +94,15 @@ def start_gerente_signing(item_id, board_id):
     # automatizacion que le avisa al Gerente debe disparar sobre este
     # cambio, para no mandar el correo antes de que "Gerente Correo"
     # tenga la direccion (mismo problema que ya se arreglo para PMO).
-    if GERENTE_FIRMA_ESTADO_COLUMN_ID:
+    #
+    # TEST_MODE_SKIP_NOTIFICATIONS solo omite este cambio de estado - el
+    # link y el correo del Gerente SI se escriben en Monday, para poder
+    # seguir el flujo a mano (abriendo el link) sin que salga el correo
+    # real de Outlook al Gerente durante pruebas.
+    if GERENTE_FIRMA_ESTADO_COLUMN_ID and not TEST_MODE_SKIP_NOTIFICATIONS:
         change_status(item_id, board_id, GERENTE_FIRMA_ESTADO_COLUMN_ID, GERENTE_FIRMA_ESTADO_PENDIENTE)
+    elif TEST_MODE_SKIP_NOTIFICATIONS:
+        print(f"GERENTE_FIRMA: TEST_MODE_SKIP_NOTIFICATIONS activo, se omite el correo - link ya escrito en Monday para item={item_id}")
 
     try:
         create_update(
