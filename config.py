@@ -18,6 +18,18 @@ ACTA_TRIGGER_LABEL = os.getenv("ACTA_TRIGGER_LABEL", "Generar")
 ACTA_ID_COLUMN_ID = os.getenv("ACTA_ID_COLUMN_ID", "text_mm736ka4")
 SIGNATURE_COLUMN_ID = os.getenv("SIGNATURE_COLUMN_ID", "file80ymdmtg")
 
+# El envio del enlace de firma al Gerente ya no es automatico apenas se
+# genera el documento - el Lider debe revisarlo primero y cambiar este
+# estado a "Enviar" cuando este listo. Arranca en "En Revision" (lo pone
+# el codigo justo despues de generar) y el codigo lo deja en "Enviando"
+# una vez que el enlace ya se genero y se le escribio a la columna del
+# Gerente - mismo patron de "disparador separado" que ya se usa en el
+# resto del sistema.
+ACTA_ENVIAR_GERENTE_COLUMN_ID = os.getenv("ACTA_ENVIAR_GERENTE_COLUMN_ID", "color_mm7nps0k")  # "Enviar a Gerente"
+ACTA_ENVIAR_GERENTE_REVISION_LABEL = os.getenv("ACTA_ENVIAR_GERENTE_REVISION_LABEL", "En Revisión")
+ACTA_ENVIAR_GERENTE_TRIGGER_LABEL = os.getenv("ACTA_ENVIAR_GERENTE_TRIGGER_LABEL", "Enviar")
+ACTA_ENVIAR_GERENTE_ENVIANDO_LABEL = os.getenv("ACTA_ENVIAR_GERENTE_ENVIANDO_LABEL", "Enviando")
+
 # Alcance de Cotizacion: el Lider sube una copia llena de
 # templates/PLANTILLA_ALCANCE_COTIZACION.xlsx a esta columna (tipo
 # archivo, "Alcance Cotizacion") en el board principal, en lugar de

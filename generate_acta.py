@@ -6,6 +6,8 @@ from zoneinfo import ZoneInfo
 
 from config import (
     ACTA_BOARD_ID,
+    ACTA_ENVIAR_GERENTE_COLUMN_ID,
+    ACTA_ENVIAR_GERENTE_REVISION_LABEL,
     ACTA_ID_COLUMN_ID,
     ACTA_OUTPUT_DIR,
     ACTA_STATUS_COLUMN_ID,
@@ -30,7 +32,6 @@ from utils.monday_client import (
 from utils.acta_builder import build_blocks, display_date, item_data, pct
 from utils.cotizacion_upload import parse_cotizacion_upload
 from utils.excel_writer import render_excel
-from firma_gerente import start_gerente_signing
 
 
 def _clean(value):
@@ -180,10 +181,13 @@ def generate_acta(item_id):
 
         change_status(item_id, board_id, ACTA_STATUS_COLUMN_ID, "Generado")
 
-        try:
-            start_gerente_signing(item_id, board_id)
-        except Exception as e:
-            print(f"GERENTE_FIRMA: no se pudo iniciar el flujo de firma: {e}")
+        # El enlace de firma ya no se manda solo - el Lider debe revisar
+        # el documento generado y cambiar "Enviar a Gerente" a "Enviar"
+        # cuando este listo (ver acta_routes.py). Aqui solo se deja esa
+        # columna en "En Revision" para que quede claro que ya hay algo
+        # que revisar.
+        if ACTA_ENVIAR_GERENTE_COLUMN_ID:
+            change_status(item_id, board_id, ACTA_ENVIAR_GERENTE_COLUMN_ID, ACTA_ENVIAR_GERENTE_REVISION_LABEL)
 
         return {"xlsx": xlsx, "name": stem}
 
