@@ -97,12 +97,37 @@ def puntos_acta_webhook():
             .strip()
         )
 
+    event_type = event.get("type") or ""
+
     print(
-        f"[PUNTOS_ACTA] board={board_id} item={item_id} column={column_id} label='{label}'",
+        f"[PUNTOS_ACTA] board={board_id} item={item_id} column={column_id} label='{label}' type='{event_type}'",
         flush=True,
     )
 
+    # Generacion automatica al crear el item (Lider llena el form -> Monday
+    # crea el item -> se genera solo, sin que nadie tenga que tocar
+    # "Estado"). El automation de Monday que manda este webhook es del
+    # tipo "when an item is created" - el payload que manda no trae
+    # columnId/value (no es un cambio de columna), solo el tipo de evento,
+    # por eso es una condicion aparte de la de abajo. "create_pulse" es el
+    # valor que Monday usa para ese tipo de automation; si algun dia
+    # cambia, el log de arriba (event_type) lo va a mostrar para poder
+    # corregirlo.
     if (
+        str(ACTA_BOARD_ID) == board_id
+        and item_id
+        and event_type in ("create_pulse", "create_item")
+    ):
+        threading.Thread(
+            target=_run,
+            args=(str(item_id),),
+            daemon=True,
+        ).start()
+
+    # Se deja tambien el disparador manual por "Estado" -> "Generar" - util
+    # para volver a generar un item a mano si algo fallo (ver generate_acta.py,
+    # ahora verifica que el archivo si haya quedado subido en Monday).
+    elif (
         str(ACTA_BOARD_ID) == board_id
         and item_id
         and (not column_id or column_id == ACTA_STATUS_COLUMN_ID)
