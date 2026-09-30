@@ -177,7 +177,30 @@ def generate_acta(item_id):
 
         render_excel(base / template, xlsx, replacements)
 
-        upload_file(item_id, ACTA_XLSX_COLUMN_ID, xlsx)
+        # upload_file() puede devolver "exitoso" (sin errores de GraphQL)
+        # y aun asi Monday no dejar el archivo pegado en la columna del
+        # lado de ellos - nos paso en produccion: el item llegaba a
+        # "Generado" con la columna de archivo vacia, y el Gerente se
+        # encontraba con "El item no tiene un acta generada todavia" al
+        # intentar firmar. Por eso aqui se vuelve a consultar el item
+        # despues de subir para confirmar que el archivo si aparece,
+        # con un reintento antes de darse por vencido.
+        uploaded_url = None
+
+        for attempt in range(2):
+            upload_file(item_id, ACTA_XLSX_COLUMN_ID, xlsx)
+            uploaded_url = get_file_public_url(get_item(item_id), ACTA_XLSX_COLUMN_ID)
+
+            if uploaded_url:
+                break
+
+            print(f"ACTA: item={item_id} el archivo no aparecio en Monday tras subirlo (intento {attempt + 1})")
+
+        if not uploaded_url:
+            raise RuntimeError(
+                f"El archivo se subio sin error reportado por Monday, pero no aparece "
+                f"en la columna {ACTA_XLSX_COLUMN_ID} despues de reintentar"
+            )
 
         change_status(item_id, board_id, ACTA_STATUS_COLUMN_ID, "Generado")
 
