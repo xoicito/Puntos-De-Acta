@@ -12,7 +12,9 @@ from config import (
     FIRMA_BOARD_ID,
     FIRMA_ESTADO_COLUMN_ID,
     FIRMA_TRIGGER_LABELS,
+    INTERNAL_TASK_SECRET,
 )
+from escalacion import check_escalaciones
 from firma_gerente import start_gerente_signing
 from generate_acta import generate_acta
 from sign_document import sign_document
@@ -215,3 +217,24 @@ def firma_melissa_webhook():
         ).start()
 
     return jsonify({"ok": True})
+
+
+@acta_bp.post("/internal/check-escalaciones")
+def check_escalaciones_route():
+    """Llamado una vez al dia por un cron externo (no una automatizacion de
+    Monday - esto es un chequeo por tiempo, no por evento). Protegido por un
+    secreto compartido en vez de dejarlo abierto, ya que dispara updates
+    visibles en Monday."""
+
+    secret = request.headers.get("X-Internal-Secret", "")
+
+    if not INTERNAL_TASK_SECRET or secret != INTERNAL_TASK_SECRET:
+        return jsonify({"error": "unauthorized"}), 401
+
+    try:
+        escalated = check_escalaciones()
+    except Exception as exc:
+        print(f"ESCALACION: error en el chequeo: {exc}", flush=True)
+        return jsonify({"ok": False, "error": str(exc)}), 500
+
+    return jsonify({"ok": True, "escalated": escalated})

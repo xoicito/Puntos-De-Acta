@@ -440,6 +440,52 @@ def create_column(board_id, title, labels):
     return result["create_column"]["id"]
 
 
+def list_board_items(board_id, column_ids):
+    """Return every item on a board - id, created_at, and the text value of
+    each requested column - paginated so boards with more than one page of
+    items are covered completely. Used for scans that have to look at the
+    whole board (e.g. the escalation check), not a single item."""
+
+    q = """query ($board: [ID!]!, $cols: [String!], $cursor: String) {
+        boards(ids: $board) {
+            items_page(limit: 100, cursor: $cursor) {
+                cursor
+                items {
+                    id
+                    created_at
+                    column_values(ids: $cols) { id text }
+                }
+            }
+        }
+    }"""
+
+    items = []
+    cursor = None
+
+    while True:
+        data = graphql(q, {"board": [str(board_id)], "cols": column_ids, "cursor": cursor})
+        boards = data["boards"]
+
+        if not boards:
+            break
+
+        page = boards[0]["items_page"]
+
+        for it in page["items"]:
+            items.append({
+                "id": it["id"],
+                "created_at": it.get("created_at"),
+                "columns": {c["id"]: (c.get("text") or "") for c in it.get("column_values", [])},
+            })
+
+        cursor = page.get("cursor")
+
+        if not cursor:
+            break
+
+    return items
+
+
 def create_item(board_id, item_name, group_id=None):
     """Create a new item on a board, optionally inside a specific group.
     Returns the new item's id."""

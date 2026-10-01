@@ -220,6 +220,22 @@ CONTROL_FACTURAS_PROYECTO_COLUMN_ID = os.getenv("CONTROL_FACTURAS_PROYECTO_COLUM
 CONTROL_FACTURAS_MONTO_COLUMN_ID = os.getenv("CONTROL_FACTURAS_MONTO_COLUMN_ID", "numeric_mm1389bs")  # "MONTO CONTRATADO (Q.)"
 CONTROL_FACTURAS_ANTICIPO_COLUMN_ID = os.getenv("CONTROL_FACTURAS_ANTICIPO_COLUMN_ID", "numeric_mm13vyvb")  # "ANTICIPO (%)"
 
+# Escalamiento por atraso (Politica de Aprobacion de Puntos de Acta, seccion 6):
+# mientras el Gerente no firme, se publica un update en el item a la 1, 2 y 3
+# semanas desde que se genero - nunca se repite el mismo umbral dos veces,
+# gracias a que el nivel ya enviado queda guardado en esta misma columna.
+# No manda correos reales a proposito (ver conversacion) - solo deja el aviso
+# visible en Monday.
+ACTA_ESCALAMIENTO_COLUMN_ID = os.getenv("ACTA_ESCALAMIENTO_COLUMN_ID", "")
+ACTA_ESCALAMIENTO_1_LABEL = os.getenv("ACTA_ESCALAMIENTO_1_LABEL", "1 Semana")
+ACTA_ESCALAMIENTO_2_LABEL = os.getenv("ACTA_ESCALAMIENTO_2_LABEL", "2 Semanas")
+ACTA_ESCALAMIENTO_3_LABEL = os.getenv("ACTA_ESCALAMIENTO_3_LABEL", "3 Semanas")
+
+# Protege /internal/check-escalaciones - un cron externo (no una automatizacion
+# de Monday) debe llamar ese endpoint una vez al dia con este valor en el
+# header X-Internal-Secret. Vacio por defecto = el endpoint rechaza todo.
+INTERNAL_TASK_SECRET = os.getenv("INTERNAL_TASK_SECRET", "")
+
 # Debe ser un valor fijo y secreto (no lo genere al azar en cada arranque -
 # eso invalidaria todos los enlaces pendientes en cada despliegue). Config
 # en Render como variable de entorno real, nunca en el codigo.
