@@ -226,7 +226,7 @@ CONTROL_FACTURAS_ANTICIPO_COLUMN_ID = os.getenv("CONTROL_FACTURAS_ANTICIPO_COLUM
 # gracias a que el nivel ya enviado queda guardado en esta misma columna.
 # No manda correos reales a proposito (ver conversacion) - solo deja el aviso
 # visible en Monday.
-ACTA_ESCALAMIENTO_COLUMN_ID = os.getenv("ACTA_ESCALAMIENTO_COLUMN_ID", "")
+ACTA_ESCALAMIENTO_COLUMN_ID = os.getenv("ACTA_ESCALAMIENTO_COLUMN_ID", "color_mm7q6r74")  # "Escalamiento"
 ACTA_ESCALAMIENTO_1_LABEL = os.getenv("ACTA_ESCALAMIENTO_1_LABEL", "1 Semana")
 ACTA_ESCALAMIENTO_2_LABEL = os.getenv("ACTA_ESCALAMIENTO_2_LABEL", "2 Semanas")
 ACTA_ESCALAMIENTO_3_LABEL = os.getenv("ACTA_ESCALAMIENTO_3_LABEL", "3 Semanas")
