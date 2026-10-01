@@ -38,6 +38,15 @@ def _clean(value):
     return re.sub(r"[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ._-]+", "_", str(value or "")).strip("_")
 
 
+def _parse_pct(value):
+    value = (value or "").strip().replace("%", "").replace(",", "")
+
+    try:
+        return float(value)
+    except ValueError:
+        return 0.0
+
+
 GUATEMALA_TZ = ZoneInfo("America/Guatemala")
 
 
@@ -121,6 +130,30 @@ def generate_acta(item_id):
 
         if missing:
             raise ValueError("Campos obligatorios vacíos: " + ", ".join(missing))
+
+        # Validacion de forma de pago: el formulario ya le pide al Lider que
+        # los porcentajes sumen 100%, pero nada lo obligaba - sin esto, un
+        # Punto de Acta con montos mal repartidos se generaba y enviaba igual.
+        pct_fields = {
+            "anticipo": data.get("anticipo"),
+            "estimaciones": data.get("estimaciones"),
+            "contra_entrega": data.get("contra_entrega"),
+            "retenido": data.get("retenido"),
+        }
+        pct_total = sum(_parse_pct(v) for v in pct_fields.values())
+
+        if abs(pct_total - 100) > 0.5:
+            detalle = ", ".join(f"{k}: {_parse_pct(v):g}%" for k, v in pct_fields.items())
+            try:
+                create_update(
+                    item_id,
+                    "No se genero el Punto de Acta: los porcentajes de forma de pago no "
+                    f"suman 100% (suman {pct_total:g}%). Valores actuales - {detalle}. "
+                    "Corrige los porcentajes en el formulario y vuelve a intentar.",
+                )
+            except Exception as e:
+                print(f"ERROR_PCT_FLAG: {e}")
+            raise ValueError(f"Los porcentajes de forma de pago suman {pct_total:g}%, no 100%")
 
         stem = _clean(f"PA-{data['no_contrato']}-{data['rubro']}-{data['proyecto']}")[:140]
 
