@@ -58,7 +58,10 @@ def _week_group_title(now=None):
     grupos que ya existen en el board (creados a mano hasta ahora)."""
 
     now = now or datetime.now(GUATEMALA_TZ)
-    monday = now - timedelta(days=now.weekday())
+    # El grupo lleva el lunes en que se ingresa el anticipo, que es el lunes
+    # SIGUIENTE a la semana en que se registra: lo que entra de lunes a
+    # domingo de la semana del 28 de septiembre va al grupo del 5 de octubre.
+    monday = now + timedelta(days=7 - now.weekday())
 
     return f"ANTICIPOS {monday.day} DE {MESES[monday.month - 1]} DE {monday.year}"
 
