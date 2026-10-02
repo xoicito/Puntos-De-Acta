@@ -5,9 +5,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from config import (
-    ACTA_BOARD_ID,
     ACTA_OUTPUT_DIR,
-    COLUMN_ALIASES,
     CONTROL_FACTURAS_ANTICIPO_COLUMN_ID,
     CONTROL_FACTURAS_BOARD_ID,
     CONTROL_FACTURAS_DIVISION_COLUMN_ID,
@@ -176,7 +174,6 @@ def registrar_en_control_facturas(firma_item_id, pdf_path):
     data = item_data(acta_item)
 
     division = data.get("tipo_plantilla") or "Constructora E4"
-    proyecto = data.get("proyecto") or ""
     rubro = _column_text(acta_item, RUBRO_TEXT_COLUMN_ID)
     acta_id = data.get("acta_id") or f"item-{acta_item_id}"
 
@@ -194,9 +191,11 @@ def registrar_en_control_facturas(firma_item_id, pdf_path):
     # se busca la equivalente en vez de pedirle a Monday que cree una
     # (create_labels_if_missing) - eso duplicaba la etiqueta ante cualquier
     # diferencia de mayusculas o de texto ("Reforma" vs "REFORMA E4").
+    # PROYECTO no se llena a proposito: las etiquetas de Facturas estan
+    # numeradas y abreviadas ("13. SM UTATLÁN") y no equivalen a los nombres
+    # del formulario, asi que lo elige una persona a mano.
     for column_id, wanted, nombre in (
         (CONTROL_FACTURAS_DIVISION_COLUMN_ID, division, "DIVISIÓN"),
-        (CONTROL_FACTURAS_PROYECTO_COLUMN_ID, proyecto, "PROYECTO"),
     ):
         if not column_id or not wanted:
             continue
@@ -274,16 +273,5 @@ def reporte_etiquetas():
             "etiquetas": [{"id": lid, "etiqueta": text} for lid, text in items],
             "posibles_duplicadas": sospechosas,
         }
-
-    # La lista de proyectos del formulario (tablero principal) - sirve para
-    # armar la equivalencia con las etiquetas numeradas de Facturas.
-    mapa = get_status_label_map(ACTA_BOARD_ID, COLUMN_ALIASES["proyecto"][0])
-    resultado["PROYECTO (tablero principal)"] = {
-        "total": len(mapa),
-        "etiquetas": [
-            {"id": lid, "etiqueta": text}
-            for lid, text in sorted(mapa.items(), key=lambda kv: int(kv[0]) if kv[0].isdigit() else 10**9)
-        ],
-    }
 
     return resultado
