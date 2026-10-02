@@ -1,3 +1,5 @@
+import re
+import unicodedata
 from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -22,9 +24,11 @@ from utils.monday_client import (
     change_multiple_column_values,
     create_group,
     create_item,
+    create_update,
     download_file,
     get_file_public_url,
     get_item,
+    get_status_labels,
     list_groups,
     upload_file,
 )
@@ -89,6 +93,40 @@ def _monto_cotizacion(acta_item):
     return sum((r["cantidad"] or 0) * (r["precio"] or 0) for r in rows)
 
 
+def _norm(text):
+    text = unicodedata.normalize("NFD", str(text or ""))
+    text = "".join(c for c in text if unicodedata.category(c) != "Mn")
+    return re.sub(r"[^a-z0-9]+", " ", text.casefold()).strip()
+
+
+def _match_label(existing, wanted):
+    """Find the existing label that corresponds to `wanted` ("Reforma" ->
+    "REFORMA E4", "MC Villa Nueva" -> "MC VILLA NUEVA"). Returns None when
+    nothing matches, so the caller can leave the column empty instead of
+    letting Monday invent a duplicate label."""
+
+    target = _norm(wanted)
+
+    if not target:
+        return None
+
+    normed = [(label, _norm(label)) for label in existing]
+
+    for label, n in normed:
+        if n == target:
+            return label
+
+    for label, n in normed:
+        if n.startswith(target + " ") or target.startswith(n + " "):
+            return label
+
+    return None
+
+
+def _nit_sin_guion(nit):
+    return re.sub(r"[\s-]+", "", nit or "")
+
+
 def _anticipo_numero(raw):
     raw = (raw or "").strip().replace("%", "").replace(",", "")
 
@@ -133,7 +171,7 @@ def registrar_en_control_facturas(firma_item_id, pdf_path):
     rubro = _column_text(acta_item, RUBRO_TEXT_COLUMN_ID)
     acta_id = data.get("acta_id") or f"item-{acta_item_id}"
 
-    name = " - ".join(part for part in (acta_id, proyecto, rubro) if part)
+    name = rubro or acta_id
 
     title = _week_group_title()
     group_id = _find_or_create_week_group(CONTROL_FACTURAS_BOARD_ID, title)
@@ -141,18 +179,31 @@ def registrar_en_control_facturas(firma_item_id, pdf_path):
     new_item_id = create_item(CONTROL_FACTURAS_BOARD_ID, name, group_id=group_id)
 
     column_values = {}
+    sin_etiqueta = []
 
-    if CONTROL_FACTURAS_DIVISION_COLUMN_ID and division:
-        column_values[CONTROL_FACTURAS_DIVISION_COLUMN_ID] = {"label": division}
+    # Las etiquetas ya existen en el board ("REFORMA E4", "MC VILLA NUEVA"):
+    # se busca la equivalente en vez de pedirle a Monday que cree una
+    # (create_labels_if_missing) - eso duplicaba la etiqueta ante cualquier
+    # diferencia de mayusculas o de texto ("Reforma" vs "REFORMA E4").
+    for column_id, wanted, nombre in (
+        (CONTROL_FACTURAS_DIVISION_COLUMN_ID, division, "DIVISIÓN"),
+        (CONTROL_FACTURAS_PROYECTO_COLUMN_ID, proyecto, "PROYECTO"),
+    ):
+        if not column_id or not wanted:
+            continue
 
-    if CONTROL_FACTURAS_PROYECTO_COLUMN_ID and proyecto:
-        column_values[CONTROL_FACTURAS_PROYECTO_COLUMN_ID] = {"label": proyecto}
+        label = _match_label(get_status_labels(CONTROL_FACTURAS_BOARD_ID, column_id), wanted)
+
+        if label:
+            column_values[column_id] = {"label": label}
+        else:
+            sin_etiqueta.append(f"{nombre}: '{wanted}'")
 
     if CONTROL_FACTURAS_EMPRESA_COLUMN_ID:
         column_values[CONTROL_FACTURAS_EMPRESA_COLUMN_ID] = data.get("empresa") or ""
 
     if CONTROL_FACTURAS_NIT_COLUMN_ID:
-        column_values[CONTROL_FACTURAS_NIT_COLUMN_ID] = data.get("nit") or ""
+        column_values[CONTROL_FACTURAS_NIT_COLUMN_ID] = _nit_sin_guion(data.get("nit"))
 
     if CONTROL_FACTURAS_MONTO_COLUMN_ID:
         column_values[CONTROL_FACTURAS_MONTO_COLUMN_ID] = _monto_cotizacion(acta_item)
@@ -162,8 +213,19 @@ def registrar_en_control_facturas(firma_item_id, pdf_path):
 
     if column_values:
         change_multiple_column_values(
-            new_item_id, CONTROL_FACTURAS_BOARD_ID, column_values, create_labels_if_missing=True
+            new_item_id, CONTROL_FACTURAS_BOARD_ID, column_values
         )
+
+    if sin_etiqueta:
+        print(f"CONTROL_FACTURAS: item={new_item_id} sin etiqueta equivalente - {', '.join(sin_etiqueta)}")
+        try:
+            create_update(
+                new_item_id,
+                "No se encontro una etiqueta existente para: " + ", ".join(sin_etiqueta)
+                + ". Esa columna se dejo vacia - elige la etiqueta correcta a mano.",
+            )
+        except Exception as e:
+            print(f"CONTROL_FACTURAS: no se pudo publicar el aviso de etiqueta: {e}")
 
     if CONTROL_FACTURAS_PA_COLUMN_ID and pdf_path:
         upload_file(new_item_id, CONTROL_FACTURAS_PA_COLUMN_ID, pdf_path)

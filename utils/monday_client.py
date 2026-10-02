@@ -440,6 +440,37 @@ def create_column(board_id, title, labels):
     return result["create_column"]["id"]
 
 
+def get_status_labels(board_id, column_id):
+    """Return the label texts currently defined on a status/dropdown column,
+    so callers can match against what already exists instead of letting
+    Monday create a new label (and a duplicate) on a near-miss."""
+
+    q = """query ($board: [ID!]!, $col: [String!]) {
+        boards(ids: $board) {
+            columns(ids: $col) { settings_str }
+        }
+    }"""
+
+    boards = graphql(q, {"board": [str(board_id)], "col": [column_id]})["boards"]
+
+    if not boards or not boards[0]["columns"]:
+        return []
+
+    try:
+        settings = json.loads(boards[0]["columns"][0].get("settings_str") or "{}")
+    except (TypeError, ValueError):
+        return []
+
+    labels = settings.get("labels") or {}
+
+    if isinstance(labels, dict):
+        values = list(labels.values())
+    else:
+        values = [(l.get("label") if isinstance(l, dict) else l) for l in labels]
+
+    return [v for v in values if isinstance(v, str) and v.strip()]
+
+
 def list_board_items(board_id, column_ids):
     """Return every item on a board - id, created_at, and the text value of
     each requested column - paginated so boards with more than one page of
