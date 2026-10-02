@@ -5,7 +5,9 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from config import (
+    ACTA_BOARD_ID,
     ACTA_OUTPUT_DIR,
+    COLUMN_ALIASES,
     CONTROL_FACTURAS_ANTICIPO_COLUMN_ID,
     CONTROL_FACTURAS_BOARD_ID,
     CONTROL_FACTURAS_DIVISION_COLUMN_ID,
@@ -272,5 +274,16 @@ def reporte_etiquetas():
             "etiquetas": [{"id": lid, "etiqueta": text} for lid, text in items],
             "posibles_duplicadas": sospechosas,
         }
+
+    # La lista de proyectos del formulario (tablero principal) - sirve para
+    # armar la equivalencia con las etiquetas numeradas de Facturas.
+    mapa = get_status_label_map(ACTA_BOARD_ID, COLUMN_ALIASES["proyecto"][0])
+    resultado["PROYECTO (tablero principal)"] = {
+        "total": len(mapa),
+        "etiquetas": [
+            {"id": lid, "etiqueta": text}
+            for lid, text in sorted(mapa.items(), key=lambda kv: int(kv[0]) if kv[0].isdigit() else 10**9)
+        ],
+    }
 
     return resultado
