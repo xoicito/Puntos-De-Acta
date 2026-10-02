@@ -46,6 +46,7 @@ def get_item(item_id):
         items(ids: $ids) {
             id
             name
+            created_at
             board { id }
             column_values { id text value type }
             subitems {
@@ -440,10 +441,11 @@ def create_column(board_id, title, labels):
     return result["create_column"]["id"]
 
 
-def get_status_labels(board_id, column_id):
-    """Return the label texts currently defined on a status/dropdown column,
-    so callers can match against what already exists instead of letting
-    Monday create a new label (and a duplicate) on a near-miss."""
+def get_status_label_map(board_id, column_id):
+    """Return {label_id: text} for the labels currently defined on a
+    status/dropdown column, so callers can match against what already
+    exists instead of letting Monday create a new label (and a duplicate)
+    on a near-miss. Higher ids are newer labels."""
 
     q = """query ($board: [ID!]!, $col: [String!]) {
         boards(ids: $board) {
@@ -454,21 +456,25 @@ def get_status_labels(board_id, column_id):
     boards = graphql(q, {"board": [str(board_id)], "col": [column_id]})["boards"]
 
     if not boards or not boards[0]["columns"]:
-        return []
+        return {}
 
     try:
         settings = json.loads(boards[0]["columns"][0].get("settings_str") or "{}")
     except (TypeError, ValueError):
-        return []
+        return {}
 
     labels = settings.get("labels") or {}
 
     if isinstance(labels, dict):
-        values = list(labels.values())
+        pairs = labels.items()
     else:
-        values = [(l.get("label") if isinstance(l, dict) else l) for l in labels]
+        pairs = [(str(i), (l.get("label") if isinstance(l, dict) else l)) for i, l in enumerate(labels)]
 
-    return [v for v in values if isinstance(v, str) and v.strip()]
+    return {str(k): v for k, v in pairs if isinstance(v, str) and v.strip()}
+
+
+def get_status_labels(board_id, column_id):
+    return list(get_status_label_map(board_id, column_id).values())
 
 
 def list_board_items(board_id, column_ids):
@@ -549,8 +555,29 @@ def list_groups(board_id):
     return boards[0]["groups"] if boards else []
 
 
-def create_group(board_id, title):
-    """Create a new group on a board. Returns the new group's id."""
+def create_group(board_id, title, at_top=False):
+    """Create a new group on a board. Returns the new group's id. With
+    at_top the group is placed above the current first one (newest week on
+    top); if Monday refuses that placement it falls back to a plain create."""
+
+    if at_top:
+        groups = list_groups(board_id)
+
+        if groups:
+            q_top = """mutation ($board: ID!, $name: String!, $rel: String) {
+                create_group(
+                    board_id: $board,
+                    group_name: $name,
+                    relative_to: $rel,
+                    position_relative_method: before_at
+                ) { id }
+            }"""
+
+            try:
+                result = graphql(q_top, {"board": str(board_id), "name": title, "rel": groups[0]["id"]})
+                return result["create_group"]["id"]
+            except MondayError as e:
+                print(f"create_group at_top fallo, se crea al final: {e}")
 
     q = """mutation ($board: ID!, $name: String!) {
         create_group(board_id: $board, group_name: $name) {
@@ -561,6 +588,14 @@ def create_group(board_id, title):
     result = graphql(q, {"board": str(board_id), "name": title})
 
     return result["create_group"]["id"]
+
+
+def move_item_to_group(item_id, group_id):
+    q = """mutation ($item: ID!, $group: String!) {
+        move_item_to_group(item_id: $item, group_id: $group) { id }
+    }"""
+
+    graphql(q, {"item": str(item_id), "group": group_id})
 
 
 def change_multiple_column_values(item_id, board_id, column_values, create_labels_if_missing=False):

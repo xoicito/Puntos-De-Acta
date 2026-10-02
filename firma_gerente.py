@@ -7,6 +7,9 @@ from openpyxl import load_workbook
 from config import (
     ACTA_BOARD_ID,
     ACTA_OUTPUT_DIR,
+    ACTA_PROCUREMENT_COLUMN_ID,
+    ACTA_PROCUREMENT_ENVIADO_LABEL,
+    ACTA_PROCUREMENT_ESPERA_LABEL,
     ACTA_XLSX_COLUMN_ID,
     FIRMA_BOARD_ID,
     FIRMA_DOCUMENTACION_COLUMN_ID,
@@ -30,6 +33,7 @@ from config import (
     RUBRO_TEXT_COLUMN_ID,
     TEST_MODE_SKIP_NOTIFICATIONS,
 )
+from semanas import GUATEMALA_TZ, es_solicitud_tardia, fecha_liberacion, parse_fecha
 from gerente_link import InvalidLinkError, generate_signing_link, verify_token
 from utils.acta_builder import item_data
 from utils.excel_writer import insert_signature
@@ -269,6 +273,41 @@ def _send_to_procurement(item_id, item, signed_path, data_fields):
     print(f"GERENTE_FIRMA: enviado a Procurement, item={new_item_id} ({name})")
 
 
+def _enviar_o_retener(item_id, board_id, item, signed_path, data_fields):
+    """Cuando el Gerente firma: si la solicitud entro fuera de horario
+    (despues del miercoles 10:00 a.m.), el Punto de Acta queda "En espera"
+    y NO se crea todavia el item en el board de Procurement - llega el lunes
+    siguiente a las 8:00 a.m. (ver retencion.py). Si ya paso esa hora, o
+    entro en horario, se manda de inmediato como siempre."""
+
+    creado = item.get("created_at")
+
+    if ACTA_PROCUREMENT_COLUMN_ID and creado:
+        creado_dt = parse_fecha(creado)
+        liberacion = fecha_liberacion(creado_dt)
+
+        if es_solicitud_tardia(creado_dt) and datetime.now(GUATEMALA_TZ) < liberacion:
+            change_status(item_id, board_id, ACTA_PROCUREMENT_COLUMN_ID, ACTA_PROCUREMENT_ESPERA_LABEL)
+
+            try:
+                create_update(
+                    item_id,
+                    "Firmado por el Gerente. La solicitud entro fuera de horario "
+                    "(despues del miercoles 10:00 a.m.), asi que llegara al board de "
+                    f"Procurement el {liberacion.strftime('%d/%m/%Y')} a las 8:00 a.m.",
+                )
+            except Exception as e:
+                print(f"GERENTE_FIRMA: no se pudo publicar el aviso de espera: {e}")
+
+            print(f"GERENTE_FIRMA: item={item_id} en espera hasta {liberacion.isoformat()}")
+            return
+
+    _send_to_procurement(item_id, item, signed_path, data_fields)
+
+    if ACTA_PROCUREMENT_COLUMN_ID:
+        change_status(item_id, board_id, ACTA_PROCUREMENT_COLUMN_ID, ACTA_PROCUREMENT_ENVIADO_LABEL)
+
+
 def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None):
     """Verify the token again, insert the signature, upload the result, and
     mark the item as signed. Meant to run on the POST of the signing page -
@@ -314,7 +353,7 @@ def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None)
     upload_file(item_id, ACTA_XLSX_COLUMN_ID, signed_path)
 
     try:
-        _send_to_procurement(item_id, item, signed_path, item_data(item))
+        _enviar_o_retener(item_id, board_id, item, signed_path, item_data(item))
     except Exception as e:
         print(f"GERENTE_FIRMA: no se pudo enviar a Procurement: {e}")
 

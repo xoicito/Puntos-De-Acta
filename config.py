@@ -231,6 +231,19 @@ ACTA_ESCALAMIENTO_1_LABEL = os.getenv("ACTA_ESCALAMIENTO_1_LABEL", "1 Semana")
 ACTA_ESCALAMIENTO_2_LABEL = os.getenv("ACTA_ESCALAMIENTO_2_LABEL", "2 Semanas")
 ACTA_ESCALAMIENTO_3_LABEL = os.getenv("ACTA_ESCALAMIENTO_3_LABEL", "3 Semanas")
 
+# Solicitudes fuera de horario (despues del miercoles 10:00 a.m.): el proceso
+# corre normal hasta que el Gerente firma, pero el Punto de Acta NO llega al
+# board de Procurement hasta el lunes siguiente a las 8:00 a.m. Mientras tanto
+# queda "En espera" en esta columna (estado, board principal), y un cron
+# diario lo libera (ver retencion.py). Sin la columna configurada, no se
+# retiene nada y todo llega a Procurement de inmediato, como antes.
+ACTA_PROCUREMENT_COLUMN_ID = os.getenv("ACTA_PROCUREMENT_COLUMN_ID", "")
+ACTA_PROCUREMENT_ESPERA_LABEL = os.getenv("ACTA_PROCUREMENT_ESPERA_LABEL", "En espera")
+ACTA_PROCUREMENT_ENVIADO_LABEL = os.getenv("ACTA_PROCUREMENT_ENVIADO_LABEL", "Enviado")
+
+# MONTO CONTRATADO en Control de Facturas = total de la cotizacion CON IVA.
+IVA_RATE = float(os.getenv("IVA_RATE", "0.12"))
+
 # Protege /internal/check-escalaciones - un cron externo (no una automatizacion
 # de Monday) debe llamar ese endpoint una vez al dia con este valor en el
 # header X-Internal-Secret. Vacio por defecto = el endpoint rechaza todo.

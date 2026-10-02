@@ -29,6 +29,7 @@ from utils.monday_client import (
     upload_file,
     update_text_column,
 )
+from semanas import es_solicitud_tardia
 from utils.acta_builder import build_blocks, display_date, item_data, pct
 from utils.cotizacion_upload import parse_cotizacion_upload
 from utils.excel_writer import render_excel
@@ -53,21 +54,10 @@ GUATEMALA_TZ = ZoneInfo("America/Guatemala")
 def _is_late_submission(now=None):
     """Per the Politica de Aprobacion de Puntos de Acta: requests are
     accepted Monday 7:00am to Wednesday 10:00am (Guatemala time). Outside
-    that window the request is actually queued for the following week's
-    review cycle - this only flags it, doesn't block generation.
-    """
+    that window the request is queued for the following week's cycle -
+    here it only flags it (see firma_gerente.py for the hold itself)."""
 
-    now = now or datetime.now(GUATEMALA_TZ)
-    weekday = now.weekday()  # Monday=0 ... Sunday=6
-
-    if weekday == 0:  # lunes
-        return now.hour < 7
-    if weekday == 1:  # martes
-        return False
-    if weekday == 2:  # miercoles
-        return (now.hour, now.minute) >= (10, 0)
-
-    return True  # jueves-domingo
+    return es_solicitud_tardia(now or datetime.now(GUATEMALA_TZ))
 
 
 def generate_acta(item_id):

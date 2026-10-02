@@ -14,9 +14,12 @@ from config import (
     FIRMA_TRIGGER_LABELS,
     INTERNAL_TASK_SECRET,
 )
+from control_facturas import reporte_etiquetas
 from escalacion import check_escalaciones
 from firma_gerente import start_gerente_signing
 from generate_acta import generate_acta
+from retencion import liberar_retenidos
+from semanas import asignar_grupo_semanal
 from sign_document import sign_document
 from utils.monday_client import change_status
 
@@ -32,6 +35,19 @@ def _run(item_id):
             f"[PUNTOS_ACTA] item={item_id} error={exc}",
             flush=True,
         )
+
+
+def _run_nuevo(item_id, board_id):
+    """Item recien creado por el formulario: primero se acomoda en el grupo de
+    su semana (miercoles 10:01 a miercoles 10:00) y luego se genera. Si mover
+    de grupo falla, igual se genera - lo importante es el documento."""
+
+    try:
+        asignar_grupo_semanal(item_id, board_id)
+    except Exception as exc:
+        print(f"[PUNTOS_ACTA] item={item_id} no se pudo asignar el grupo semanal: {exc}", flush=True)
+
+    _run(item_id)
 
 
 def _run_enviar_gerente(item_id, board_id):
@@ -121,8 +137,8 @@ def puntos_acta_webhook():
         and event_type in ("create_pulse", "create_item")
     ):
         threading.Thread(
-            target=_run,
-            args=(str(item_id),),
+            target=_run_nuevo,
+            args=(str(item_id), ACTA_BOARD_ID),
             daemon=True,
         ).start()
 
@@ -237,4 +253,29 @@ def check_escalaciones_route():
         print(f"ESCALACION: error en el chequeo: {exc}", flush=True)
         return jsonify({"ok": False, "error": str(exc)}), 500
 
-    return jsonify({"ok": True, "escalated": escalated})
+    # Mismo cron diario: libera a Procurement los Puntos de Acta que
+    # quedaron "En espera" por entrar fuera de horario.
+    try:
+        liberados = liberar_retenidos()
+    except Exception as exc:
+        print(f"RETENCION: error al liberar: {exc}", flush=True)
+        return jsonify({"ok": False, "escalated": escalated, "error": str(exc)}), 500
+
+    return jsonify({"ok": True, "escalated": escalated, "liberados": liberados})
+
+
+@acta_bp.get("/internal/etiquetas-facturas")
+def etiquetas_facturas_route():
+    """Lista las etiquetas de DIVISION y PROYECTO en Control de Facturas y
+    marca las que parecen duplicadas (mismo texto salvo mayusculas/tildes, o
+    una es el inicio de la otra). Solo lectura, mismo secreto que arriba."""
+
+    secret = request.headers.get("X-Internal-Secret", "")
+
+    if not INTERNAL_TASK_SECRET or secret != INTERNAL_TASK_SECRET:
+        return jsonify({"error": "unauthorized"}), 401
+
+    try:
+        return jsonify(reporte_etiquetas())
+    except Exception as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 500

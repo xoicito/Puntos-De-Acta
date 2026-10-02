@@ -16,6 +16,7 @@ from config import (
     CONTROL_FACTURAS_PROYECTO_COLUMN_ID,
     COTIZACION_FILE_COLUMN_ID,
     FIRMA_PA_ITEM_ID_COLUMN_ID,
+    IVA_RATE,
     RUBRO_TEXT_COLUMN_ID,
 )
 from utils.acta_builder import item_data
@@ -28,6 +29,7 @@ from utils.monday_client import (
     download_file,
     get_file_public_url,
     get_item,
+    get_status_label_map,
     get_status_labels,
     list_groups,
     upload_file,
@@ -75,9 +77,9 @@ def _find_or_create_week_group(board_id, title):
 
 
 def _monto_cotizacion(acta_item):
-    """Suma cantidad x precio de cada renglon de la cotizacion subida
-    (PLANTILLA_ALCANCE_COTIZACION.xlsx, ya sin IVA) - no hay un campo de
-    "monto total" propio en el Punto de Acta."""
+    """Total de la cotizacion subida CON IVA: suma cantidad x precio de cada
+    renglon (PLANTILLA_ALCANCE_COTIZACION.xlsx, capturada sin IVA) y le suma
+    el IVA - no hay un campo de "monto total" propio en el Punto de Acta."""
 
     url = get_file_public_url(acta_item, COTIZACION_FILE_COLUMN_ID)
 
@@ -93,7 +95,9 @@ def _monto_cotizacion(acta_item):
 
     rows = parse_cotizacion_upload(path)
 
-    return sum((r["cantidad"] or 0) * (r["precio"] or 0) for r in rows)
+    subtotal = sum((r["cantidad"] or 0) * (r["precio"] or 0) for r in rows)
+
+    return round(subtotal * (1 + IVA_RATE), 2)
 
 
 def _norm(text):
@@ -234,3 +238,39 @@ def registrar_en_control_facturas(firma_item_id, pdf_path):
         upload_file(new_item_id, CONTROL_FACTURAS_PA_COLUMN_ID, pdf_path)
 
     print(f"CONTROL_FACTURAS: creado item={new_item_id} ({name}) en grupo '{title}'")
+
+
+def reporte_etiquetas():
+    """Etiquetas de DIVISION y PROYECTO en Control de Facturas, con las que
+    parecen duplicadas. Un id mas alto = etiqueta mas nueva (probablemente la
+    que creo la automatizacion, no la original)."""
+
+    resultado = {}
+
+    for nombre, column_id in (
+        ("DIVISION (PRC)", CONTROL_FACTURAS_DIVISION_COLUMN_ID),
+        ("PROYECTO", CONTROL_FACTURAS_PROYECTO_COLUMN_ID),
+    ):
+        mapa = get_status_label_map(CONTROL_FACTURAS_BOARD_ID, column_id)
+        items = sorted(mapa.items(), key=lambda kv: int(kv[0]) if kv[0].isdigit() else 10**9)
+        normed = [(lid, text, _norm(text)) for lid, text in items]
+
+        sospechosas = []
+
+        for i, (lid, text, n) in enumerate(normed):
+            parecidas = [
+                {"id": lid2, "etiqueta": text2}
+                for j, (lid2, text2, n2) in enumerate(normed)
+                if i != j and (n == n2 or n.startswith(n2 + " ") or n2.startswith(n + " "))
+            ]
+
+            if parecidas:
+                sospechosas.append({"id": lid, "etiqueta": text, "parecida_a": parecidas})
+
+        resultado[nombre] = {
+            "total": len(items),
+            "etiquetas": [{"id": lid, "etiqueta": text} for lid, text in items],
+            "posibles_duplicadas": sospechosas,
+        }
+
+    return resultado
