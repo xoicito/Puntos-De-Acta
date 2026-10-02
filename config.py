@@ -237,7 +237,7 @@ ACTA_ESCALAMIENTO_3_LABEL = os.getenv("ACTA_ESCALAMIENTO_3_LABEL", "3 Semanas")
 # queda "En espera" en esta columna (estado, board principal), y un cron
 # diario lo libera (ver retencion.py). Sin la columna configurada, no se
 # retiene nada y todo llega a Procurement de inmediato, como antes.
-ACTA_PROCUREMENT_COLUMN_ID = os.getenv("ACTA_PROCUREMENT_COLUMN_ID", "")
+ACTA_PROCUREMENT_COLUMN_ID = os.getenv("ACTA_PROCUREMENT_COLUMN_ID", "color_mm7rns4m")  # "Procurement"
 ACTA_PROCUREMENT_ESPERA_LABEL = os.getenv("ACTA_PROCUREMENT_ESPERA_LABEL", "En espera")
 ACTA_PROCUREMENT_ENVIADO_LABEL = os.getenv("ACTA_PROCUREMENT_ENVIADO_LABEL", "Enviado")
 
