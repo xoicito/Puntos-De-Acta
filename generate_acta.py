@@ -266,12 +266,14 @@ def generate_acta(item_id):
         change_status(item_id, board_id, ACTA_STATUS_COLUMN_ID, ACTA_RECHAZADO_LABEL)
 
         try:
+            enlace = f"{GERENTE_LINK_BASE_URL}/plantilla-alcance-cotizacion"
             create_update(
                 item_id,
-                f"Punto de Acta rechazado: {exc}. En \"Alcance Cotizacion\" hay que subir la "
-                "plantilla oficial, llena (una fila por renglon y montos SIN IVA). Descargala aqui: "
-                f"{GERENTE_LINK_BASE_URL}/plantilla-alcance-cotizacion . Cuando la subas, cambia el "
-                "Estado del PA a \"Generar\" para volver a generarlo.",
+                "<p>El Alcance de Cotización proporcionado por el Líder de Proyecto no es la "
+                "plantilla solicitada en el formulario. "
+                f'(<a href="{enlace}">PLANTILLA_ALCANCE_COTIZACION.xlsx</a>)</p>'
+                "<p>Se adjunta la plantilla solicitada.</p>"
+                "<p>En este caso, se debe volver a llenar el formulario con la plantilla correcta.</p>",
             )
         except Exception as e:
             print(f"ERROR_RECHAZO_COTIZACION: {e}")
