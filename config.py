@@ -185,6 +185,15 @@ PMO_NOMBRE_COLUMN_ID = os.getenv("PMO_NOMBRE_COLUMN_ID", "single_selectd8eed12")
 PMO_EMAIL_COLUMN_ID = os.getenv("PMO_EMAIL_COLUMN_ID", "text_mm7ayzbv")  # "e-mail" en "Base Datos PMO"
 PMO_EMAIL_APROBACION_COLUMN_ID = os.getenv("PMO_EMAIL_APROBACION_COLUMN_ID", "text_mm7fe2dx")  # "PMO Correo"
 
+# Copia del correo a PMO: estas direcciones se agregan a "PMO Correo" junto con
+# la del PMO del proyecto, asi la misma automatizacion de Monday les manda el
+# correo a todos. PMO_COPIA_CORREOS son direcciones separadas por coma; si no
+# se configuran, se buscan por nombre (FIRMA_NOTIFICAR_NOMBRES) en el board
+# "Base Datos PMO". PMO_CORREOS_SEPARADOR es lo que separa las direcciones
+# dentro de la columna (Outlook usa ";").
+PMO_COPIA_CORREOS = [c.strip() for c in os.getenv("PMO_COPIA_CORREOS", "").split(",") if c.strip()]
+PMO_CORREOS_SEPARADOR = os.getenv("PMO_CORREOS_SEPARADOR", "; ")
+
 # La automatizacion que le manda el correo a PMO (adjuntando el archivo
 # firmado) no puede disparar directo sobre ESTADO DE APROBACION -> FIRMADO,
 # porque ese es el mismo evento que arranca sign_document() via webhook, y

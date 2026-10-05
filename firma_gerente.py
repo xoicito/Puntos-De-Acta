@@ -26,7 +26,10 @@ from config import (
     GERENTE_FIRMA_LINK_COLUMN_ID,
     GERENTE_NOMBRE_COLUMN_ID,
     LIDER_DOCUMENTACION_COLUMN_ID,
+    FIRMA_NOTIFICAR_NOMBRES,
     PMO_BOARD_ID,
+    PMO_COPIA_CORREOS,
+    PMO_CORREOS_SEPARADOR,
     PMO_EMAIL_APROBACION_COLUMN_ID,
     PMO_EMAIL_COLUMN_ID,
     PMO_NOMBRE_COLUMN_ID,
@@ -264,13 +267,46 @@ def _send_to_procurement(item_id, item, signed_path, data_fields):
         pmo_selected = _column_text(item, PMO_NOMBRE_COLUMN_ID)
         pmo_name, pmo_email = find_item_by_name(PMO_BOARD_ID, pmo_selected, PMO_EMAIL_COLUMN_ID)
 
-        if pmo_email:
-            update_text_column(new_item_id, FIRMA_BOARD_ID, PMO_EMAIL_APROBACION_COLUMN_ID, pmo_email)
-            print(f"PMO: correo resuelto para {pmo_name} <{pmo_email}>, copiado a item={new_item_id}")
+        correos = _correos_con_copia(pmo_email)
+
+        if correos:
+            update_text_column(new_item_id, FIRMA_BOARD_ID, PMO_EMAIL_APROBACION_COLUMN_ID, correos)
+            print(f"PMO: correos resueltos para {pmo_name or pmo_selected or '(sin PMO)'}: {correos}, copiados a item={new_item_id}")
         else:
             print(f"PMO: item={item_id} sin PMO asignado (o '{pmo_selected}' no encontrado), se omite")
 
     print(f"GERENTE_FIRMA: enviado a Procurement, item={new_item_id} ({name})")
+
+
+def _correos_con_copia(pmo_email):
+    """El correo del PMO del proyecto mas las direcciones que van en copia
+    (PMO_COPIA_CORREOS, o - si no estan configuradas - los correos de
+    FIRMA_NOTIFICAR_NOMBRES buscados en "Base Datos PMO"), sin repetidos y en
+    ese orden. Devuelve el texto listo para la columna "PMO Correo", o None."""
+
+    copias = list(PMO_COPIA_CORREOS)
+
+    if not copias:
+        for nombre in FIRMA_NOTIFICAR_NOMBRES:
+            try:
+                _, correo = find_item_by_name(PMO_BOARD_ID, nombre, PMO_EMAIL_COLUMN_ID)
+            except Exception as e:
+                print(f"PMO: no se pudo buscar el correo de '{nombre}': {e}")
+                continue
+
+            if correo:
+                copias.append(correo)
+            else:
+                print(f"PMO: sin correo para '{nombre}' en Base Datos PMO - configura PMO_COPIA_CORREOS")
+
+    vistos, resultado = set(), []
+
+    for correo in [pmo_email] + copias:
+        if correo and correo.strip().lower() not in vistos:
+            vistos.add(correo.strip().lower())
+            resultado.append(correo.strip())
+
+    return PMO_CORREOS_SEPARADOR.join(resultado) or None
 
 
 def _enviar_o_retener(item_id, board_id, item, signed_path, data_fields):
