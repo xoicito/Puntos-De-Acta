@@ -17,7 +17,7 @@ from config import (
 from control_facturas import reporte_etiquetas
 from escalacion import check_escalaciones
 from firma_gerente import start_gerente_signing
-from firmas_orden import ordenar_firmas
+from firmas_orden import mover_a_pasados, movimientos_recientes, ordenar_firmas
 from generate_acta import generate_acta
 from retencion import liberar_retenidos
 from semanas import asignar_grupo_semanal
@@ -297,4 +297,34 @@ def ordenar_firmas_route():
         return jsonify({"ok": True, **ordenar_firmas()})
     except Exception as exc:
         print(f"ORDEN_FIRMAS: error: {exc}", flush=True)
+        return jsonify({"ok": False, "error": str(exc)}), 500
+
+
+@acta_bp.get("/internal/movimientos-firmas")
+def movimientos_firmas_route():
+    """Solo lectura: movimientos entre grupos de las ultimas horas en el board
+    de Melissa (?minutos=240)."""
+
+    if not INTERNAL_TASK_SECRET or request.headers.get("X-Internal-Secret", "") != INTERNAL_TASK_SECRET:
+        return jsonify({"error": "unauthorized"}), 401
+
+    try:
+        return jsonify(movimientos_recientes(int(request.args.get("minutos", 240))))
+    except Exception as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 500
+
+
+@acta_bp.post("/internal/devolver-a-pasados")
+def devolver_a_pasados_route():
+    """Devuelve al grupo PASADOS los items cuyos ids vienen en el JSON
+    {"item_ids": [...]}."""
+
+    if not INTERNAL_TASK_SECRET or request.headers.get("X-Internal-Secret", "") != INTERNAL_TASK_SECRET:
+        return jsonify({"error": "unauthorized"}), 401
+
+    ids = (request.get_json(silent=True) or {}).get("item_ids") or []
+
+    try:
+        return jsonify({"ok": True, "movidos": mover_a_pasados([str(i) for i in ids])})
+    except Exception as exc:
         return jsonify({"ok": False, "error": str(exc)}), 500
