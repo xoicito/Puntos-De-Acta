@@ -2,7 +2,7 @@ import threading
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from utils.monday_client import create_group, list_groups, move_item_to_group
+from utils.monday_client import create_group, list_board_items, list_groups, move_item_to_group
 
 GUATEMALA_TZ = ZoneInfo("America/Guatemala")
 
@@ -95,3 +95,52 @@ def asignar_grupo_semanal(item_id, board_id, ahora=None):
         ) or create_group(board_id, title, at_top=True)
 
     move_item_to_group(item_id, group_id)
+
+
+def agrupar_semana_actual(board_id, ahora=None):
+    """Red de seguridad que corre en el cron diario (y se puede lanzar a
+    mano): cualquier item del board creado dentro de la semana en curso
+    (miercoles 10:01 a miercoles 10:00) que no este en el grupo de esa semana
+    se mueve ahi. Solo mira la semana actual - lo anterior no se toca, asi que
+    los grupos viejos quedan como estan. Devuelve cuantos movio."""
+
+    ahora = ahora or datetime.now(GUATEMALA_TZ)
+    inicio, fin = ventana_semanal(ahora)
+    title = titulo_semana(ahora)
+
+    items = list_board_items(board_id, [])
+    pendientes = []
+
+    for it in items:
+        if not it.get("created_at"):
+            continue
+
+        creado = _local(parse_fecha(it["created_at"]))
+
+        if inicio < creado <= fin:
+            pendientes.append(it)
+
+    if not pendientes:
+        return 0
+
+    with _group_lock:
+        group_id = next(
+            (g["id"] for g in list_groups(board_id) if g["title"].strip().lower() == title.lower()),
+            None,
+        ) or create_group(board_id, title, at_top=True)
+
+    movidos = 0
+
+    for it in pendientes:
+        if it.get("group_id") == group_id:
+            continue
+
+        try:
+            move_item_to_group(it["id"], group_id)
+            movidos += 1
+        except Exception as e:
+            print(f"SEMANAS: item={it['id']} no se pudo mover: {e}", flush=True)
+
+    print(f"SEMANAS: {movidos} items movidos a '{title}'", flush=True)
+
+    return movidos

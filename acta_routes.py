@@ -20,7 +20,7 @@ from firma_gerente import start_gerente_signing
 from firmas_orden import mover_a_pasados, movimientos_recientes, ordenar_firmas
 from generate_acta import generate_acta
 from retencion import liberar_retenidos
-from semanas import asignar_grupo_semanal
+from semanas import agrupar_semana_actual, asignar_grupo_semanal
 from sign_document import sign_document
 from utils.monday_client import change_status
 
@@ -262,7 +262,15 @@ def check_escalaciones_route():
         print(f"RETENCION: error al liberar: {exc}", flush=True)
         return jsonify({"ok": False, "escalated": escalated, "error": str(exc)}), 500
 
-    return jsonify({"ok": True, "escalated": escalated, "liberados": liberados})
+    # Y se acomodan por semana los items del board que hayan quedado fuera de
+    # su grupo (red de seguridad del acomodo automatico al crearlos).
+    try:
+        agrupados = agrupar_semana_actual(ACTA_BOARD_ID)
+    except Exception as exc:
+        print(f"SEMANAS: error al agrupar: {exc}", flush=True)
+        agrupados = None
+
+    return jsonify({"ok": True, "escalated": escalated, "liberados": liberados, "agrupados": agrupados})
 
 
 @acta_bp.get("/internal/etiquetas-facturas")
@@ -328,3 +336,16 @@ def devolver_a_pasados_route():
         return jsonify({"ok": True, "movidos": mover_a_pasados([str(i) for i in ids])})
     except Exception as exc:
         return jsonify({"ok": False, "error": str(exc)}), 500
+
+
+@acta_bp.post("/internal/agrupar-semanas")
+def agrupar_semanas_route():
+    """Acomoda por semana, en segundo plano, los items de la semana en curso
+    del board de formularios (mismo secreto que los demas endpoints)."""
+
+    if not INTERNAL_TASK_SECRET or request.headers.get("X-Internal-Secret", "") != INTERNAL_TASK_SECRET:
+        return jsonify({"error": "unauthorized"}), 401
+
+    threading.Thread(target=agrupar_semana_actual, args=(ACTA_BOARD_ID,), daemon=True).start()
+
+    return jsonify({"ok": True, "estado": "en proceso, revisa el board en un minuto"})
