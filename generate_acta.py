@@ -10,12 +10,14 @@ from config import (
     ACTA_ENVIAR_GERENTE_REVISION_LABEL,
     ACTA_ID_COLUMN_ID,
     ACTA_OUTPUT_DIR,
+    ACTA_RECHAZADO_LABEL,
     ACTA_STATUS_COLUMN_ID,
     ACTA_TEMPLATE,
     ACTA_TEMPLATE_REFORMA,
     ACTA_XLSX_COLUMN_ID,
     COTIZACION_FILE_COLUMN_ID,
     FIRMA_MONDAY_COLUMN_ID,
+    GERENTE_LINK_BASE_URL,
     METODO_FIRMA_MONDAY_LABEL,
     SIGNATURE_COLUMN_ID,
 )
@@ -25,18 +27,23 @@ from utils.monday_client import (
     download_file,
     generate_acta_id,
     get_file_public_url,
+    get_file_public_urls,
     get_item,
     upload_file,
     update_text_column,
 )
 from semanas import es_solicitud_tardia
 from utils.acta_builder import build_blocks, display_date, item_data, pct
-from utils.cotizacion_upload import parse_cotizacion_upload
+from utils.cotizacion_upload import parse_cotizacion_upload, validar_plantilla
 from utils.excel_writer import render_excel
 
 
 def _clean(value):
     return re.sub(r"[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ._-]+", "_", str(value or "")).strip("_")
+
+
+class CotizacionInvalida(Exception):
+    """El archivo de "Alcance Cotizacion" no es la plantilla oficial."""
 
 
 def _parse_pct(value):
@@ -156,13 +163,29 @@ def generate_acta(item_id):
 
         try:
             if COTIZACION_FILE_COLUMN_ID:
-                cotizacion_url = get_file_public_url(item, COTIZACION_FILE_COLUMN_ID)
+                # El archivo MAS RECIENTE de la columna: si el Lider corrige
+                # subiendo la plantilla correcta sin borrar la equivocada, la
+                # nueva es la que cuenta.
+                archivos = get_file_public_urls(item, COTIZACION_FILE_COLUMN_ID)
 
-                if cotizacion_url:
-                    suffix = Path(cotizacion_url.split("?")[0]).suffix or ".xlsx"
+                if archivos:
+                    nombre_archivo, cotizacion_url = archivos[-1]
+                    suffix = (
+                        Path(nombre_archivo).suffix
+                        or Path(cotizacion_url.split("?")[0]).suffix
+                        or ".xlsx"
+                    )
                     cotizacion_path = str(output_directory / f"{stem}_cotizacion{suffix}")
                     download_file(cotizacion_url, cotizacion_path)
+
+                    motivo = validar_plantilla(cotizacion_path, nombre_archivo)
+
+                    if motivo:
+                        raise CotizacionInvalida(motivo)
+
                     cotizacion_rows = parse_cotizacion_upload(cotizacion_path)
+        except CotizacionInvalida:
+            raise
         except Exception as e:
             print(f"ERROR COTIZACION_UPLOAD: {e}")
             cotizacion_rows = []
@@ -237,6 +260,24 @@ def generate_acta(item_id):
 
         return {"xlsx": xlsx, "name": stem}
 
+    except CotizacionInvalida as exc:
+        # No es un error del sistema: el Lider subio otro documento en vez de
+        # la plantilla. Se rechaza y se le explica que hacer, en el item.
+        change_status(item_id, board_id, ACTA_STATUS_COLUMN_ID, ACTA_RECHAZADO_LABEL)
+
+        try:
+            create_update(
+                item_id,
+                f"Punto de Acta rechazado: {exc}. En \"Alcance Cotizacion\" hay que subir la "
+                "plantilla oficial, llena (una fila por renglon y montos SIN IVA). Descargala aqui: "
+                f"{GERENTE_LINK_BASE_URL}/plantilla-alcance-cotizacion . Cuando la subas, cambia el "
+                "Estado del PA a \"Generar\" para volver a generarlo.",
+            )
+        except Exception as e:
+            print(f"ERROR_RECHAZO_COTIZACION: {e}")
+
+        print(f"ACTA: item={item_id} rechazado por cotizacion invalida: {exc}")
+        return None
     except Exception:
         try:
             change_status(item_id, board_id, ACTA_STATUS_COLUMN_ID, "Error")
