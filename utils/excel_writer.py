@@ -459,12 +459,22 @@ def _estimate_row_height(ws, text, cols, font_size=12, min_height=27.6):
     if not text:
         return min_height
 
-    width_px = sum(_col_width_px(ws, c) for c in cols)
-    avg_char_px = font_size * 0.55  # rough estimate for a proportional sans-serif font
-    chars_per_line = max(10, int(width_px / avg_char_px))
-    lines_needed = max(1, math.ceil(len(str(text)) / chars_per_line))
+    lines_needed = _wrapped_lines(ws, text, cols, font_size)
 
     return max(min_height, lines_needed * font_size * 1.6 + 10)
+
+
+def _wrapped_lines(ws, text, cols, font_size=12, char_width=0.55):
+    """How many lines `text` wraps into across the merged columns `cols`
+    (rough estimate, see _estimate_row_height)."""
+
+    if not text:
+        return 1
+
+    width_px = sum(_col_width_px(ws, c) for c in cols)
+    chars_per_line = max(10, int(width_px / (font_size * char_width)))
+
+    return max(1, math.ceil(len(str(text)) / chars_per_line))
 
 
 def _write_list(ws, first_row, capacity, items, column=LIST_COLUMN, row_shift=0, merge_cols=None):
@@ -534,6 +544,31 @@ def _write_programacion(ws, rows, row_shift=0):
         dias_cell.number_format = "0"
 
         ws[f"M{row_num}"] = fila.get("obs") or None
+
+        # AREA (D:F) y OBSERVACIONES (M:P) son celdas combinadas con el
+        # texto en una sola linea: lo largo se cortaba en vez de bajar de
+        # linea. Se activa el ajuste de texto y la fila crece solo lo que
+        # haga falta (si el texto cabe en una linea, queda la altura de la
+        # plantilla, sin tocar el resto de la estructura).
+        lineas = 1
+
+        for col, merged_cols in (("D", "DEF"), ("M", "MNOP")):
+            cell = ws[f"{col}{row_num}"]
+
+            if not cell.value:
+                continue
+
+            alineacion = cell.alignment
+            cell.alignment = Alignment(
+                horizontal=alineacion.horizontal,
+                vertical="center",
+                wrap_text=True,
+            )
+            lineas = max(lineas, _wrapped_lines(ws, cell.value, merged_cols, font_size=12, char_width=0.6))
+
+        if lineas > 1:
+            base = ws.row_dimensions[row_num].height or 21
+            ws.row_dimensions[row_num].height = max(base, lineas * 12 * 1.4 + 6)
 
 
 def _replace_text_placeholders(ws, replacements):
