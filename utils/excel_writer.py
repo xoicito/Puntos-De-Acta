@@ -9,6 +9,7 @@ from openpyxl.drawing.image import Image as XLImage
 from openpyxl.drawing.spreadsheet_drawing import AnchorMarker, OneCellAnchor
 from openpyxl.drawing.xdr import XDRPositiveSize2D
 from openpyxl.styles import Alignment
+from openpyxl.styles.colors import Color
 from openpyxl.utils import column_index_from_string, get_column_letter
 from openpyxl.utils.units import pixels_to_EMU
 from PIL import Image as PILImage
@@ -180,6 +181,13 @@ def insert_text_placeholder(ws, text, placeholder):
     top_left, _cols, _rows = found
 
     ws[top_left] = text
+
+    # El marcador se esconde en la plantilla con letra blanca (igual que los
+    # de firma) para que no se vea mientras sigue sin resolver; al ponerle
+    # el texto real hay que devolverle un color visible.
+    visible = copy.copy(ws[top_left].font)
+    visible.color = Color(rgb="FF000000")
+    ws[top_left].font = visible
 
     return True
 
