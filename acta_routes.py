@@ -17,6 +17,7 @@ from config import (
 from control_facturas import reporte_etiquetas
 from escalacion import check_escalaciones
 from firma_gerente import start_gerente_signing
+from firmas_orden import ordenar_firmas
 from generate_acta import generate_acta
 from retencion import liberar_retenidos
 from semanas import asignar_grupo_semanal
@@ -278,4 +279,22 @@ def etiquetas_facturas_route():
     try:
         return jsonify(reporte_etiquetas())
     except Exception as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 500
+
+
+@acta_bp.post("/internal/ordenar-firmas")
+def ordenar_firmas_route():
+    """Cron externo, domingo por la noche: pasa los Puntos de Acta ya
+    firmados / rechazados en el board de Melissa a sus grupos. Mismo secreto
+    que los demas endpoints internos."""
+
+    secret = request.headers.get("X-Internal-Secret", "")
+
+    if not INTERNAL_TASK_SECRET or secret != INTERNAL_TASK_SECRET:
+        return jsonify({"error": "unauthorized"}), 401
+
+    try:
+        return jsonify({"ok": True, **ordenar_firmas()})
+    except Exception as exc:
+        print(f"ORDEN_FIRMAS: error: {exc}", flush=True)
         return jsonify({"ok": False, "error": str(exc)}), 500
