@@ -6,7 +6,7 @@ IMMUTABLE_POINTS = [
     "CAMBIO DE PROVEEDOR: Si el proveedor no reacciona a los requerimientos solicitados previos y a los contratados, se debe cambiar no más de 3 días después de la falta de reacción.",
     "GARANTÍA: Si el proveedor tuvo un trabajo de mala calidad, se deben descontar materiales y otros gastos que se requieran.",
     "RETENCIÓN: 5% del monto total retenido por 3 meses luego de haber recibido con satisfacción los trabajos.",
-    "El proveedor se compromete a cumplir con todas las normas del ACUERDO GUBERNATIVO 229-204 Y SUS REFORMAS 33-2016. De no cumplir con las normativas del acuerdo o las internas del proyecto, se podrá dar por terminado el contrato.",
+    "El proveedor se compromete a cumplir con todas las normas del ACUERDO GUBERNATIVO 229-2014 Y SUS REFORMAS 33-2016. De no cumplir con las normativas del acuerdo o las internas del proyecto, se podrá dar por terminado el contrato.",
 ]
 
 # Fallback amounts, taken from the original template (cells P30-P33) - used
@@ -1063,7 +1063,7 @@ def build_multas(data):
 
     atraso_pct = (data.get("multa_atraso_pct") or "").strip()
     atraso_value = (
-        f"{atraso_pct} POR DIA"
+        f"{atraso_pct} POR DÍA"
         if atraso_pct and atraso_pct.upper() != "N/A"
         else "N/A"
     )

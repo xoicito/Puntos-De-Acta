@@ -12,6 +12,7 @@ from openpyxl.styles import Alignment
 from openpyxl.styles.colors import Color
 from openpyxl.utils import column_index_from_string, get_column_letter
 from openpyxl.utils.units import pixels_to_EMU
+from openpyxl.worksheet.pagebreak import Break, RowBreak
 from PIL import Image as PILImage
 
 from config import LIDER_FIRMA_PLACEHOLDER
@@ -31,6 +32,9 @@ SERVICIOS_FIRST_ROW = 76
 SHORT_LIST_CAPACITY = 5
 PUNTOS_FIRST_ROW = 84
 PUNTOS_CAPACITY = 28
+ANEXOS_HEADER_ROW = 127
+ANEXOS_FIRST_ROW = 128
+ANEXOS_CAPACITY = 8
 LIST_COLUMN = "E"
 
 SI_NO_CELLS = {
@@ -438,6 +442,32 @@ def write_cotizacion_rows(ws, rows):
         ws[f"N{excel_row}"] = float(row.get("cantidad") or 0) * float(row.get("precio") or 0)
         ws[f"P{excel_row}"] = row.get("observaciones", "")
 
+        # "1.00" para una cantidad entera se ve descuidado: sin decimales si
+        # es entera, con dos si no.
+        try:
+            cantidad = float(row.get("cantidad"))
+            ws[f"L{excel_row}"].number_format = "#,##0" if cantidad.is_integer() else "#,##0.00"
+        except (TypeError, ValueError):
+            pass
+
+        # Las filas de la plantilla miden ~70 pt aunque el texto sea de una
+        # linea: se ajusta cada una a lo que realmente ocupa su texto.
+        lineas = 1
+
+        for col, merged_cols in (("E", "EFGHIJ"), ("P", "P")):
+            cell = ws[f"{col}{excel_row}"]
+
+            if not cell.value:
+                continue
+
+            alineacion = cell.alignment
+            cell.alignment = Alignment(
+                horizontal=alineacion.horizontal, vertical="center", wrap_text=True
+            )
+            lineas = max(lineas, _wrapped_lines(ws, cell.value, merged_cols, font_size=11, char_width=0.6))
+
+        ws.row_dimensions[excel_row].height = max(27.6, lineas * 11 * 1.4 + 10)
+
 
 def _as_lines(value):
     """Normalize a list, a newline-separated string or None into a list of
@@ -553,6 +583,13 @@ def _write_programacion(ws, rows, row_shift=0):
 
         ws[f"M{row_num}"] = fila.get("obs") or None
 
+        # En la plantilla solo la primera fila trae las fechas en negrita:
+        # se uniforma (area en negrita, el resto normal).
+        for col in "DGIKM":
+            f = copy.copy(ws[f"{col}{row_num}"].font)
+            f.b = col == "D"
+            ws[f"{col}{row_num}"].font = f
+
         # AREA (D:F) y OBSERVACIONES (M:P) son celdas combinadas con el
         # texto en una sola linea: lo largo se cortaba en vez de bajar de
         # linea. Se activa el ajuste de texto y la fila crece solo lo que
@@ -577,6 +614,68 @@ def _write_programacion(ws, rows, row_shift=0):
         if lineas > 1:
             base = ws.row_dimensions[row_num].height or 21
             ws.row_dimensions[row_num].height = max(base, lineas * 12 * 1.4 + 6)
+
+
+def _hide_unused_rows(ws, first_row, capacity, used):
+    """Oculta las filas de una tabla que quedaron sin datos (se deja visible
+    una si no hay ninguna, para que la seccion no parezca rota)."""
+
+    for i in range(max(used, 1), capacity):
+        ws.row_dimensions[first_row + i].hidden = True
+
+
+def _row_points(ws, row):
+    dim = ws.row_dimensions[row]
+
+    if dim.hidden:
+        return 0
+
+    return dim.height or DEFAULT_ROW_HEIGHT
+
+
+def _plan_page_breaks(ws, s_cot, s_trab, s_serv, con_anexos=True):
+    """Recalcula los saltos de pagina sobre el documento ya armado (con sus
+    filas extra y las filas ocultas): cada seccion queda completa en una
+    pagina en vez de partirse, salvo que ella sola no quepa.
+
+    Fijo, como en la plantilla: la pagina 2 arranca en la cotizacion (la 1 es
+    el resumen del contrato). El resto se acomoda segun lo que quepa.
+    """
+
+    # (fila inicial en la plantilla, filas insertadas arriba de ella, salto fijo)
+    starts = [
+        (2, 0, False),
+        (48, 0, True),                          # cotizacion
+        (60, s_cot, False),                     # programacion
+        (68, s_cot, False),                     # trabajos previos
+        (75, s_cot + s_trab, False),            # servicios basicos
+        (83, s_cot + s_trab + s_serv, False),   # puntos de revision
+        (114, s_cot + s_trab + s_serv, False),  # area de firmas
+        (126, s_cot + s_trab + s_serv, False),  # anexos
+    ]
+    if not con_anexos:
+        starts = starts[:-1]
+
+    rows = [row + shift for row, shift, _ in starts]
+    forced = [f for _, _, f in starts]
+    last_row = (ANEXOS_FIRST_ROW + ANEXOS_CAPACITY if con_anexos else 125) + s_cot + s_trab + s_serv
+
+    ancho_pt = sum(_col_width_px(ws, get_column_letter(c)) for c in range(2, 19)) * 0.75
+    escala = min(1.0, 576 / ancho_pt)  # 8.5 in - margenes de 0.25 in, a 72 pt/in
+    capacidad = (684 / escala) * 0.96  # 11 in - margenes de 0.75 in, con holgura
+
+    ws.row_breaks = RowBreak()
+    actual = 0
+
+    for i, inicio in enumerate(rows):
+        fin = (rows[i + 1] - 1) if i + 1 < len(rows) else last_row
+        alto = sum(_row_points(ws, r) for r in range(inicio, fin + 1))
+
+        if i > 0 and (forced[i] or actual + alto > capacidad):
+            ws.row_breaks.append(Break(id=inicio - 1))
+            actual = 0
+
+        actual += alto
 
 
 def _replace_text_placeholders(ws, replacements):
@@ -623,8 +722,12 @@ def render_excel(template_path, output_path, replacements):
     row_shift = ensure_cotizacion_capacity(ws, len(cotizacion_rows))
     print(f"COTIZACION_FILAS_EXTRA: {row_shift}")
     write_cotizacion_rows(ws, cotizacion_rows)
+    _hide_unused_rows(ws, COTIZACION_FIRST_ROW, COTIZACION_CAPACITY, len(cotizacion_rows))
+    shift_cot = row_shift
 
-    _write_programacion(ws, replacements.get("__PROGRAMACION_ROWS__", []), row_shift)
+    programacion_rows = replacements.get("__PROGRAMACION_ROWS__", [])
+    _write_programacion(ws, programacion_rows, row_shift)
+    _hide_unused_rows(ws, PROGRAMACION_FIRST_ROW + row_shift, PROGRAMACION_CAPACITY, len(programacion_rows))
 
     # Trabajos Previos and Servicios Basicos grow the same way the
     # quotation table does - each insertion shifts everything below it, so
@@ -635,14 +738,39 @@ def render_excel(template_path, output_path, replacements):
     trabajos_items = _as_lines(replacements.get("{{TRABAJOS_PREVIOS}}"))
     trabajos_extra = ensure_simple_list_capacity(ws, TRABAJOS_FIRST_ROW + row_shift, SHORT_LIST_CAPACITY, len(trabajos_items))
     _write_list(ws, TRABAJOS_FIRST_ROW, SHORT_LIST_CAPACITY + trabajos_extra, trabajos_items, row_shift=row_shift, merge_cols=wide_row_cols)
+    _hide_unused_rows(ws, TRABAJOS_FIRST_ROW + row_shift, SHORT_LIST_CAPACITY + trabajos_extra, len(trabajos_items))
     row_shift += trabajos_extra
+    shift_trab = trabajos_extra
 
     servicios_items = _as_lines(replacements.get("{{SERVICIOS_BASICOS}}"))
     servicios_extra = ensure_simple_list_capacity(ws, SERVICIOS_FIRST_ROW + row_shift, SHORT_LIST_CAPACITY, len(servicios_items))
     _write_list(ws, SERVICIOS_FIRST_ROW, SHORT_LIST_CAPACITY + servicios_extra, servicios_items, row_shift=row_shift, merge_cols=wide_row_cols)
+    _hide_unused_rows(ws, SERVICIOS_FIRST_ROW + row_shift, SHORT_LIST_CAPACITY + servicios_extra, len(servicios_items))
     row_shift += servicios_extra
+    shift_serv = servicios_extra
 
     _write_list(ws, PUNTOS_FIRST_ROW, PUNTOS_CAPACITY, _as_lines(replacements.get("{{PUNTOS_REVISION}}")), row_shift=row_shift, merge_cols=puntos_row_cols)
+
+    # Anexos: los documentos que acompanan la solicitud. Sin ninguno, la
+    # seccion completa (titulo incluido) se oculta.
+    anexos = [str(a) for a in (replacements.get("__ANEXOS__") or []) if str(a).strip()]
+
+    if len(anexos) > ANEXOS_CAPACITY:
+        anexos = anexos[: ANEXOS_CAPACITY - 1] + [f"... y {len(anexos) - (ANEXOS_CAPACITY - 1)} documentos más"]
+
+    _write_list(ws, ANEXOS_FIRST_ROW, ANEXOS_CAPACITY, anexos, row_shift=row_shift, merge_cols=wide_row_cols)
+
+    if anexos:
+        _hide_unused_rows(ws, ANEXOS_FIRST_ROW + row_shift, ANEXOS_CAPACITY, len(anexos))
+    else:
+        for r in range(ANEXOS_HEADER_ROW, ANEXOS_FIRST_ROW + ANEXOS_CAPACITY):
+            ws.row_dimensions[r + row_shift].hidden = True
+
+    _plan_page_breaks(ws, shift_cot, shift_trab, shift_serv, con_anexos=bool(anexos))
+
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
 
     _replace_text_placeholders(ws, replacements)
 

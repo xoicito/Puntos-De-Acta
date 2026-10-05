@@ -16,6 +16,7 @@ from config import (
     ACTA_TEMPLATE_REFORMA,
     ACTA_XLSX_COLUMN_ID,
     COTIZACION_FILE_COLUMN_ID,
+    LIDER_DOCUMENTACION_COLUMN_ID,
     FIRMA_MONDAY_COLUMN_ID,
     GERENTE_LINK_BASE_URL,
     METODO_FIRMA_MONDAY_LABEL,
@@ -193,6 +194,24 @@ def generate_acta(item_id):
         print("COTIZACION_ROWS =", cotizacion_rows)
 
         replacements["__COTIZACION_ROWS__"] = cotizacion_rows
+
+        # Lista de anexos al pie del documento: lo que el Lider adjunto.
+        anexos = []
+
+        try:
+            if COTIZACION_FILE_COLUMN_ID:
+                cot_files = get_file_public_urls(item, COTIZACION_FILE_COLUMN_ID)
+
+                if cot_files:
+                    anexos.append(f"Cotización: {cot_files[-1][0]}")
+
+            if LIDER_DOCUMENTACION_COLUMN_ID:
+                for nombre_doc, _url in get_file_public_urls(item, LIDER_DOCUMENTACION_COLUMN_ID):
+                    anexos.append(f"Documentación: {nombre_doc}")
+        except Exception as e:
+            print(f"ERROR ANEXOS: {e}")
+
+        replacements["__ANEXOS__"] = anexos
 
         signature_path = None
 
