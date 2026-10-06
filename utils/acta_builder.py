@@ -917,8 +917,11 @@ def build_template_points(data):
 
     field = mapping.get(plantilla)
 
+    # Plantilla "Otros" (o un rubro sin lista propia): no hay opciones que
+    # elegir, pero el cuadro de texto libre "Otros" igual debe llegar al
+    # documento - antes se devolvia [] aqui y se perdia lo que el Lider escribio.
     if not field:
-        return []
+        return split_lines(data.get("otros_revision"))
 
     values = data.get(field) or ""
 
