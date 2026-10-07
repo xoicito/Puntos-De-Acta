@@ -371,7 +371,7 @@ ACTA_CONTRATISTA_COLUMN_ID = os.getenv("ACTA_CONTRATISTA_COLUMN_ID", "")
 # item. Las que estan vacias todavia no existen en el board: se omiten.
 CONTRATISTA_DB_COLUMNS = {
     "nit": os.getenv("CONTRATISTA_DB_NIT_COLUMN_ID", "text_mm7f68sy"),
-    "contacto": os.getenv("CONTRATISTA_DB_CONTACTO_COLUMN_ID", ""),
+    "contacto": os.getenv("CONTRATISTA_DB_CONTACTO_COLUMN_ID", "text_mm7f4sce"),  # el contacto es el Representante Legal
     "telefono": os.getenv("CONTRATISTA_DB_TELEFONO_COLUMN_ID", ""),
     "correo": os.getenv("CONTRATISTA_DB_CORREO_COLUMN_ID", ""),
     "rtu": os.getenv("CONTRATISTA_DB_RTU_COLUMN_ID", ""),
