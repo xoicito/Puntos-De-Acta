@@ -1047,6 +1047,16 @@ def build_multas(data):
     selected_options = parse_multi(data.get("multas_aplicar"))
     print("MULTAS_SELECCIONADAS =", selected_options)
 
+    # La opcion "N/A" de "Multas a Aplicar" gana sobre todo lo demas: ninguna
+    # multa aplica, ni siquiera la de atraso que tiene su propio desplegable.
+    if "n/a" in selected_options:
+        return {
+            "{{MULTA_ATRASO}}": "N/A",
+            "{{MULTA_ORDEN}}": "N/A",
+            "{{MULTA_SEGURIDAD}}": "N/A",
+            "{{MULTA_REPORTERIA}}": "N/A",
+        }
+
     selected_keys = {
         MULTAS_OPTION_MAP[option]
         for option in selected_options
