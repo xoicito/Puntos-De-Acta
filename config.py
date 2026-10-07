@@ -320,6 +320,7 @@ COLUMN_ALIASES = {
     "tipo_contrato": ["dropdown_mm6zs4b6", "single_selectx8edjlf", "dropdown_mm6zhe47"],
     "fecha_acta": ["datey7gu64nb", "date_mm6zrqxn"],
     "empresa": ["short_textll93jrb8", "text_mm6z1hdy"],
+    "contratista_db": [c for c in [os.getenv("ACTA_CONTRATISTA_COLUMN_ID", "")] if c],  # ver mas abajo
     "contacto": ["short_textqmmb6nuk", "text_mm6z4d0y"],
     "telefono": ["short_text30bpngci", "text_mm6z9m36"],
     "correo": ["short_textxcbqqjll", "text_mm6z8he8"],
@@ -355,3 +356,23 @@ COLUMN_ALIASES = {
     "pilotes_nailing": ["dropdown_mm7awz8f"],
 }
 SUBITEM_COLUMNS = {"fecha_inicio": "fecha0", "fecha_fin": "fecha__1", "observaciones": "texto"}
+
+
+# Contratista elegido de la Base de Datos de Contratistas (en vez de escribir a
+# mano empresa, NIT, contacto, telefono, correo y RTU). El Lider escoge el
+# contratista en una lista desplegable del formulario (ACTA_CONTRATISTA_COLUMN_ID,
+# cuyas etiquetas son los nombres de los items del board de la base de datos) y
+# el sistema trae el resto de esa base. Sin ACTA_CONTRATISTA_COLUMN_ID la funcion
+# queda apagada y todo sigue como antes (datos escritos a mano).
+CONTRATISTA_DB_BOARD_ID = os.getenv("CONTRATISTA_DB_BOARD_ID", "18409645351")
+ACTA_CONTRATISTA_COLUMN_ID = os.getenv("ACTA_CONTRATISTA_COLUMN_ID", "")
+
+# Columna de la base de datos de donde sale cada dato. "empresa" es el nombre del
+# item. Las que estan vacias todavia no existen en el board: se omiten.
+CONTRATISTA_DB_COLUMNS = {
+    "nit": os.getenv("CONTRATISTA_DB_NIT_COLUMN_ID", "text_mm7f68sy"),
+    "contacto": os.getenv("CONTRATISTA_DB_CONTACTO_COLUMN_ID", ""),
+    "telefono": os.getenv("CONTRATISTA_DB_TELEFONO_COLUMN_ID", ""),
+    "correo": os.getenv("CONTRATISTA_DB_CORREO_COLUMN_ID", ""),
+    "rtu": os.getenv("CONTRATISTA_DB_RTU_COLUMN_ID", ""),
+}

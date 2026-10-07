@@ -489,6 +489,7 @@ def list_board_items(board_id, column_ids):
                 cursor
                 items {
                     id
+                    name
                     created_at
                     group { id }
                     column_values(ids: $cols) { id text }
@@ -512,6 +513,7 @@ def list_board_items(board_id, column_ids):
         for it in page["items"]:
             items.append({
                 "id": it["id"],
+                "name": it.get("name") or "",
                 "created_at": it.get("created_at"),
                 "group_id": (it.get("group") or {}).get("id"),
                 "columns": {c["id"]: (c.get("text") or "") for c in it.get("column_values", [])},

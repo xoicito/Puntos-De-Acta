@@ -35,6 +35,7 @@ from utils.monday_client import (
 )
 from semanas import es_solicitud_tardia
 from utils.acta_builder import build_blocks, display_date, item_data, pct
+from contratistas import aplicar_contratista, escribir_en_item
 from utils.cotizacion_upload import parse_cotizacion_upload, validar_plantilla
 from utils.excel_writer import render_excel
 
@@ -102,6 +103,14 @@ def generate_acta(item_id):
         base = Path(__file__).resolve().parent
 
         rubrics = json.loads((base / "rubros.json").read_text(encoding="utf-8"))
+
+        # Contratista elegido de la Base de Datos: trae empresa, NIT, contacto,
+        # telefono, correo y RTU de ahi (apagado si la columna no esta configurada).
+        original = data
+        data = aplicar_contratista(item_id, data)
+
+        if data is not original:
+            escribir_en_item(item_id, board_id, original, data)
 
         replacements = {
             "{{PROYECTO}}": data["proyecto"].upper(),
