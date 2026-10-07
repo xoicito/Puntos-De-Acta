@@ -1047,9 +1047,10 @@ def build_multas(data):
     selected_options = parse_multi(data.get("multas_aplicar"))
     print("MULTAS_SELECCIONADAS =", selected_options)
 
-    # La opcion "N/A" de "Multas a Aplicar" gana sobre todo lo demas: ninguna
-    # multa aplica, ni siquiera la de atraso que tiene su propio desplegable.
-    if "n/a" in selected_options:
+    # La opcion "No aplica ninguna" de "Multas a Aplicar" (antes "N/A") gana
+    # sobre todo lo demas: ninguna multa aplica, ni siquiera la de atraso que
+    # tiene su propio desplegable.
+    if {"no aplica ninguna", "n/a"} & {o.strip().lower() for o in selected_options}:
         return {
             "{{MULTA_ATRASO}}": "N/A",
             "{{MULTA_ORDEN}}": "N/A",
