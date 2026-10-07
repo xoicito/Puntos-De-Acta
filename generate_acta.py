@@ -36,6 +36,7 @@ from utils.monday_client import (
 from semanas import es_solicitud_tardia, parse_fecha
 from utils.acta_builder import build_blocks, display_date, item_data, pct
 from contratistas import aplicar_contratista, escribir_en_item
+from pagos import aplicar_esquema_pago, escribir_en_item as escribir_pagos
 from utils.cotizacion_upload import parse_cotizacion_upload, validar_plantilla
 from utils.excel_writer import render_excel
 
@@ -123,6 +124,13 @@ def generate_acta(item_id):
 
         if data is not original:
             escribir_en_item(item_id, board_id, original, data)
+
+        # Esquema de pago elegido de la lista: trae los 4 porcentajes.
+        original = data
+        data = aplicar_esquema_pago(data)
+
+        if data is not original:
+            escribir_pagos(item_id, board_id, original, data)
 
         replacements = {
             "{{PROYECTO}}": data["proyecto"].upper(),

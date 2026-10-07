@@ -321,6 +321,7 @@ COLUMN_ALIASES = {
     "fecha_acta": ["datey7gu64nb", "date_mm6zrqxn"],
     "empresa": ["short_textll93jrb8", "text_mm6z1hdy"],
     "contratista_db": [c for c in [os.getenv("ACTA_CONTRATISTA_COLUMN_ID", "")] if c],  # ver mas abajo
+    "esquema_pago": [c for c in [os.getenv("ACTA_ESQUEMA_PAGO_COLUMN_ID", "")] if c],  # ver mas abajo
     "contacto": ["short_textqmmb6nuk", "text_mm6z4d0y"],
     "telefono": ["short_text30bpngci", "text_mm6z9m36"],
     "correo": ["short_textxcbqqjll", "text_mm6z8he8"],
@@ -377,3 +378,11 @@ CONTRATISTA_DB_COLUMNS = {
     "correo": os.getenv("CONTRATISTA_DB_CORREO_COLUMN_ID", "text_mm2tncg2"),  # "CORREO ELECTRÓNICO"
     "rtu": os.getenv("CONTRATISTA_DB_RTU_COLUMN_ID", ""),
 }
+
+# Esquema de pago preestablecido: una lista desplegable en el formulario cuyas
+# etiquetas llevan los cuatro porcentajes (anticipo, estimaciones, contra
+# entrega, retenido), ej. "Anticipo 30% - Estimaciones 60% - Contra entrega 10%
+# - Retenido 0%". Con una elegida, esos porcentajes reemplazan a las cuatro
+# preguntas numericas; con "Otro" (sin numeros) se usan las escritas a mano.
+# Sin ACTA_ESQUEMA_PAGO_COLUMN_ID queda apagado.
+ACTA_ESQUEMA_PAGO_COLUMN_ID = os.getenv("ACTA_ESQUEMA_PAGO_COLUMN_ID", "")
