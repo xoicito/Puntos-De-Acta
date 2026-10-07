@@ -33,7 +33,7 @@ from utils.monday_client import (
     upload_file,
     update_text_column,
 )
-from semanas import es_solicitud_tardia
+from semanas import es_solicitud_tardia, parse_fecha
 from utils.acta_builder import build_blocks, display_date, item_data, pct
 from contratistas import aplicar_contratista, escribir_en_item
 from utils.cotizacion_upload import parse_cotizacion_upload, validar_plantilla
@@ -60,6 +60,12 @@ def _parse_pct(value):
 GUATEMALA_TZ = ZoneInfo("America/Guatemala")
 
 
+def fecha_de_creacion(created_at):
+    """Fecha (YYYY-MM-DD, hora de Guatemala) del created_at de Monday."""
+
+    return parse_fecha(created_at).astimezone(GUATEMALA_TZ).strftime("%Y-%m-%d")
+
+
 def _is_late_submission(now=None):
     """Per the Politica de Aprobacion de Puntos de Acta: requests are
     accepted Monday 7:00am to Wednesday 10:00am (Guatemala time). Outside
@@ -74,6 +80,12 @@ def generate_acta(item_id):
     data = item_data(item)
 
     board_id = int(data.get("board_id") or ACTA_BOARD_ID)
+
+    # Fecha del acta automatica: si el formulario ya no la pregunta (o quedo
+    # vacia), es la fecha en que se creo el item, en hora de Guatemala. Si el
+    # Lider la escribio, manda lo que escribio.
+    if not data.get("fecha_acta") and item.get("created_at"):
+        data["fecha_acta"] = fecha_de_creacion(item["created_at"])
 
     if not data.get("acta_id"):
         data["acta_id"] = generate_acta_id()
