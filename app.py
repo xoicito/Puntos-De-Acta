@@ -4,12 +4,14 @@ from flask import Flask, jsonify, send_file
 
 from acta_routes import acta_bp
 from firma_gerente_routes import firma_gerente_bp
+from gerente_portal import gerente_portal_bp
 
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024  # 8 MB - plenty for a signature image
 app.register_blueprint(acta_bp)
 app.register_blueprint(firma_gerente_bp)
+app.register_blueprint(gerente_portal_bp)
 
 
 @app.get("/")

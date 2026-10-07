@@ -47,3 +47,10 @@ def verify_token(token):
         raise InvalidLinkError("Este enlace no es valido.")
 
     return data
+
+
+def make_token(item_id, board_id):
+    """El token firmado de un acta (el mismo que va dentro del enlace por acta),
+    para que el portal reutilice el flujo de firma sin pasar por una URL."""
+
+    return _serializer().dumps({"item_id": str(item_id), "board_id": str(board_id)})

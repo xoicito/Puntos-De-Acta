@@ -1,3 +1,4 @@
+import threading
 import base64
 from datetime import datetime, timezone
 from pathlib import Path
@@ -344,7 +345,32 @@ def _enviar_o_retener(item_id, board_id, item, signed_path, data_fields):
         change_status(item_id, board_id, ACTA_PROCUREMENT_COLUMN_ID, ACTA_PROCUREMENT_ENVIADO_LABEL)
 
 
+_firmando = set()
+_firmando_lock = threading.Lock()
+
+
 def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None):
+    """Candado alrededor de la firma: un acta no puede procesarse dos veces a
+    la vez (doble clic, reintento de Monday, firma desde dos pantallas). La
+    segunda llamada recibe un aviso en vez de crear un item duplicado en el
+    board de Aprobacion."""
+
+    item_id = verify_token(token)["item_id"]
+
+    with _firmando_lock:
+        if item_id in _firmando:
+            raise LookupError("Este documento ya se esta firmando. Espere un momento y recargue la pagina.")
+
+        _firmando.add(item_id)
+
+    try:
+        return _apply_gerente_signature(token, file_storage=file_storage, data_url=data_url, audit=audit)
+    finally:
+        with _firmando_lock:
+            _firmando.discard(item_id)
+
+
+def _apply_gerente_signature(token, file_storage=None, data_url=None, audit=None):
     """Verify the token again, insert the signature, upload the result, and
     mark the item as signed. Meant to run on the POST of the signing page -
     never trust the GET's validation alone.
@@ -406,7 +432,8 @@ def apply_gerente_signature(token, file_storage=None, data_url=None, audit=None)
             item_id,
             f"Documento firmado por el Gerente de Proyecto el {timestamp}. "
             f"IP: {audit.get('ip', 'desconocida')} - "
-            f"Dispositivo: {audit.get('user_agent', 'desconocido')}",
+            f"Dispositivo: {audit.get('user_agent', 'desconocido')}"
+            + (f" - Sesion de Monday: {audit['gerente']}" if audit.get("gerente") else ""),
         )
     except Exception as e:
         print(f"GERENTE_FIRMA: no se pudo publicar el registro de auditoria: {e}")

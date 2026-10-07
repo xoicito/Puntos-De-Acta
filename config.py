@@ -386,3 +386,16 @@ CONTRATISTA_DB_COLUMNS = {
 # preguntas numericas; con "Otro" (sin numeros) se usan las escritas a mano.
 # Sin ACTA_ESQUEMA_PAGO_COLUMN_ID queda apagado.
 ACTA_ESQUEMA_PAGO_COLUMN_ID = os.getenv("ACTA_ESQUEMA_PAGO_COLUMN_ID", "")
+
+
+# Portal del Gerente: "Mis actas pendientes". El Gerente inicia sesion con su
+# cuenta de Monday (OAuth) - Monday verifica quien es - y el sistema le muestra
+# solo las actas cuyo correo de Gerente coincide con el de esa cuenta, para
+# firmar varias a la vez. Se registra una app OAuth en el Centro de
+# Desarrolladores de Monday (permiso me:read; redirect URI =
+# <GERENTE_PORTAL_BASE_URL>/gerente/callback). Sin CLIENT_ID / CLIENT_SECRET el
+# portal queda apagado.
+MONDAY_OAUTH_CLIENT_ID = os.getenv("MONDAY_OAUTH_CLIENT_ID", "")
+MONDAY_OAUTH_CLIENT_SECRET = os.getenv("MONDAY_OAUTH_CLIENT_SECRET", "")
+GERENTE_PORTAL_BASE_URL = os.getenv("GERENTE_PORTAL_BASE_URL", GERENTE_LINK_BASE_URL)
+GERENTE_SESION_SEGUNDOS = int(os.getenv("GERENTE_SESION_SEGUNDOS", "7200"))  # 2 horas
