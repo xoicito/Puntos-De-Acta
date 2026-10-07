@@ -372,7 +372,8 @@ ACTA_CONTRATISTA_COLUMN_ID = os.getenv("ACTA_CONTRATISTA_COLUMN_ID", "")
 CONTRATISTA_DB_COLUMNS = {
     "nit": os.getenv("CONTRATISTA_DB_NIT_COLUMN_ID", "text_mm7f68sy"),
     "contacto": os.getenv("CONTRATISTA_DB_CONTACTO_COLUMN_ID", "text_mm7f4sce"),  # el contacto es el Representante Legal
-    "telefono": os.getenv("CONTRATISTA_DB_TELEFONO_COLUMN_ID", "short_textk69c1cig"),  # "Número de Teléfono"
+    # El telefono NO sale de la base de datos: lo escribe el Lider a mano en el formulario.
+    "telefono": os.getenv("CONTRATISTA_DB_TELEFONO_COLUMN_ID", ""),
     "correo": os.getenv("CONTRATISTA_DB_CORREO_COLUMN_ID", "text_mm2tncg2"),  # "CORREO ELECTRÓNICO"
     "rtu": os.getenv("CONTRATISTA_DB_RTU_COLUMN_ID", ""),
 }
