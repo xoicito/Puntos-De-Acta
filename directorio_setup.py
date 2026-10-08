@@ -203,8 +203,8 @@ def _ver_ids(board_id):
     if not boards:
         sys.exit(f"Con este token no veo ningún board con id {board_id}.")
 
-    print(f'Board: "{boards[0]["name"]}" ({board_id})
-')
+    print('Board: "' + boards[0]["name"] + '" (' + str(board_id) + ')')
+    print()
     lineas, faltan = variables_de_board(boards[0]["columns"], board_id)
 
     for l in lineas:
@@ -213,8 +213,8 @@ def _ver_ids(board_id):
     print("PORTAL_ADMIN_CORREOS=tu.correo@...   (separados por coma)")
 
     if faltan:
-        print(f"
-OJO: no encontré columnas llamadas: {', '.join(faltan)}.")
+        print()
+        print("OJO: no encontré columnas llamadas: " + ", ".join(faltan) + ".")
 
 
 def _borrar(board_id):
