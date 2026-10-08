@@ -13,6 +13,8 @@ _HEAD = """<!doctype html>
 <meta name="theme-color" content="#141B23">
 <meta name="color-scheme" content="dark">
 <meta name="robots" content="noindex">
+<meta name="description" content="Firmas de punto de acta de Constructora E4 y Reforma.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23C44D00'/%3E%3Ctext x='16' y='21.5' font-family='Arial' font-weight='700' font-size='15' text-anchor='middle' fill='white'%3EE4%3C/text%3E%3C/svg%3E">
 <title>__TITULO__</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,12 +25,13 @@ _HEAD = """<!doctype html>
     --e4:#C44D00; --e4-oscuro:#A84100; --plano:#86B6E8;
     --reciente:#566475; --atencion:#E0A800; --urgente:#FF6E61;
     --texto:'IBM Plex Sans','Segoe UI',Arial,sans-serif;
+    --z-barra:20; --z-velo:30; --z-hoja:31; --z-aviso:60; --z-salto:100;
   }
   *{box-sizing:border-box}
   html{scroll-padding-bottom:110px;scroll-behavior:smooth}
   a,button,label,input,.lamina{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-  .skip{position:absolute;left:12px;top:-60px;background:var(--tinta);color:#141B23;padding:10px 16px;border-radius:6px;font-weight:600;z-index:100;text-decoration:none}
+  .skip{position:absolute;left:12px;top:-60px;background:var(--tinta);color:#141B23;padding:10px 16px;border-radius:6px;font-weight:600;z-index:var(--z-salto);text-decoration:none}
   .skip:focus{top:12px}
   main:focus{outline:none}
   body{margin:0;background:var(--concreto);color:var(--tinta);font:15px/1.5 var(--texto);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
@@ -73,20 +76,21 @@ _HEAD = """<!doctype html>
   .btn-sec:hover{background:var(--e4-oscuro);border-color:#fff;box-shadow:0 0 0 1px #fff}
   .tardia{font-size:12px;background:#3B3012;color:#F2C94C;padding:2px 8px;border-radius:4px;font-weight:500}
   .vacio{padding:34px 8px;color:var(--tinta-2);font-size:16px}
-  .accion{position:fixed;left:0;right:0;bottom:0;background:#0F151B;border-top:1px solid var(--regla);color:#fff;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+  .accion{position:fixed;left:0;right:0;bottom:0;background:#0F151B;border-top:1px solid var(--regla);color:#fff;z-index:var(--z-barra);padding-bottom:env(safe-area-inset-bottom)}
   .accion-in{max-width:1040px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:16px}
   .accion p{margin:0;font-size:15px}
   .accion .ayuda{display:block;color:var(--tinta-2);font-size:13px}
   .accion.vacia p{color:var(--tinta-2)}
   .btn-firmar{margin-left:auto;background:var(--e4);color:#fff;border:0;border-radius:6px;padding:12px 22px;font-weight:600;font-size:16px}
   .btn-firmar{min-height:46px}
+  .btn-firmar:active:not(:disabled),.btn-sec:active,.chip:active{transform:translateY(1px)}
   .btn-firmar:hover:not(:disabled){background:var(--e4-oscuro);box-shadow:0 0 0 1px #fff}
   .btn-firmar:disabled{background:#2A3541;color:#7F8C99;cursor:not-allowed}
-  .velo{position:fixed;inset:0;background:rgba(5,8,11,.72);opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}
+  .velo{position:fixed;inset:0;background:rgba(5,8,11,.72);opacity:0;pointer-events:none;transition:opacity .2s;z-index:var(--z-velo)}
   .velo.abierto{opacity:1;pointer-events:auto}
   .velo{overscroll-behavior:contain}
   .hoja{position:fixed;left:50%;bottom:0;width:min(560px,100%);background:var(--papel);border:1px solid var(--regla);border-bottom:0;border-radius:10px 10px 0 0;padding:22px 22px 24px;
-        transform:translate(-50%,105%);transition:transform .25s ease;z-index:31;max-height:94vh;overflow:auto;overscroll-behavior:contain;padding-bottom:calc(24px + env(safe-area-inset-bottom));visibility:hidden}
+        transform:translate(-50%,105%);transition:transform .25s ease;z-index:var(--z-hoja);max-height:94vh;overflow:auto;overscroll-behavior:contain;padding-bottom:calc(24px + env(safe-area-inset-bottom));visibility:hidden}
   .hoja.abierta{visibility:visible}
   .hoja.abierta{transform:translate(-50%,0)}
   .hoja h2:focus{outline:none}

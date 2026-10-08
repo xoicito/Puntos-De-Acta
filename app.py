@@ -14,6 +14,27 @@ app.register_blueprint(firma_gerente_bp)
 app.register_blueprint(gerente_portal_bp)
 
 
+def _es_api():
+    from flask import request
+    return request.path.startswith(("/webhook", "/internal"))
+
+
+@app.errorhandler(404)
+def pagina_no_encontrada(error):
+    if _es_api():
+        return error
+    from gerente_portal_ui import pagina_error
+    return pagina_error("La página que busca no existe o el enlace ya no es válido."), 404
+
+
+@app.errorhandler(500)
+def pagina_con_error(error):
+    if _es_api():
+        return error
+    from gerente_portal_ui import pagina_error
+    return pagina_error("Ocurrió un error inesperado. Intente de nuevo en un momento."), 500
+
+
 @app.get("/")
 def health_check():
     return jsonify(
