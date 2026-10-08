@@ -668,14 +668,30 @@ def get_item_updates(item_id, limit=10):
     ]
 
 
-def create_board(name, kind="private"):
-    """Create a board (kind: private | public | share). Returns its id."""
+def create_board(name, kind="private", workspace_id=None):
+    """Create a board (kind: private | public | share), optionally inside a
+    workspace. Returns its id."""
 
-    q = """mutation ($name: String!, $kind: BoardKind!) {
-        create_board(board_name: $name, board_kind: $kind) { id }
+    q = """mutation ($name: String!, $kind: BoardKind!, $workspace: ID) {
+        create_board(board_name: $name, board_kind: $kind, workspace_id: $workspace) { id }
     }"""
 
-    return graphql(q, {"name": name, "kind": kind})["create_board"]["id"]
+    return graphql(q, {"name": name, "kind": kind, "workspace": str(workspace_id) if workspace_id else None})["create_board"]["id"]
+
+
+def list_workspaces():
+    """[{"id", "name"}] of the workspaces the token can see."""
+
+    return graphql("query { workspaces(limit: 100) { id name } }", {})["workspaces"]
+
+
+def board_workspace(board_id):
+    """{"id", "name"} of the workspace a board lives in, or None (main workspace / not visible)."""
+
+    q = """query ($ids: [ID!]) { boards(ids: $ids) { workspace { id name } } }"""
+    boards = graphql(q, {"ids": [str(board_id)]})["boards"]
+
+    return (boards[0].get("workspace") if boards else None) or None
 
 
 def create_column_tipo(board_id, title, column_type, defaults=None):

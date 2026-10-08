@@ -8,6 +8,7 @@ Uso (como create_rubro_columns.py: el token lo pones tu, no se comparte):
     3. python directorio_setup.py --aplicar                -> crea el board de verdad
     Opciones:
        --lideres lideres.csv   CSV con columnas nombre,correo (los lideres que no estan en Monday)
+       --espacio "NOMBRE"      espacio de trabajo donde crear el board (por defecto: Procurement)
        --publico               el board se crea publico (por defecto es privado: tiene correos)
        --duenos a@x.com,b@x.com  quienes seran duenos del board y lo veran (recomendado: privado + duenos)
        --agregar-duenos ID --duenos ...   agrega duenos a un board ya creado
@@ -24,6 +25,7 @@ import sys
 import unicodedata
 
 from config import (
+    CONTROL_FACTURAS_BOARD_ID,
     GERENTE_EMAIL_COLUMN_ID,
     GERENTES_BOARD_ID,
     LIDERES_BOARD_ID,
@@ -115,6 +117,41 @@ def _mostrar(personas, avisos):
             print(f"  - {a}")
 
 
+def elegir_espacio(espacios, nombre_pedido=None, espacio_de_referencia=None):
+    """Espacio de trabajo donde va el board. Orden: el nombre que se pida con
+    --espacio; si no, uno que se llame "Procurement"; si no, el espacio donde ya
+    vive Control de Facturas (que esta en Procurement). Devuelve el dict {id, name}
+    o None si no se puede decidir (y entonces el script se detiene, no adivina)."""
+
+    def hallar(texto):
+        t = _norm(texto)
+
+        return next((e for e in espacios if _norm(e["name"]) == t), None) or next((e for e in espacios if t and t in _norm(e["name"])), None)
+
+    if nombre_pedido:
+        return hallar(nombre_pedido)
+
+    return hallar("procurement") or espacio_de_referencia
+
+
+def _resolver_espacio(nombre_pedido):
+    from utils.monday_client import board_workspace, list_workspaces
+
+    espacios = list_workspaces()
+    referencia = board_workspace(CONTROL_FACTURAS_BOARD_ID) if CONTROL_FACTURAS_BOARD_ID else None
+    espacio = elegir_espacio(espacios, nombre_pedido, referencia)
+
+    if espacio is None:
+        print("\nNo pude decidir en qué espacio de trabajo crear el board. Espacios que veo con este token:")
+
+        for e in espacios:
+            print(f"  - {e['name']}")
+
+        sys.exit('Vuelva a correr el script agregando --espacio "NOMBRE" con el nombre exacto de uno de esos espacios.')
+
+    return espacio
+
+
 def _agregar_duenos(board, correos):
     """Agrega a esas personas como dueñas del board (para que lo vean aunque sea
     privado). Avisa de los correos que no son usuarios de Monday."""
@@ -187,7 +224,7 @@ def _crear_lista(board, titulo, etiquetas):
     return create_column_tipo(board, titulo, "text"), "text"
 
 
-def _crear(personas, publico, duenos=()):
+def _crear(personas, publico, duenos=(), espacio=None):
     import json
 
     from utils.monday_client import (
@@ -202,7 +239,7 @@ def _crear(personas, publico, duenos=()):
     if find_board_by_name(NOMBRE_BOARD):
         sys.exit(f'Ya existe un board llamado "{NOMBRE_BOARD}". Para no duplicarlo, no se creó nada. Bórrelo o renómbrelo y vuelva a correr el script.')
 
-    board = create_board(NOMBRE_BOARD, "public" if publico else "private")
+    board = create_board(NOMBRE_BOARD, "public" if publico else "private", espacio["id"] if espacio else None)
     print(f"\nBoard creado: {board}")
 
     try:
@@ -274,6 +311,7 @@ def main():
     ap.add_argument("--aplicar", action="store_true", help="crear el board de verdad (sin esto solo se muestra el plan)")
     ap.add_argument("--lideres", help="CSV con columnas nombre,correo")
     ap.add_argument("--publico", action="store_true", help="crear el board como público")
+    ap.add_argument("--espacio", help='nombre del espacio de trabajo donde crear el board (por defecto: Procurement)')
     ap.add_argument("--duenos", help="correos (separados por coma) de quienes serán dueños del board y lo verán")
     ap.add_argument("--borrar", metavar="ID", help="borra un board creado por este script (pide confirmación)")
     ap.add_argument("--agregar-duenos", metavar="ID", help="solo agrega los --duenos a un board que ya existe")
@@ -300,6 +338,8 @@ def main():
     if args.lideres:
         lideres += _leer_csv(args.lideres)
 
+    espacio = _resolver_espacio(args.espacio)
+    print(f'El board se creará en el espacio de trabajo: "{espacio["name"]}"')
     print(f"Leídos: {len(gerentes)} Gerentes, {len(pmos)} PMO, {len(lideres)} Líderes")
     personas, avisos = fusionar(gerentes, pmos, lideres)
     _mostrar(personas, avisos)
@@ -308,7 +348,7 @@ def main():
         print("\nEsto es solo la vista previa: no se creó nada. Si todo está bien, corra de nuevo con --aplicar.")
         return
 
-    _crear(personas, args.publico, (args.duenos or "").split(","))
+    _crear(personas, args.publico, (args.duenos or "").split(","), espacio)
 
 
 if __name__ == "__main__":
