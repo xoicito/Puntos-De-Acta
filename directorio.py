@@ -16,6 +16,7 @@ import unicodedata
 
 from config import (
     DIRECTORIO_ACCESO_COLUMN_ID,
+    DIRECTORIO_ACCESO_TIPO,
     DIRECTORIO_ALIAS_COLUMN_ID,
     DIRECTORIO_BOARD_ID,
     DIRECTORIO_CORREO_COLUMN_ID,
@@ -25,6 +26,7 @@ from config import (
 from utils.monday_client import (
     change_multiple_column_values,
     create_item,
+    create_update,
     list_board_items,
     update_text_column,
 )
@@ -81,11 +83,13 @@ def _acceso(texto):
 
     n = _norm(texto)
 
-    if n.startswith("pendiente"):
-        return "pendiente"
-
-    if n.startswith("rechaz"):
+    # Si por error quedan marcadas dos opciones (por ejemplo en una lista), manda
+    # la mas restrictiva: nunca se concede acceso por una ambiguedad.
+    if "rechaz" in n:
         return "rechazado"
+
+    if "pendiente" in n:
+        return "pendiente"
 
     return "aprobado"
 
@@ -160,20 +164,40 @@ def buscar_correo(nombre, rol):
     return None, None
 
 
-def crear_solicitud(correo, nombre, rol_solicitado):
+def crear_solicitud(correo, nombre, roles_solicitados):
     """Fila nueva en el directorio con acceso Pendiente. El rol que se concede
-    lo pone quien aprueba (columna Rol); aqui solo queda lo que se pidio."""
+    lo pone quien aprueba (columna Rol); lo que se pidio queda como comentario
+    del item (y en la columna "Rol solicitado", si existe)."""
 
+    if isinstance(roles_solicitados, str):
+        roles_solicitados = [roles_solicitados]
+
+    pedidos = ", ".join(ETIQUETA_ROL.get(r, r) for r in roles_solicitados)
     item_id = create_item(DIRECTORIO_BOARD_ID, nombre)
     valores = {DIRECTORIO_CORREO_COLUMN_ID: correo}
 
     if DIRECTORIO_ACCESO_COLUMN_ID:
-        valores[DIRECTORIO_ACCESO_COLUMN_ID] = {"label": "Pendiente"}
+        valores[DIRECTORIO_ACCESO_COLUMN_ID] = (
+            {"labels": ["Pendiente"]} if DIRECTORIO_ACCESO_TIPO == "dropdown" else {"label": "Pendiente"}
+        )
 
     if DIRECTORIO_ROL_SOLICITADO_COLUMN_ID:
-        valores[DIRECTORIO_ROL_SOLICITADO_COLUMN_ID] = ETIQUETA_ROL.get(rol_solicitado, rol_solicitado)
+        valores[DIRECTORIO_ROL_SOLICITADO_COLUMN_ID] = pedidos
 
     change_multiple_column_values(item_id, DIRECTORIO_BOARD_ID, valores)
+
+    try:
+        create_update(
+            item_id,
+            f"<p><b>Solicitud de acceso al portal.</b></p>"
+            f"<p>Cuenta de Monday: {correo}<br>Rol solicitado: <b>{pedidos}</b></p>"
+            "<p>Para aprobarla: elija el <b>Rol</b> que corresponda en la columna Rol "
+            "(puede ser distinto del solicitado) y cambie <b>Acceso</b> a «Aprobado». "
+            "Para negarla, cambie Acceso a «Rechazado».</p>",
+        )
+    except Exception as e:
+        print(f"DIRECTORIO: no se pudo dejar el comentario de la solicitud {item_id}: {e}", flush=True)
+
     personas(forzar=True)
 
     return item_id

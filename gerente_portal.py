@@ -595,21 +595,21 @@ def solicitar_enviar():
         return pagina_solicitud(datos["name"], datos["email"], persona)
 
     nombre = " ".join((request.form.get("nombre") or "").split())
-    rol = request.form.get("rol")
+    roles = [r for r in dict.fromkeys(request.form.getlist("rol")) if r in ("lider", "gerente")]
 
     if not _NOMBRE_OK.match(nombre) or " " not in nombre:
         return pagina_solicitud(datos["name"], datos["email"], None, error="Escriba su nombre y apellido, tal como lo escribe en el formulario de Puntos de Acta."), 400
 
-    if rol not in ("lider", "gerente"):
-        return pagina_solicitud(datos["name"], datos["email"], None, error="Elija si es Líder o Gerente de proyecto."), 400
+    if not roles:
+        return pagina_solicitud(datos["name"], datos["email"], None, error="Elija al menos un rol: Líder, Gerente o ambos."), 400
 
     try:
-        directorio.crear_solicitud(datos["email"], nombre, rol)
+        directorio.crear_solicitud(datos["email"], nombre, roles)
     except Exception as e:
         print(f"GERENTE_PORTAL: no se pudo crear la solicitud de {datos['email']}: {e}", flush=True)
         return pagina_error("No se pudo registrar su solicitud. Intente de nuevo en un momento."), 502
 
-    print(f"GERENTE_PORTAL: solicitud de acceso de {datos['email']} ({nombre}) como {rol}", flush=True)
+    print(f"GERENTE_PORTAL: solicitud de acceso de {datos['email']} ({nombre}) como {', '.join(roles)}", flush=True)
 
     return pagina_solicitud(nombre, datos["email"], directorio.persona_por_correo(datos["email"], forzar=True))
 

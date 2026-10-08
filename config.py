@@ -425,3 +425,7 @@ DIRECTORIO_ROL_SOLICITADO_COLUMN_ID = os.getenv("DIRECTORIO_ROL_SOLICITADO_COLUM
 # Correos (separados por coma) que ven la pagina de administracion del portal
 # (actas sin lider reconocido). Aprobar accesos se hace en el board de Monday.
 PORTAL_ADMIN_CORREOS = [c.strip().lower() for c in os.getenv("PORTAL_ADMIN_CORREOS", "").split(",") if c.strip()]
+
+# Tipo de la columna "Acceso" del directorio: "status" (estado con colores) o
+# "dropdown" (lista). Lo imprime directorio_setup.py segun lo que pudo crear.
+DIRECTORIO_ACCESO_TIPO = os.getenv("DIRECTORIO_ACCESO_TIPO", "status")

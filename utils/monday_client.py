@@ -666,3 +666,47 @@ def get_item_updates(item_id, limit=10):
         }
         for u in items[0].get("updates") or []
     ]
+
+
+def create_board(name, kind="private"):
+    """Create a board (kind: private | public | share). Returns its id."""
+
+    q = """mutation ($name: String!, $kind: BoardKind!) {
+        create_board(board_name: $name, board_kind: $kind) { id }
+    }"""
+
+    return graphql(q, {"name": name, "kind": kind})["create_board"]["id"]
+
+
+def create_column_tipo(board_id, title, column_type, defaults=None):
+    """Create a column of any type (text, status, ...) on a board; `defaults` is
+    the optional settings dict (e.g. {"labels": {...}} for a status column).
+    Returns the new column's id."""
+
+    q = """mutation ($board: ID!, $title: String!, $type: ColumnType!, $defaults: JSON) {
+        create_column(board_id: $board, title: $title, column_type: $type, defaults: $defaults) { id }
+    }"""
+
+    result = graphql(
+        q,
+        {
+            "board": str(board_id),
+            "title": title,
+            "type": column_type,
+            "defaults": json.dumps(defaults) if defaults else None,
+        },
+    )
+
+    return result["create_column"]["id"]
+
+
+def find_board_by_name(name):
+    """Id of the first board with exactly that name, or None."""
+
+    q = """query { boards(limit: 100, order_by: created_at) { id name } }"""
+
+    for b in graphql(q, {})["boards"]:
+        if (b.get("name") or "").strip().lower() == name.strip().lower():
+            return b["id"]
+
+    return None

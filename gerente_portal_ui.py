@@ -665,9 +665,9 @@ def pagina_solicitud(nombre, correo, persona, error=""):
       style="width:100%;padding:12px;border:1px solid var(--regla);background:#141B23;color:var(--tinta);border-radius:6px;font:inherit">
     <p style="color:var(--tinta-2);font-size:13px;margin:6px 0 18px">Escríbalo igual que en el formulario de Puntos de Acta, para reconocer sus actas.</p>
     <fieldset style="border:0;padding:0;margin:0 0 18px">
-      <legend style="font-weight:600;margin-bottom:8px">¿Cuál es su rol?</legend>
-      <label class="confirma" style="margin:0 0 8px"><input type="radio" name="rol" value="lider" required><span><b>Líder de proyecto.</b> Ve el estado de sus actas.</span></label>
-      <label class="confirma" style="margin:0"><input type="radio" name="rol" value="gerente"><span><b>Gerente de proyecto.</b> Firma las actas. Esta solicitud se verifica con más cuidado.</span></label>
+      <legend style="font-weight:600;margin-bottom:8px">¿Cuál es su rol? Marque uno o ambos</legend>
+      <label class="confirma" style="margin:0 0 8px"><input type="checkbox" name="rol" value="lider"><span><b>Líder de proyecto.</b> Ve el estado de sus actas.</span></label>
+      <label class="confirma" style="margin:0"><input type="checkbox" name="rol" value="gerente"><span><b>Gerente de proyecto.</b> Firma las actas. Esta solicitud se verifica con más cuidado.</span></label>
     </fieldset>
     <button class="btn-firmar" type="submit" style="width:100%;margin:0">Enviar solicitud</button>
   </form>
