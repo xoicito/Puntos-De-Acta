@@ -722,3 +722,36 @@ def delete_column(board_id, column_id):
     }"""
 
     graphql(q, {"board": str(board_id), "col": column_id})
+
+
+
+def get_board_name(board_id):
+    """Name of a board, or None if the token cannot see it (or it does not exist)."""
+
+    q = """query ($ids: [ID!]) { boards(ids: $ids) { name } }"""
+    boards = graphql(q, {"ids": [str(board_id)]})["boards"]
+
+    return boards[0]["name"] if boards else None
+
+
+def delete_board(board_id):
+    q = """mutation ($id: ID!) { delete_board(board_id: $id) { id } }"""
+
+    graphql(q, {"id": str(board_id)})
+
+
+def find_user_ids(emails):
+    """{email: user_id} for the Monday users with those emails (missing ones are skipped)."""
+
+    q = """query ($emails: [String!]) { users(emails: $emails) { id email } }"""
+    usuarios = graphql(q, {"emails": list(emails)})["users"]
+
+    return {(u["email"] or "").lower(): u["id"] for u in usuarios}
+
+
+def add_board_owners(board_id, user_ids):
+    q = """mutation ($board: ID!, $users: [ID!]!) {
+        add_users_to_board(board_id: $board, user_ids: $users, kind: owner) { id }
+    }"""
+
+    graphql(q, {"board": str(board_id), "users": [str(u) for u in user_ids]})

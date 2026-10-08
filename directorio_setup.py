@@ -9,6 +9,9 @@ Uso (como create_rubro_columns.py: el token lo pones tu, no se comparte):
     Opciones:
        --lideres lideres.csv   CSV con columnas nombre,correo (los lideres que no estan en Monday)
        --publico               el board se crea publico (por defecto es privado: tiene correos)
+       --duenos a@x.com,b@x.com  quienes seran duenos del board y lo veran (recomendado: privado + duenos)
+       --agregar-duenos ID --duenos ...   agrega duenos a un board ya creado
+       --borrar ID             borra un board creado por este script (pide confirmacion)
 
 Al terminar imprime las variables de entorno listas para pegar en Render.
 Los boards viejos de Gerentes y PMO NO se tocan.
@@ -112,6 +115,45 @@ def _mostrar(personas, avisos):
             print(f"  - {a}")
 
 
+def _agregar_duenos(board, correos):
+    """Agrega a esas personas como dueñas del board (para que lo vean aunque sea
+    privado). Avisa de los correos que no son usuarios de Monday."""
+
+    from utils.monday_client import add_board_owners, find_user_ids
+
+    correos = [c.strip().lower() for c in correos if c.strip()]
+    ids = find_user_ids(correos)
+
+    for c in correos:
+        if c not in ids:
+            print(f"  (no encontré un usuario de Monday con el correo {c}; no se agregó)")
+
+    if ids:
+        add_board_owners(board, list(ids.values()))
+        print(f"  Dueños agregados al board {board}: {', '.join(ids)}")
+
+
+def _borrar(board_id):
+    """Borra un board creado por este script. Solo si se llama como el que crea
+    el script, y pidiendo confirmacion escrita."""
+
+    from utils.monday_client import delete_board, get_board_name
+
+    nombre = get_board_name(board_id)
+
+    if nombre is None:
+        sys.exit(f"Con este token no veo ningún board con id {board_id}. Puede ser privado de otra cuenta: bórrelo desde la cuenta que lo creó.")
+
+    if nombre != NOMBRE_BOARD:
+        sys.exit(f'El board {board_id} se llama "{nombre}", no "{NOMBRE_BOARD}". Por seguridad no se borra.')
+
+    if input(f'Se va a BORRAR el board "{nombre}" ({board_id}). Escriba BORRAR para confirmar: ').strip() != "BORRAR":
+        sys.exit("Cancelado: no se borró nada.")
+
+    delete_board(board_id)
+    print("Board borrado.")
+
+
 def _crear_lista(board, titulo, etiquetas):
     """Crea una columna de lista con esas opciones y COMPRUEBA que Monday las creo
     (una vez creo la columna vacia y todo fallo despues). Prueba las formas conocidas
@@ -145,7 +187,7 @@ def _crear_lista(board, titulo, etiquetas):
     return create_column_tipo(board, titulo, "text"), "text"
 
 
-def _crear(personas, publico):
+def _crear(personas, publico, duenos=()):
     import json
 
     from utils.monday_client import (
@@ -164,6 +206,7 @@ def _crear(personas, publico):
     print(f"\nBoard creado: {board}")
 
     try:
+        _agregar_duenos(board, duenos)
         _llenar(board, personas)
     except Exception:
         print(f"\nALGO FALLÓ. El board {board} quedó a medias: bórrelo en Monday y vuelva a correr el script.")
@@ -231,7 +274,21 @@ def main():
     ap.add_argument("--aplicar", action="store_true", help="crear el board de verdad (sin esto solo se muestra el plan)")
     ap.add_argument("--lideres", help="CSV con columnas nombre,correo")
     ap.add_argument("--publico", action="store_true", help="crear el board como público")
+    ap.add_argument("--duenos", help="correos (separados por coma) de quienes serán dueños del board y lo verán")
+    ap.add_argument("--borrar", metavar="ID", help="borra un board creado por este script (pide confirmación)")
+    ap.add_argument("--agregar-duenos", metavar="ID", help="solo agrega los --duenos a un board que ya existe")
     args = ap.parse_args()
+
+    if args.borrar:
+        _borrar(args.borrar)
+        return
+
+    if args.agregar_duenos:
+        if not args.duenos:
+            sys.exit("Falta --duenos con los correos.")
+
+        _agregar_duenos(args.agregar_duenos, args.duenos.split(","))
+        return
 
     gerentes = _leer_board(GERENTES_BOARD_ID, GERENTE_EMAIL_COLUMN_ID)
     pmos = _leer_board(PMO_BOARD_ID, PMO_EMAIL_COLUMN_ID)
@@ -251,7 +308,7 @@ def main():
         print("\nEsto es solo la vista previa: no se creó nada. Si todo está bien, corra de nuevo con --aplicar.")
         return
 
-    _crear(personas, args.publico)
+    _crear(personas, args.publico, (args.duenos or "").split(","))
 
 
 if __name__ == "__main__":
