@@ -12,6 +12,7 @@ Uso (como create_rubro_columns.py: el token lo pones tu, no se comparte):
        --publico               el board se crea publico (por defecto es privado: tiene correos)
        --duenos a@x.com,b@x.com  quienes seran duenos del board y lo veran (recomendado: privado + duenos)
        --agregar-duenos ID --duenos ...   agrega duenos a un board ya creado
+       --ver-ids ID            imprime las variables DIRECTORIO_* de un board ya creado (solo lee)
        --borrar ID             borra un board creado por este script (pide confirmacion)
 
 Al terminar imprime las variables de entorno listas para pegar en Render.
@@ -170,6 +171,52 @@ def _agregar_duenos(board, correos):
         print(f"  Dueños agregados al board {board}: {', '.join(ids)}")
 
 
+def variables_de_board(columnas, board_id):
+    """Bloque de variables de entorno (DIRECTORIO_*) para un board ya creado, a
+    partir de sus columnas [{"id", "title", "type"}] reconocidas por su titulo."""
+
+    por_titulo = {_norm(c["title"]): c for c in columnas}
+    faltan = [t for t in ("Correo", "Rol", "Acceso") if _norm(t) not in por_titulo]
+    lineas = [f"DIRECTORIO_BOARD_ID={board_id}"]
+    nombres = (("DIRECTORIO_CORREO_COLUMN_ID", "Correo"), ("DIRECTORIO_ROL_COLUMN_ID", "Rol"), ("DIRECTORIO_ACCESO_COLUMN_ID", "Acceso"),
+               ("DIRECTORIO_ALIAS_COLUMN_ID", "Alias"), ("DIRECTORIO_ROL_SOLICITADO_COLUMN_ID", "Rol solicitado"))
+
+    for var, titulo in nombres:
+        c = por_titulo.get(_norm(titulo))
+
+        if c:
+            lineas.append(f"{var}={c['id']}")
+
+            if titulo == "Acceso":
+                tipo = {"status": "status", "color": "status", "dropdown": "dropdown"}.get(c["type"], "text")
+                lineas.append(f"DIRECTORIO_ACCESO_TIPO={tipo}")
+
+    return lineas, faltan
+
+
+def _ver_ids(board_id):
+    from utils.monday_client import graphql
+
+    q = """query ($ids: [ID!]) { boards(ids: $ids) { name columns { id title type } } }"""
+    boards = graphql(q, {"ids": [str(board_id)]})["boards"]
+
+    if not boards:
+        sys.exit(f"Con este token no veo ningún board con id {board_id}.")
+
+    print(f'Board: "{boards[0]["name"]}" ({board_id})
+')
+    lineas, faltan = variables_de_board(boards[0]["columns"], board_id)
+
+    for l in lineas:
+        print(l)
+
+    print("PORTAL_ADMIN_CORREOS=tu.correo@...   (separados por coma)")
+
+    if faltan:
+        print(f"
+OJO: no encontré columnas llamadas: {', '.join(faltan)}.")
+
+
 def _borrar(board_id):
     """Borra un board creado por este script. Solo si se llama como el que crea
     el script, y pidiendo confirmacion escrita."""
@@ -313,9 +360,14 @@ def main():
     ap.add_argument("--publico", action="store_true", help="crear el board como público")
     ap.add_argument("--espacio", help='nombre del espacio de trabajo donde crear el board (por defecto: Procurement)')
     ap.add_argument("--duenos", help="correos (separados por coma) de quienes serán dueños del board y lo verán")
+    ap.add_argument("--ver-ids", metavar="ID", help="solo imprime las variables DIRECTORIO_* de un board ya creado (no cambia nada)")
     ap.add_argument("--borrar", metavar="ID", help="borra un board creado por este script (pide confirmación)")
     ap.add_argument("--agregar-duenos", metavar="ID", help="solo agrega los --duenos a un board que ya existe")
     args = ap.parse_args()
+
+    if args.ver_ids:
+        _ver_ids(args.ver_ids)
+        return
 
     if args.borrar:
         _borrar(args.borrar)
