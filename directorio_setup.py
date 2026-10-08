@@ -112,13 +112,45 @@ def _mostrar(personas, avisos):
             print(f"  - {a}")
 
 
+def _crear_lista(board, titulo, etiquetas):
+    """Crea una columna de lista con esas opciones y COMPRUEBA que Monday las creo
+    (una vez creo la columna vacia y todo fallo despues). Prueba las formas conocidas
+    de pedirlas; si ninguna funciona, deja una columna de texto. Devuelve (id, tipo)
+    con tipo "dropdown" o "text"."""
+
+    from utils.monday_client import create_column_tipo, delete_column, get_status_label_map
+
+    intentos = [
+        {"settings": {"labels": [{"id": i, "label": e} for i, e in enumerate(etiquetas, 1)]}},
+        {"labels": etiquetas},
+        {"labels": {str(i): e for i, e in enumerate(etiquetas, 1)}},
+    ]
+
+    for defaults in intentos:
+        try:
+            col = create_column_tipo(board, titulo, "dropdown", defaults)
+        except Exception as e:
+            print(f"  ({titulo}: Monday rechazó una forma de crear la lista: {str(e)[:90]})")
+            continue
+
+        creadas = set(get_status_label_map(board, col).values())
+
+        if set(etiquetas) <= creadas:
+            return col, "dropdown"
+
+        delete_column(board, col)  # quedo vacia: se borra y se prueba la siguiente forma
+
+    print(f"  ({titulo}: Monday no creó las opciones de la lista; se usa una columna de texto.)")
+
+    return create_column_tipo(board, titulo, "text"), "text"
+
+
 def _crear(personas, publico):
     import json
 
     from utils.monday_client import (
         change_multiple_column_values,
         create_board,
-        create_column,
         create_column_tipo,
         create_item,
         find_board_by_name,
@@ -131,8 +163,23 @@ def _crear(personas, publico):
     board = create_board(NOMBRE_BOARD, "public" if publico else "private")
     print(f"\nBoard creado: {board}")
 
+    try:
+        _llenar(board, personas)
+    except Exception:
+        print(f"\nALGO FALLÓ. El board {board} quedó a medias: bórrelo en Monday y vuelva a correr el script.")
+        raise
+
+
+def _llenar(board, personas):
+    from utils.monday_client import (
+        change_multiple_column_values,
+        create_column_tipo,
+        create_item,
+        get_status_label_map,
+    )
+
     col_correo = create_column_tipo(board, "Correo", "text")
-    col_rol = create_column(board, "Rol", ROLES)               # lista con varias opciones (una persona puede tener dos roles)
+    col_rol, tipo_rol = _crear_lista(board, "Rol", ROLES)      # lista con varias opciones (una persona puede tener dos roles)
     col_alias = create_column_tipo(board, "Alias", "text")
     col_solicitado = create_column_tipo(board, "Rol solicitado", "text")
 
@@ -143,12 +190,14 @@ def _crear(personas, publico):
 
     if not set(ACCESOS) <= existentes:
         print("  (Monday no creó las etiquetas del estado; se usa una lista en su lugar.)")
-        tipo_acceso = "dropdown"
-        col_acceso = create_column(board, "Acceso", ACCESOS)
+        from utils.monday_client import delete_column
+
+        delete_column(board, col_acceso)
+        col_acceso, tipo_acceso = _crear_lista(board, "Acceso", ACCESOS)
 
     for i, p in enumerate(personas, 1):
         item = create_item(board, p["nombre"])
-        valores = {col_correo: p["correo"], col_rol: {"labels": p["roles"]}}
+        valores = {col_correo: p["correo"], col_rol: ({"labels": p["roles"]} if tipo_rol == "dropdown" else ", ".join(p["roles"]))}
 
         if p["alias"]:
             valores[col_alias] = ", ".join(p["alias"])
@@ -162,11 +211,17 @@ def _crear(personas, publico):
     print(f"DIRECTORIO_CORREO_COLUMN_ID={col_correo}")
     print(f"DIRECTORIO_ROL_COLUMN_ID={col_rol}")
     print(f"DIRECTORIO_ACCESO_COLUMN_ID={col_acceso}")
-    print(f"DIRECTORIO_ACCESO_TIPO={tipo_acceso}")
+    print(f"DIRECTORIO_ACCESO_TIPO={'dropdown' if tipo_acceso == 'dropdown' else 'status' if tipo_acceso == 'status' else 'text'}")
     print(f"DIRECTORIO_ALIAS_COLUMN_ID={col_alias}")
     print(f"DIRECTORIO_ROL_SOLICITADO_COLUMN_ID={col_solicitado}")
     print("PORTAL_ADMIN_CORREOS=tu.correo@...   (separados por coma)")
     print("=" * 70)
+    if tipo_rol == "text":
+        print("\nOJO: la columna Rol quedó como texto. Al aprobar a alguien escriba sus roles separados por coma (Líder, Gerente).")
+
+    if tipo_acceso == "text":
+        print("OJO: la columna Acceso quedó como texto. Escriba Pendiente / Aprobado / Rechazado.")
+
     print("\nLos Acceso de las filas quedan VACIOS a propósito: una fila sin estado cuenta como aprobada.")
     print("Las solicitudes nuevas llegarán como «Pendiente»; las apruebas cambiando Acceso a «Aprobado».")
 

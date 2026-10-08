@@ -710,3 +710,15 @@ def find_board_by_name(name):
             return b["id"]
 
     return None
+
+
+
+def delete_column(board_id, column_id):
+    """Delete a column. Used by the setup script to clean up a column it just
+    created when Monday did not create its options."""
+
+    q = """mutation ($board: ID!, $col: String!) {
+        delete_column(board_id: $board, column_id: $col) { id }
+    }"""
+
+    graphql(q, {"board": str(board_id), "col": column_id})

@@ -177,9 +177,10 @@ def crear_solicitud(correo, nombre, roles_solicitados):
     valores = {DIRECTORIO_CORREO_COLUMN_ID: correo}
 
     if DIRECTORIO_ACCESO_COLUMN_ID:
-        valores[DIRECTORIO_ACCESO_COLUMN_ID] = (
-            {"labels": ["Pendiente"]} if DIRECTORIO_ACCESO_TIPO == "dropdown" else {"label": "Pendiente"}
-        )
+        valores[DIRECTORIO_ACCESO_COLUMN_ID] = {
+            "dropdown": {"labels": ["Pendiente"]},
+            "text": "Pendiente",
+        }.get(DIRECTORIO_ACCESO_TIPO, {"label": "Pendiente"})
 
     if DIRECTORIO_ROL_SOLICITADO_COLUMN_ID:
         valores[DIRECTORIO_ROL_SOLICITADO_COLUMN_ID] = pedidos
