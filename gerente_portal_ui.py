@@ -120,6 +120,42 @@ _HEAD = """<!doctype html>
     .lado{grid-column:1 / -1;flex-direction:row;align-items:center;justify-content:space-between;margin-top:12px}
     .todas{margin-left:0;width:100%}.quien{display:none}
   }
+
+  .pestanas{display:flex;gap:4px;border-bottom:1px solid var(--regla);margin:0 0 20px;flex-wrap:wrap}
+  .pestana{color:var(--tinta-2);padding:12px 16px;font-size:15px;font-weight:500;border-bottom:3px solid transparent;margin-bottom:-1px;min-height:44px;text-decoration:none;display:inline-flex;align-items:center}
+  .pestana:hover{color:var(--tinta)}
+  .pestana[aria-current=page]{color:var(--tinta);border-bottom-color:var(--e4);font-weight:600}
+  .pestana .n{display:inline-block;min-width:22px;padding:0 7px;margin-left:8px;border-radius:999px;background:var(--regla);color:var(--tinta);font-size:12px;line-height:20px;text-align:center}
+  .acta-estado{background:var(--papel);border:1px solid var(--regla);border-left:6px solid var(--reciente);border-radius:6px;padding:16px 18px;margin-bottom:12px}
+  .acta-estado[hidden]{display:none}
+  .acta-estado[data-nivel=error]{border-left-color:var(--urgente)}
+  .acta-estado[data-nivel=aviso]{border-left-color:var(--atencion)}
+  .acta-estado[data-nivel=ok]{border-left-color:#3FA564}
+  .acta-estado[data-nivel=curso]{border-left-color:var(--plano)}
+  .ae-cab{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+  .ae-cab>div{min-width:0}
+  .ae-cab h2{font:600 19px/1.3 var(--texto);margin:0;overflow-wrap:anywhere}
+  .ae-sub{color:var(--tinta-2);font-size:14px;margin:2px 0 0;overflow-wrap:anywhere}
+  .insignia{margin-left:auto;font-size:12px;font-weight:600;padding:3px 10px;border-radius:4px;white-space:nowrap}
+  .insignia.error{background:#3A1B19;color:#FFB4AB}.insignia.aviso{background:#3B3012;color:#F2C94C}
+  .insignia.ok{background:#16301F;color:#7BDC9A}.insignia.curso{background:#1B2E44;color:#9CC8F5}
+  .linea-tiempo{display:flex;list-style:none;margin:18px 0 6px;padding:0}
+  .linea-tiempo li{flex:1;position:relative;text-align:center;font-size:12px;color:var(--tinta-2);padding-top:22px}
+  .linea-tiempo li::before{content:'';position:absolute;top:6px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--regla);z-index:1}
+  .linea-tiempo li::after{content:'';position:absolute;top:11px;left:-50%;width:100%;height:2px;background:var(--regla)}
+  .linea-tiempo li:first-child::after{display:none}
+  .linea-tiempo li.hecho{color:var(--tinta)}.linea-tiempo li.hecho::before,.linea-tiempo li.hecho::after{background:#3FA564}
+  .linea-tiempo li.actual{color:var(--tinta);font-weight:600}.linea-tiempo li.actual::before{background:var(--plano);box-shadow:0 0 0 4px rgba(134,182,232,.25)}
+  .linea-tiempo li.actual::after{background:#3FA564}
+  .linea-tiempo li.fallo{color:#FFB4AB;font-weight:600}.linea-tiempo li.fallo::before{background:var(--urgente);box-shadow:0 0 0 4px rgba(255,110,97,.25)}
+  .linea-tiempo li.fallo::after{background:#3FA564}
+  .aviso-caja{margin:12px 0 0;padding:12px 14px;border-radius:6px;background:#202B38;border:1px solid var(--regla-2);font-size:14px;overflow-wrap:anywhere}
+  .aviso-caja strong{display:block;margin-bottom:2px}
+  .aviso-caja .que{display:block;color:var(--tinta-2);margin-top:6px}
+  .aviso-caja .que strong{display:inline;color:var(--tinta)}
+  .ae-acciones{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .ae-acciones .btn-sec{min-height:38px;padding:8px 14px;font-size:14px}
+  @media (max-width:720px){.linea-tiempo li{font-size:11px}}
   @media (pointer:coarse){.chip{min-height:44px}.btn-sec{min-height:44px}.todas{min-height:44px}.marca input{width:28px;height:28px}}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style></head><body>
@@ -367,7 +403,8 @@ def pagina_pendientes(sesion, actas):
 
     return _documento("Actas por firmar", _barra(sesion) + f"""
 <main id="contenido" tabindex="-1">
-  <h1>Actas por firmar</h1>
+  <h1>Mis actas</h1>
+  {_pestanas('firmar', len(actas))}
   <p class="resumen">{escape(_resumen(actas))}</p>
   {cuerpo}
 </main>{extra}""")
@@ -480,3 +517,109 @@ def pagina_firmado():
   <h1>Documento firmado</h1>
   <p style="color:var(--tinta-2);margin:0">Su firma quedó registrada y el punto de acta continúa con el proceso de aprobación. Ya puede cerrar esta página.</p>
 </div></div></main>""")
+
+
+
+# ------------------------------------------------------------------ pestana "Estado de las actas"
+def _pestanas(actual, n_firmar=None, solo_estado=False):
+    if solo_estado:
+        return ""
+
+    n = f'<span class="n">{n_firmar}</span>' if n_firmar else ""
+    actual_attr = ' aria-current="page"'
+    en_firmar = actual_attr if actual == "firmar" else ""
+    en_estado = actual_attr if actual == "estado" else ""
+
+    return (
+        '<nav class="pestanas" aria-label="Secciones">'
+        f'<a class="pestana" href="/gerente/pendientes"{en_firmar}>Por firmar{n}</a>'
+        f'<a class="pestana" href="/gerente/estado"{en_estado}>Estado de las actas</a>'
+        "</nav>"
+    )
+
+
+_GRUPOS = (("", "Todas"), ("atencion", "Requieren atención"), ("rechazadas", "Rechazadas"), ("curso", "En curso"), ("ok", "Completadas"))
+
+_JS_ESTADO = """
+<script>
+  var tarjetas = [].slice.call(document.querySelectorAll('.acta-estado'));
+  var botones = [].slice.call(document.querySelectorAll('.chip'));
+  function aplicar(g){
+    botones.forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.g === g)); });
+    tarjetas.forEach(function(t){ t.hidden = !!g && t.dataset.g !== g; });
+    history.replaceState(null, '', location.pathname + (g ? '?estado=' + g : ''));
+  }
+  botones.forEach(function(b){ b.onclick = function(){ aplicar(b.dataset.g); }; });
+  var g0 = new URLSearchParams(location.search).get('estado') || '';
+  if (!botones.some(function(b){ return b.dataset.g === g0; })) g0 = '';
+  aplicar(g0);
+</script>
+"""
+
+
+def _tarjeta_estado(a):
+    pasos = ""
+
+    for i, nombre in enumerate(("Generada", "Enviada al Gerente", "Firmada por el Gerente", "En aprobación", "Aprobada")):
+        if a["fallo"] == i:
+            clase = "fallo"
+        elif i < a["paso"] - 1:
+            clase = "hecho"
+        elif i == a["paso"] - 1:
+            clase = "hecho" if a["nivel"] == "ok" else "actual"
+        else:
+            clase = ""
+
+        pasos += f'<li class="{clase}">{nombre}</li>'
+
+    cajas = "".join(
+        f'<div class="aviso-caja"><strong>{escape(al["titulo"])}</strong>{escape(al["causa"])}'
+        f'<span class="que"><strong>Qué hacer:</strong> {escape(al["que"])}</span></div>'
+        for al in a["alertas"]
+    )
+    sin_documento = any(al["titulo"] == "El documento no quedó guardado" for al in a["alertas"])
+    ver = ""
+
+    if a["paso"] >= 1 and a["nivel"] != "error" and not sin_documento and a["insignia"] not in ("En cola para generarse", "Generándose"):
+        ver = (f'<div class="ae-acciones"><a class="btn-sec" href="/gerente/documento/{escape(a["id"])}" target="_blank" rel="noopener" '
+               f'aria-label="Ver documento de {escape(a["rubro"])}, se abre en una pestaña nueva">Ver documento</a></div>')
+
+    quien = ", ".join(x for x in (a["empresa"], a["proyecto"]) if x)
+    lider = f" (líder {escape(a['lider'])})" if a["lider"] else ""
+
+    return f"""
+    <article class="acta-estado" data-nivel="{a['nivel']}" data-g="{a['grupo']}" aria-label="{escape(a['rubro'])}: {escape(a['insignia'])}">
+      <div class="ae-cab"><div><h2>{escape(a['rubro'])}</h2><p class="ae-sub">{escape(quien)}{lider}. Acta del {escape(a['fecha'])}</p></div>
+        <span class="insignia {a['nivel']}">{escape(a['insignia'])}</span></div>
+      <ol class="linea-tiempo" aria-label="Avance del acta">{pasos}</ol>
+      {cajas}{ver}
+    </article>"""
+
+
+def pagina_estado(sesion, actas, n_firmar=None):
+    solo_lider = not sesion.get("gerente")
+    cont = {}
+
+    for a in actas:
+        cont[a["grupo"]] = cont.get(a["grupo"], 0) + 1
+
+    if actas:
+        resumen = (f"{len(actas)} {'acta' if len(actas) == 1 else 'actas'} en seguimiento: {cont.get('atencion', 0)} requieren atención, "
+                   f"{cont.get('rechazadas', 0)} rechazadas y {cont.get('curso', 0)} en curso.")
+        chips = "".join(
+            f'<button class="chip" data-g="{g}" aria-pressed="false">{n} ({len(actas) if not g else cont.get(g, 0)})</button>'
+            for g, n in _GRUPOS
+        )
+        cuerpo = (f'<div class="filtros" role="group" aria-label="Filtrar por estado">{chips}</div>'
+                  f'<div id="lista">{"".join(_tarjeta_estado(a) for a in actas)}</div>{_JS_ESTADO}')
+    else:
+        resumen = "Todavía no hay actas a su nombre. Cuando se genere una, la verá aquí con su avance."
+        cuerpo = ""
+
+    return _documento("Estado de las actas", _barra(sesion) + f"""
+<main id="contenido" tabindex="-1">
+  <h1>{'Mis actas' if solo_lider else 'Mis actas'}</h1>
+  {_pestanas('estado', n_firmar, solo_estado=solo_lider)}
+  <p class="resumen">{escape(resumen)}</p>
+  {cuerpo}
+</main>""")

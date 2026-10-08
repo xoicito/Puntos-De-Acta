@@ -491,6 +491,7 @@ def list_board_items(board_id, column_ids):
                     id
                     name
                     created_at
+                    updated_at
                     group { id }
                     column_values(ids: $cols) { id text }
                 }
@@ -515,6 +516,7 @@ def list_board_items(board_id, column_ids):
                 "id": it["id"],
                 "name": it.get("name") or "",
                 "created_at": it.get("created_at"),
+                "updated_at": it.get("updated_at"),
                 "group_id": (it.get("group") or {}).get("id"),
                 "columns": {c["id"]: (c.get("text") or "") for c in it.get("column_values", [])},
             })
@@ -631,3 +633,34 @@ def change_multiple_column_values(item_id, board_id, column_values, create_label
             "createLabels": create_labels_if_missing,
         },
     )
+
+
+def get_item_updates(item_id, limit=10):
+    """Comentarios mas recientes de un item: [{"id", "text", "created_at",
+    "author"}], el mas nuevo primero. `text` es texto plano (sin HTML)."""
+
+    q = """query ($ids: [ID!]!, $limit: Int) {
+        items(ids: $ids) {
+            updates(limit: $limit) {
+                id
+                text_body
+                created_at
+                creator { name }
+            }
+        }
+    }"""
+
+    items = graphql(q, {"ids": [str(item_id)], "limit": limit})["items"]
+
+    if not items:
+        return []
+
+    return [
+        {
+            "id": u["id"],
+            "text": (u.get("text_body") or "").strip(),
+            "created_at": u.get("created_at"),
+            "author": (u.get("creator") or {}).get("name", ""),
+        }
+        for u in items[0].get("updates") or []
+    ]

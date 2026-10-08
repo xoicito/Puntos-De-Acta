@@ -35,6 +35,7 @@ from utils.monday_client import (
 )
 from semanas import es_solicitud_tardia, parse_fecha
 from utils.acta_builder import build_blocks, display_date, item_data, pct
+from avisos import avisos_de_generacion, texto_de_avisos
 from contratistas import aplicar_contratista, escribir_en_item
 from pagos import aplicar_esquema_pago, escribir_en_item as escribir_pagos
 from utils.cotizacion_upload import parse_cotizacion_upload, validar_plantilla
@@ -297,6 +298,19 @@ def generate_acta(item_id):
             )
 
         change_status(item_id, board_id, ACTA_STATUS_COLUMN_ID, "Generado")
+
+        # Avisos que no bloquean (cotizacion vacia, retenido distinto de 5 %,
+        # fechas invertidas...): quedan como comentario para revisarlos antes de
+        # enviar al Gerente, y la pestana "Estado de las actas" los muestra.
+        try:
+            retenido = _parse_pct(data.get("retenido")) if (data.get("retenido") or "").strip() else None
+            avisos = avisos_de_generacion(data, cotizacion_rows, replacements.get("__PROGRAMACION_ROWS__") or [], retenido)
+
+            if avisos:
+                create_update(item_id, texto_de_avisos(avisos))
+                print(f"ACTA: item={item_id} avisos: {[a['codigo'] for a in avisos]}")
+        except Exception as e:
+            print(f"ERROR_AVISOS: {e}")
 
         # El enlace de firma ya no se manda solo - el Lider debe revisar
         # el documento generado y cambiar "Enviar a Gerente" a "Enviar"

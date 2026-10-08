@@ -399,3 +399,11 @@ MONDAY_OAUTH_CLIENT_ID = os.getenv("MONDAY_OAUTH_CLIENT_ID", "")
 MONDAY_OAUTH_CLIENT_SECRET = os.getenv("MONDAY_OAUTH_CLIENT_SECRET", "")
 GERENTE_PORTAL_BASE_URL = os.getenv("GERENTE_PORTAL_BASE_URL", GERENTE_LINK_BASE_URL)
 GERENTE_SESION_SEGUNDOS = int(os.getenv("GERENTE_SESION_SEGUNDOS", "7200"))  # 2 horas
+
+
+# Lideres de proyecto: igual que los Gerentes, un board con una fila por persona
+# (nombre + correo). El correo con el que inicia sesion en Monday decide cuales
+# actas ve (las que tienen su nombre en "Lider de proyecto"). Sin
+# LIDERES_BOARD_ID los lideres no tienen acceso y solo entran los Gerentes.
+LIDERES_BOARD_ID = os.getenv("LIDERES_BOARD_ID", "")
+LIDERES_EMAIL_COLUMN_ID = os.getenv("LIDERES_EMAIL_COLUMN_ID", "")

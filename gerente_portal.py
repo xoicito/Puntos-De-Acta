@@ -30,13 +30,16 @@ from config import (
     GERENTE_PORTAL_BASE_URL,
     GERENTE_SESION_SEGUNDOS,
     GERENTES_BOARD_ID,
+    LIDERES_BOARD_ID,
+    LIDERES_EMAIL_COLUMN_ID,
     MONDAY_OAUTH_CLIENT_ID,
     MONDAY_OAUTH_CLIENT_SECRET,
 )
 from firma_gerente import apply_gerente_signature
 from firma_gerente_routes import _rate_limited
 from gerente_link import make_token
-from gerente_portal_ui import pagina_error, pagina_pendientes, pagina_trabajo
+from estado_actas import actas_del_usuario
+from gerente_portal_ui import pagina_error, pagina_estado, pagina_pendientes, pagina_trabajo
 from control_facturas import _monto_cotizacion
 from semanas import GUATEMALA_TZ, es_solicitud_tardia, parse_fecha
 from utils.acta_builder import display_date
@@ -122,6 +125,31 @@ def _es_gerente(correo):
             return it.get("name") or correo
 
     return None
+
+
+def _es_lider(correo):
+    """Nombre del Lider cuyo correo (en el board de Lideres) es `correo`, o None.
+    Sin board de Lideres configurado nadie entra como Lider."""
+
+    correo = (correo or "").strip().lower()
+
+    if not correo or not LIDERES_BOARD_ID or not LIDERES_EMAIL_COLUMN_ID:
+        return None
+
+    for it in list_board_items(LIDERES_BOARD_ID, [LIDERES_EMAIL_COLUMN_ID]):
+        if (it["columns"].get(LIDERES_EMAIL_COLUMN_ID) or "").strip().lower() == correo:
+            return it.get("name") or correo
+
+    return None
+
+
+def _con_roles(sesion):
+    """Sesiones anteriores a los roles no traen "gerente": eran solo de Gerentes."""
+
+    if "gerente" not in sesion:
+        sesion = dict(sesion, gerente=sesion.get("name") or sesion.get("email"), lider=None)
+
+    return sesion
 
 
 def _alias_ids(*campos):
@@ -308,16 +336,21 @@ def callback():
         nombre, correo = _usuario_de_monday(_codigo_a_token(code))
         correo = (correo or "").strip().lower()
         gerente = _es_gerente(correo)
+        lider = _es_lider(correo)
     except Exception as e:
         print(f"GERENTE_PORTAL: error en el inicio de sesion: {e}", flush=True)
         return pagina_error("No se pudo iniciar sesion con Monday. Intente de nuevo."), 502
 
-    if not gerente:
-        print(f"GERENTE_PORTAL: acceso denegado, el correo {correo!r} no esta en el board de Gerentes", flush=True)
-        return pagina_error("Su cuenta de Monday no esta registrada como Gerente de Proyecto."), 403
+    if not gerente and not lider:
+        print(f"GERENTE_PORTAL: acceso denegado, el correo {correo!r} no esta en los boards de Gerentes ni de Lideres", flush=True)
+        return pagina_error("Su cuenta de Monday no esta registrada como Gerente ni como Lider de Proyecto."), 403
 
-    resp = make_response(redirect("/gerente/pendientes"))
-    _poner_cookie(resp, SESION_COOKIE, _sesiones().dumps({"email": correo, "name": gerente}), GERENTE_SESION_SEGUNDOS)
+    resp = make_response(redirect("/gerente/pendientes" if gerente else "/gerente/estado"))
+    _poner_cookie(
+        resp, SESION_COOKIE,
+        _sesiones().dumps({"email": correo, "name": gerente or lider, "gerente": gerente, "lider": lider}),
+        GERENTE_SESION_SEGUNDOS,
+    )
     resp.delete_cookie(STATE_COOKIE)
     print(f"GERENTE_PORTAL: sesion iniciada para {correo}", flush=True)
 
@@ -336,6 +369,11 @@ def salir():
 @_rate_limited
 @_requiere_sesion
 def pendientes(sesion):
+    sesion = _con_roles(sesion)
+
+    if not sesion["gerente"]:
+        return redirect("/gerente/estado")
+
     try:
         actas = actas_pendientes(sesion["email"])
     except Exception as e:
@@ -349,8 +387,17 @@ def pendientes(sesion):
 @_rate_limited
 @_requiere_sesion
 def documento(sesion, item_id):
-    if item_id not in {a["id"] for a in actas_pendientes(sesion["email"])}:
-        return pagina_error("Esa acta no esta entre sus pendientes."), 403
+    sesion = _con_roles(sesion)
+    permitidas = {a["id"] for a in actas_pendientes(sesion["email"])} if sesion["gerente"] else set()
+
+    if item_id not in permitidas:
+        try:
+            permitidas |= {a["id"] for a in actas_del_usuario(sesion)}
+        except Exception as e:
+            print(f"GERENTE_PORTAL: error revisando permisos del documento: {e}", flush=True)
+
+    if item_id not in permitidas:
+        return pagina_error("Esa acta no es suya."), 403
 
     url = get_file_public_url(get_item(item_id), ACTA_XLSX_COLUMN_ID)
 
@@ -364,6 +411,11 @@ def documento(sesion, item_id):
 @_rate_limited
 @_requiere_sesion
 def firmar(sesion):
+    sesion = _con_roles(sesion)
+
+    if not sesion["gerente"]:
+        return pagina_error("Solo los Gerentes de Proyecto pueden firmar actas."), 403
+
     if not _mismo_origen():
         return pagina_error("Solicitud no valida."), 403
 
@@ -444,3 +496,18 @@ def trabajo_estado(sesion, job_id):
         return jsonify({"error": "no encontrado"}), 404
 
     return jsonify({"done": job["done"], "items": job["items"]})
+
+
+@gerente_portal_bp.get("/gerente/estado")
+@_rate_limited
+@_requiere_sesion
+def estado(sesion):
+    sesion = _con_roles(sesion)
+
+    try:
+        actas = actas_del_usuario(sesion)
+    except Exception as e:
+        print(f"GERENTE_PORTAL: error calculando el estado de las actas: {e}", flush=True)
+        return pagina_error("No se pudo cargar el estado de sus actas. Intente de nuevo."), 500
+
+    return pagina_estado(sesion, actas, n_firmar=sum(1 for a in actas if a["pendiente_gerente"]))
