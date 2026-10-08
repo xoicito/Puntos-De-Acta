@@ -10,7 +10,8 @@ import secrets
 import threading
 import time
 import uuid
-from html import escape
+from concurrent.futures import ThreadPoolExecutor, wait
+from datetime import datetime
 from urllib.parse import urlencode
 
 import requests
@@ -33,8 +34,12 @@ from config import (
     MONDAY_OAUTH_CLIENT_SECRET,
 )
 from firma_gerente import apply_gerente_signature
-from firma_gerente_routes import _error_page, _page, _rate_limited
+from firma_gerente_routes import _rate_limited
 from gerente_link import make_token
+from gerente_portal_ui import pagina_error, pagina_pendientes, pagina_trabajo
+from control_facturas import _monto_cotizacion
+from semanas import GUATEMALA_TZ, es_solicitud_tardia, parse_fecha
+from utils.acta_builder import display_date
 from utils.monday_client import get_file_public_url, get_item, list_board_items
 
 gerente_portal_bp = Blueprint("gerente_portal_bp", __name__)
@@ -134,7 +139,7 @@ def actas_pendientes(correo):
 
     correo = (correo or "").strip().lower()
     columnas = [GERENTE_EMAIL_LINK_COLUMN_ID, GERENTE_FIRMA_ESTADO_COLUMN_ID] + _alias_ids(
-        "proyecto", "rubro", "empresa", "no_contrato"
+        "proyecto", "rubro", "empresa", "no_contrato", "lider_proyecto", "fecha_acta"
     )
     pendientes = []
 
@@ -156,9 +161,75 @@ def actas_pendientes(correo):
             "rubro": primero("rubro") or it.get("name", ""),
             "empresa": primero("empresa"),
             "no_contrato": primero("no_contrato"),
+            "lider": primero("lider_proyecto"),
+            "fecha_acta": primero("fecha_acta"),
+            "created_at": it.get("created_at"),
         })
 
     return pendientes
+
+
+# ------------------------------------------------------------ datos de cada fila
+_monto_cache = {}
+_MONTO_TTL = 6 * 3600
+
+
+def monto_con_iva(item_id):
+    """Total de la cotizacion con IVA, o None si no se pudo calcular. Leer el
+    Excel de cada acta tarda, asi que se recuerda un rato por acta."""
+
+    hit = _monto_cache.get(item_id)
+
+    if hit and time.time() - hit[0] < _MONTO_TTL:
+        return hit[1]
+
+    try:
+        monto = _monto_cotizacion(get_item(item_id)) or None
+    except Exception as e:
+        print(f"GERENTE_PORTAL: no se pudo calcular el monto de {item_id}: {e}", flush=True)
+        return None
+
+    _monto_cache[item_id] = (time.time(), monto)
+
+    return monto
+
+
+def _dias_desde(created_at, ahora=None):
+    if not created_at:
+        return 0
+
+    ahora = ahora or datetime.now(GUATEMALA_TZ)
+
+    return max(0, (ahora.date() - parse_fecha(created_at).astimezone(GUATEMALA_TZ).date()).days)
+
+
+def enriquecer(actas, ahora=None):
+    """Agrega a cada acta lo que muestra la pantalla: fecha, monto con IVA,
+    dias de espera y si ingreso fuera de horario. Los montos se calculan en
+    paralelo y, si alguno tarda demasiado, se muestra "—" (ya calculado, queda
+    en cache para la siguiente carga)."""
+
+    pool = ThreadPoolExecutor(max_workers=4)
+    futuros = {a["id"]: pool.submit(monto_con_iva, a["id"]) for a in actas}
+    wait(futuros.values(), timeout=12)
+    pool.shutdown(wait=False)
+
+    for a in actas:
+        fecha = a.get("fecha_acta") or ""
+        creado = a.get("created_at")
+
+        if not fecha and creado:
+            fecha = parse_fecha(creado).astimezone(GUATEMALA_TZ).strftime("%Y-%m-%d")
+
+        f = futuros[a["id"]]
+        monto = f.result() if f.done() and not f.exception() else None
+
+        a["fecha"] = display_date(fecha) or "—"
+        a["monto"] = f"Q {monto:,.2f}" if monto else "—"
+        a["edad"] = _dias_desde(creado, ahora)
+        a["tardia"] = bool(creado) and es_solicitud_tardia(parse_fecha(creado))
+
+    return actas
 
 
 # --------------------------------------------------------------------- sesion
@@ -184,7 +255,7 @@ def _requiere_sesion(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if not habilitado():
-            return _error_page("Esta funcion todavia no esta disponible."), 404
+            return pagina_error("Esta funcion todavia no esta disponible."), 404
 
         sesion = _sesion_actual()
 
@@ -207,7 +278,7 @@ def _mismo_origen():
 @_rate_limited
 def entrar():
     if not habilitado():
-        return _error_page("Esta funcion todavia no esta disponible."), 404
+        return pagina_error("Esta funcion todavia no esta disponible."), 404
 
     state = secrets.token_urlsafe(16)
     url = AUTH_URL + "?" + urlencode({
@@ -225,13 +296,13 @@ def entrar():
 @_rate_limited
 def callback():
     if not habilitado():
-        return _error_page("Esta funcion todavia no esta disponible."), 404
+        return pagina_error("Esta funcion todavia no esta disponible."), 404
 
     state = request.args.get("state", "")
     code = request.args.get("code", "")
 
     if not code or not state or state != request.cookies.get(STATE_COOKIE):
-        return _error_page("No se pudo verificar el inicio de sesion. Intente de nuevo desde el enlace del correo."), 400
+        return pagina_error("No se pudo verificar el inicio de sesion. Intente de nuevo desde el enlace del correo."), 400
 
     try:
         nombre, correo = _usuario_de_monday(_codigo_a_token(code))
@@ -239,11 +310,11 @@ def callback():
         gerente = _es_gerente(correo)
     except Exception as e:
         print(f"GERENTE_PORTAL: error en el inicio de sesion: {e}", flush=True)
-        return _error_page("No se pudo iniciar sesion con Monday. Intente de nuevo."), 502
+        return pagina_error("No se pudo iniciar sesion con Monday. Intente de nuevo."), 502
 
     if not gerente:
         print(f"GERENTE_PORTAL: acceso denegado, el correo {correo!r} no esta en el board de Gerentes", flush=True)
-        return _error_page("Su cuenta de Monday no esta registrada como Gerente de Proyecto."), 403
+        return pagina_error("Su cuenta de Monday no esta registrada como Gerente de Proyecto."), 403
 
     resp = make_response(redirect("/gerente/pendientes"))
     _poner_cookie(resp, SESION_COOKIE, _sesiones().dumps({"email": correo, "name": gerente}), GERENTE_SESION_SEGUNDOS)
@@ -269,9 +340,9 @@ def pendientes(sesion):
         actas = actas_pendientes(sesion["email"])
     except Exception as e:
         print(f"GERENTE_PORTAL: error listando pendientes: {e}", flush=True)
-        return _error_page("No se pudieron cargar sus actas. Intente de nuevo."), 500
+        return pagina_error("No se pudieron cargar sus actas. Intente de nuevo."), 500
 
-    return _pagina_pendientes(sesion, actas)
+    return pagina_pendientes(sesion, enriquecer(actas))
 
 
 @gerente_portal_bp.get("/gerente/documento/<item_id>")
@@ -279,12 +350,12 @@ def pendientes(sesion):
 @_requiere_sesion
 def documento(sesion, item_id):
     if item_id not in {a["id"] for a in actas_pendientes(sesion["email"])}:
-        return _error_page("Esa acta no esta entre sus pendientes."), 403
+        return pagina_error("Esa acta no esta entre sus pendientes."), 403
 
     url = get_file_public_url(get_item(item_id), ACTA_XLSX_COLUMN_ID)
 
     if not url:
-        return _error_page("El documento no esta disponible todavia."), 404
+        return pagina_error("El documento no esta disponible todavia."), 404
 
     return redirect(url)
 
@@ -294,22 +365,22 @@ def documento(sesion, item_id):
 @_requiere_sesion
 def firmar(sesion):
     if not _mismo_origen():
-        return _error_page("Solicitud no valida."), 403
+        return pagina_error("Solicitud no valida."), 403
 
     ids = request.form.getlist("item_ids")
     firma = request.form.get("signature_data_url", "")
 
     if not request.form.get("confirmar"):
-        return _error_page("Debe confirmar que reviso los documentos seleccionados."), 400
+        return pagina_error("Debe confirmar que reviso los documentos seleccionados."), 400
 
     if not ids or not firma.startswith("data:image"):
-        return _error_page("Seleccione al menos un acta y dibuje o suba su firma."), 400
+        return pagina_error("Seleccione al menos un acta y dibuje o suba su firma."), 400
 
     validos = {a["id"]: a for a in actas_pendientes(sesion["email"])}
     ids = [i for i in dict.fromkeys(ids)]
 
     if any(i not in validos for i in ids):
-        return _error_page("Alguna de las actas seleccionadas ya no esta entre sus pendientes. Recargue la pagina."), 409
+        return pagina_error("Alguna de las actas seleccionadas ya no esta entre sus pendientes. Recargue la pagina."), 409
 
     job_id = uuid.uuid4().hex
     audit = {
@@ -359,9 +430,9 @@ def trabajo(sesion, job_id):
     job = _jobs.get(job_id)
 
     if not job or job["email"] != sesion["email"]:
-        return _error_page("No se encontro ese proceso."), 404
+        return pagina_error("No se encontro ese proceso."), 404
 
-    return _pagina_trabajo(job_id)
+    return pagina_trabajo(job_id)
 
 
 @gerente_portal_bp.get("/gerente/trabajo/<job_id>/estado")
@@ -373,107 +444,3 @@ def trabajo_estado(sesion, job_id):
         return jsonify({"error": "no encontrado"}), 404
 
     return jsonify({"done": job["done"], "items": job["items"]})
-
-
-# --------------------------------------------------------------------- paginas
-_CSS = """
-<style>
-  .card.wide{max-width:760px}
-  table.actas{width:100%;border-collapse:collapse;font-size:.85rem}
-  table.actas th{text-align:left;color:#8c8f97;font-weight:600;font-size:.72rem;text-transform:uppercase;padding:6px 8px}
-  table.actas td{padding:9px 8px;border-top:1px solid #eee;vertical-align:middle}
-  table.actas a{color:var(--accent-dark)}
-  .who{font-size:.8rem;color:#5b616c;margin-bottom:14px}
-  .estado-ok{color:#1a7f37;font-weight:600}.estado-err{color:#b42318;font-weight:600}
-  .vacio{padding:18px;text-align:center;color:#5b616c}
-  .confirm{display:flex;gap:8px;align-items:flex-start;font-size:.85rem;margin:14px 0}
-  canvas.pad{border:1px dashed #b9b5a8;border-radius:10px;background:#fff;touch-action:none;max-width:100%}
-</style>
-"""
-
-_PAD_JS = """
-<script>
-  var c = document.getElementById('pad'), ctx = c.getContext('2d'), drawing = false, dirty = false;
-  ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#20242b';
-  function pos(e){var r=c.getBoundingClientRect(),t=e.touches?e.touches[0]:e;
-    return {x:(t.clientX-r.left)*(c.width/r.width), y:(t.clientY-r.top)*(c.height/r.height)};}
-  function st(e){drawing=true;dirty=true;var p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();}
-  function mv(e){if(!drawing)return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();}
-  function en(){drawing=false;}
-  c.addEventListener('mousedown',st);c.addEventListener('mousemove',mv);window.addEventListener('mouseup',en);
-  c.addEventListener('touchstart',st,{passive:false});c.addEventListener('touchmove',mv,{passive:false});c.addEventListener('touchend',en);
-  document.getElementById('clear').onclick=function(){ctx.clearRect(0,0,c.width,c.height);dirty=false;document.getElementById('sig').value='';document.getElementById('file').value='';};
-  document.getElementById('file').onchange=function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();
-    rd.onload=function(){document.getElementById('sig').value=rd.result;dirty=false;};rd.readAsDataURL(f);};
-  document.getElementById('form').onsubmit=function(e){
-    if(dirty){document.getElementById('sig').value=c.toDataURL('image/png');}
-    if(!document.querySelector('input[name=item_ids]:checked')){e.preventDefault();alert('Seleccione al menos un acta.');return;}
-    if(!document.getElementById('sig').value){e.preventDefault();alert('Dibuje o suba su firma.');return;}
-    document.getElementById('go').disabled=true;document.getElementById('go').textContent='Firmando...';};
-  document.getElementById('all').onchange=function(e){document.querySelectorAll('input[name=item_ids]').forEach(function(i){i.checked=e.target.checked;});};
-</script>
-"""
-
-
-def _pagina_pendientes(sesion, actas):
-    if not actas:
-        cuerpo = '<div class="vacio">No tiene actas pendientes de firma. Cuando llegue una, aparecera aqui.</div>'
-    else:
-        filas = "".join(
-            f'<tr><td><input type="checkbox" name="item_ids" value="{escape(a["id"])}"></td>'
-            f'<td>{escape(a["proyecto"])}</td><td>{escape(a["rubro"])}</td>'
-            f'<td>{escape(a["empresa"])}</td><td>{escape(a["no_contrato"])}</td>'
-            f'<td><a href="/gerente/documento/{escape(a["id"])}" target="_blank" rel="noopener">Ver documento</a></td></tr>'
-            for a in actas
-        )
-        cuerpo = f"""
-        <form id="form" method="post" action="/gerente/firmar">
-          <table class="actas">
-            <tr><th><input type="checkbox" id="all" title="Seleccionar todas"></th><th>Proyecto</th><th>Rubro</th><th>Empresa</th><th>Contrato</th><th></th></tr>
-            {filas}
-          </table>
-          <div class="section-label" style="margin-top:20px">Firma</div>
-          <canvas id="pad" class="pad" width="320" height="200"></canvas>
-          <div class="draw-actions"><button type="button" class="link-btn" id="clear">Borrar</button></div>
-          <div style="font-size:.8rem;color:#5b616c;margin-top:8px">O suba una imagen de su firma: <input type="file" id="file" accept="image/*"></div>
-          <input type="hidden" name="signature_data_url" id="sig">
-          <label class="confirm"><input type="checkbox" name="confirmar" value="1" required>
-            <span>Revise los documentos seleccionados y apruebo su contenido.</span></label>
-          <button type="submit" class="submit-btn" id="go">Firmar las seleccionadas</button>
-        </form>{_PAD_JS}"""
-
-    return _page(f"""
-    <div class="card wide"><div class="card-accent"></div><div class="card-body">
-      <h1>Mis actas pendientes</h1>
-      <div class="who">Sesion iniciada como {escape(sesion.get('name') or sesion['email'])} ({escape(sesion['email'])}) -
-        <a href="/gerente/salir">Cerrar sesion</a></div>
-      {cuerpo}
-    </div></div>{_CSS}""")
-
-
-def _pagina_trabajo(job_id):
-    return _page(f"""
-    <div class="card wide"><div class="card-accent"></div><div class="card-body">
-      <h1>Firmando actas</h1>
-      <div class="subtitle">No cierre esta pagina hasta que termine. Cada acta tarda unos segundos.</div>
-      <table class="actas" id="lista"></table>
-      <p id="fin" hidden><a href="/gerente/pendientes">Volver a mis actas pendientes</a></p>
-    </div></div>{_CSS}
-    <script>
-      function pintar(d){{
-        var t = {{pendiente:'En espera', firmando:'Firmando...', firmado:'Firmada', error:'Error'}};
-        document.getElementById('lista').innerHTML = d.items.map(function(i){{
-          var cls = i.estado === 'firmado' ? 'estado-ok' : (i.estado === 'error' ? 'estado-err' : '');
-          var msg = i.mensaje ? ' - ' + i.mensaje.replace(/</g,'&lt;') : '';
-          return '<tr><td>' + i.nombre.replace(/</g,'&lt;') + '</td><td class="' + cls + '">' + t[i.estado] + msg + '</td></tr>';
-        }}).join('');
-        if (d.done) {{ document.getElementById('fin').hidden = false; }}
-        return d.done;
-      }}
-      function ciclo(){{
-        fetch('/gerente/trabajo/{job_id}/estado').then(function(r){{return r.json();}}).then(function(d){{
-          if (!pintar(d)) setTimeout(ciclo, 2500);
-        }}).catch(function(){{ setTimeout(ciclo, 4000); }});
-      }}
-      ciclo();
-    </script>""")
