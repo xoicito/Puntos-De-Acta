@@ -299,7 +299,7 @@ def pagina_pendientes(sesion, actas):
   </form>
 </section>""" + _JS
     else:
-        cuerpo = '<div class="vacio">Cuando el líder le envíe un acta para firmar, la verá aquí.</div>'
+        cuerpo = ""
         extra = ""
 
     return _documento("Actas por firmar", _barra(sesion) + f"""
