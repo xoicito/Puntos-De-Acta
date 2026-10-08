@@ -181,6 +181,11 @@ def _page(body, tipo_plantilla=""):
 
 
 def _error_page(message):
+    from gerente_portal_ui import pagina_error
+    return pagina_error(message).replace('<a href="/gerente/pendientes">Ir a mis actas pendientes</a>', '')
+
+
+def _error_page_antigua(message):
     return _page(f"""
     <div class="card error-card">
       <div class="card-accent"></div>
@@ -193,6 +198,11 @@ def _error_page(message):
 
 
 def _success_page(tipo_plantilla=""):
+    from gerente_portal_ui import pagina_firmado
+    return pagina_firmado()
+
+
+def _success_page_antigua(tipo_plantilla=""):
     return _page(f"""
     <div class="card success-card">
       <div class="card-accent"></div>
@@ -205,6 +215,11 @@ def _success_page(tipo_plantilla=""):
 
 
 def _form_page(ctx):
+    from gerente_portal_ui import pagina_firma
+    return pagina_firma(ctx["item_id_token"], ctx)
+
+
+def _form_page_antigua(ctx):
     brand = _brand(ctx.get("tipo_plantilla"))
     return _page(f"""
     <div class="card">

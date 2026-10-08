@@ -225,7 +225,7 @@ def enriquecer(actas, ahora=None):
         monto = f.result() if f.done() and not f.exception() else None
 
         a["fecha"] = display_date(fecha) or "—"
-        a["monto"] = f"Q {monto:,.2f}" if monto else "—"
+        a["monto"] = f"Q {monto:,.2f}" if monto else "—"
         a["edad"] = _dias_desde(creado, ahora)
         a["tardia"] = bool(creado) and es_solicitud_tardia(parse_fecha(creado))
 
