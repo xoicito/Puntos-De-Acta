@@ -349,3 +349,45 @@ def agrupar_semanas_route():
     threading.Thread(target=agrupar_semana_actual, args=(ACTA_BOARD_ID,), daemon=True).start()
 
     return jsonify({"ok": True, "estado": "en proceso, revisa el board en un minuto"})
+
+
+@acta_bp.get("/internal/directorio")
+def directorio_diagnostico():
+    """Diagnostico solo de lectura del directorio de personas (mismo secreto que
+    los demas endpoints internos): cuantas filas lee el servidor, cuantas traen
+    correo y, con ?correo=..., que ve del correo buscado. No muestra correos completos."""
+
+    if not INTERNAL_TASK_SECRET or request.headers.get("X-Internal-Secret", "") != INTERNAL_TASK_SECRET:
+        return jsonify({"error": "unauthorized"}), 401
+
+    import directorio
+
+    if not directorio.activo():
+        return jsonify({"activo": False, "motivo": "Faltan variables DIRECTORIO_* en el servidor (board, correo o rol)."})
+
+    try:
+        filas = directorio.personas(forzar=True)
+    except Exception as exc:
+        return jsonify({"activo": True, "error": f"No se pudo leer el board: {exc}"}), 502
+
+    def mascara(correo):
+        usuario, _, dominio = (correo or "").partition("@")
+
+        return (usuario[:2] + "***@" + dominio) if correo else ""
+
+    buscado = (request.args.get("correo") or "").strip().lower()
+    persona = next((p for p in filas if buscado and p["correo"] == buscado), None)
+
+    return jsonify({
+        "activo": True,
+        "board_id": directorio.DIRECTORIO_BOARD_ID,
+        "filas_leidas": len(filas),
+        "con_correo": sum(1 for p in filas if p["correo"]),
+        "con_rol": sum(1 for p in filas if p["roles"]),
+        "estados": {e: sum(1 for p in filas if p["acceso"] == e) for e in ("aprobado", "pendiente", "rechazado")},
+        "muestra": [{"nombre": p["nombre"], "correo": mascara(p["correo"]), "roles": sorted(p["roles"]), "acceso": p["acceso"]} for p in filas[:5]],
+        "correo_buscado": ({"encontrado": True, "nombre": persona["nombre"], "roles": sorted(persona["roles"]), "acceso": persona["acceso"]}
+                           if persona else {"encontrado": False}) if buscado else None,
+        "ayuda": ("0 filas: el servidor no ve el board (probablemente privado para la cuenta del token de Render) o el ID del board esta mal."
+                  if not filas else "con_correo = 0: el ID de la columna Correo en Render no coincide." if not any(p["correo"] for p in filas) else ""),
+    })

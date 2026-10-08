@@ -115,6 +115,9 @@ def personas(forzar=False):
             "solicitado": (c.get(DIRECTORIO_ROL_SOLICITADO_COLUMN_ID) or "").strip(),
         })
 
+    if not filas:
+        print(f"DIRECTORIO: el board {DIRECTORIO_BOARD_ID} devolvio 0 filas (el token del servidor no lo ve, o esta vacio)", flush=True)
+
     with _lock:
         _cache.update(t=time.time(), filas=filas)
 
