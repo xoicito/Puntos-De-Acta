@@ -12,6 +12,8 @@ import unicodedata
 from concurrent.futures import ThreadPoolExecutor, wait
 from datetime import datetime, timedelta, timezone
 
+import directorio
+import identidad
 from avisos import MARCA, TITULOS
 from config import (
     ACTA_BOARD_ID,
@@ -386,12 +388,18 @@ def actas_del_usuario(sesion, ahora=None):
 
     items = list_board_items(ACTA_BOARD_ID, COLUMNAS_ACTA)
     melissa = list_board_items(FIRMA_BOARD_ID, [FIRMA_ESTADO_COLUMN_ID, FIRMA_PA_ITEM_ID_COLUMN_ID])
+    del_lider = _clasificador_de_lideres(items)
 
     def visible(it):
         c = it["columns"]
 
         if es_gerente and (c.get(GERENTE_EMAIL_LINK_COLUMN_ID) or "").strip().lower() == correo:
             return True
+
+        if sesion.get("lider") and directorio.activo():
+            persona = del_lider(it)
+
+            return bool(persona and persona["correo"] == correo)
 
         return bool(nombres_lider) and _norm(_primero(c, "lider_proyecto")) in nombres_lider
 
@@ -440,3 +448,77 @@ def actas_del_usuario(sesion, ahora=None):
                 it["_archivo_confirmado"] = True  # ante la duda, no alarmar
 
     return armar(items, melissa, comentarios, comentarios_melissa, ahora, visible)
+
+
+
+# ------------------------------------------------------------ a que lider pertenece cada acta
+def _clasificador_de_lideres(items):
+    """Devuelve una funcion item -> persona del directorio (o None) que dice de
+    que Lider es cada acta. Orden de confianza: 1) quien creo el item en Monday, si
+    ese dato sirve (una cuenta que crea casi todo es la del formulario, no el
+    Lider); 2) el nombre escrito en el formulario, reconocido con tolerancia."""
+
+    if not directorio.activo():
+        return lambda it: None
+
+    lideres = [p for p in directorio.personas() if "lider" in p["roles"] and p["acceso"] == "aprobado"]
+    por_correo = {p["correo"]: p for p in lideres if p["correo"]}
+    conteo = {}
+
+    for it in items:
+        e = it.get("creator_email")
+
+        if e:
+            conteo[e] = conteo.get(e, 0) + 1
+
+    # Una sola cuenta creando la mayoria de las actas = cuenta generica del formulario.
+    genericos = {e for e, n in conteo.items() if len(items) >= 10 and n / len(items) > 0.6}
+    memo = {}
+
+    def del_lider(it):
+        e = it.get("creator_email")
+
+        if e and e not in genericos and e in por_correo:
+            return por_correo[e]
+
+        escrito = _primero(it["columns"], "lider_proyecto")
+
+        if escrito not in memo:
+            memo[escrito] = identidad.reconocer(escrito, lideres)
+
+        return memo[escrito][0]
+
+    del_lider.sugerir = lambda it: identidad.reconocer(_primero(it["columns"], "lider_proyecto"), lideres)[1]
+
+    return del_lider
+
+
+def actas_sin_lider(ahora=None):
+    """Actas recientes cuyo Lider no se pudo reconocer: [{id, rubro, proyecto,
+    escrito, fecha, sugerencia}], para que un administrador confirme a quien
+    pertenecen (queda guardado como alias)."""
+
+    ahora = ahora or datetime.now(timezone.utc)
+    items = list_board_items(ACTA_BOARD_ID, COLUMNAS_ACTA)
+    del_lider = _clasificador_de_lideres(items)
+    sin = []
+
+    for it in items:
+        if not it.get("created_at") or _dias(it["created_at"], ahora) > DIAS_VENTANA:
+            continue
+
+        if del_lider(it):
+            continue
+
+        c = it["columns"]
+        sugerida = del_lider.sugerir(it) if hasattr(del_lider, "sugerir") else None
+        sin.append({
+            "id": str(it["id"]),
+            "rubro": _primero(c, "rubro") or it.get("name", ""),
+            "proyecto": _primero(c, "proyecto"),
+            "escrito": _primero(c, "lider_proyecto"),
+            "fecha": display_date(parse_fecha(it["created_at"]).astimezone(GUATEMALA_TZ).strftime("%Y-%m-%d")),
+            "sugerencia": {"id": sugerida["id"], "nombre": sugerida["nombre"]} if sugerida else None,
+        })
+
+    return sin

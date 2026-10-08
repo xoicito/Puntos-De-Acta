@@ -492,6 +492,7 @@ def list_board_items(board_id, column_ids):
                     name
                     created_at
                     updated_at
+                    creator { email }
                     group { id }
                     column_values(ids: $cols) { id text }
                 }
@@ -517,6 +518,7 @@ def list_board_items(board_id, column_ids):
                 "name": it.get("name") or "",
                 "created_at": it.get("created_at"),
                 "updated_at": it.get("updated_at"),
+                "creator_email": ((it.get("creator") or {}).get("email") or "").strip().lower(),
                 "group_id": (it.get("group") or {}).get("id"),
                 "columns": {c["id"]: (c.get("text") or "") for c in it.get("column_values", [])},
             })

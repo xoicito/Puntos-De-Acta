@@ -407,3 +407,21 @@ GERENTE_SESION_SEGUNDOS = int(os.getenv("GERENTE_SESION_SEGUNDOS", "7200"))  # 2
 # LIDERES_BOARD_ID los lideres no tienen acceso y solo entran los Gerentes.
 LIDERES_BOARD_ID = os.getenv("LIDERES_BOARD_ID", "")
 LIDERES_EMAIL_COLUMN_ID = os.getenv("LIDERES_EMAIL_COLUMN_ID", "")
+
+
+# Directorio de personas: un solo board con Lideres, Gerentes y PMO (reemplaza a
+# los boards separados cuando se configura; sin DIRECTORIO_BOARD_ID todo sigue
+# funcionando con los boards de Gerentes y de Lideres de antes). Columnas:
+#   Correo (texto) | Rol (lista con varias opciones: Lider, Gerente, PMO) |
+#   Acceso (estado: Pendiente / Aprobado / Rechazado; vacio = aprobado) |
+#   Alias (texto, otros nombres separados por coma) | Rol solicitado (texto).
+DIRECTORIO_BOARD_ID = os.getenv("DIRECTORIO_BOARD_ID", "")
+DIRECTORIO_CORREO_COLUMN_ID = os.getenv("DIRECTORIO_CORREO_COLUMN_ID", "")
+DIRECTORIO_ROL_COLUMN_ID = os.getenv("DIRECTORIO_ROL_COLUMN_ID", "")
+DIRECTORIO_ACCESO_COLUMN_ID = os.getenv("DIRECTORIO_ACCESO_COLUMN_ID", "")
+DIRECTORIO_ALIAS_COLUMN_ID = os.getenv("DIRECTORIO_ALIAS_COLUMN_ID", "")
+DIRECTORIO_ROL_SOLICITADO_COLUMN_ID = os.getenv("DIRECTORIO_ROL_SOLICITADO_COLUMN_ID", "")
+
+# Correos (separados por coma) que ven la pagina de administracion del portal
+# (actas sin lider reconocido). Aprobar accesos se hace en el board de Monday.
+PORTAL_ADMIN_CORREOS = [c.strip().lower() for c in os.getenv("PORTAL_ADMIN_CORREOS", "").split(",") if c.strip()]

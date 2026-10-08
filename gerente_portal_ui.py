@@ -623,3 +623,89 @@ def pagina_estado(sesion, actas, n_firmar=None):
   <p class="resumen">{escape(resumen)}</p>
   {cuerpo}
 </main>""")
+
+
+
+# ------------------------------------------------------------------ solicitud de acceso
+def pagina_solicitud(nombre, correo, persona, error=""):
+    """Pantalla para quien inicio sesion con Monday pero todavia no esta en el
+    directorio (o su solicitud esta en revision). `persona`: su fila, o None."""
+
+    if persona is not None:
+        acceso = persona["acceso"]
+
+        if acceso == "aprobado" and persona["roles"] & {"lider", "gerente"}:
+            titulo, texto = "Ya tiene acceso", 'Su solicitud fue aprobada. <a href="/gerente/entrar">Inicie sesión de nuevo</a> para entrar.'
+        elif acceso == "rechazado":
+            titulo, texto = "Solicitud no aprobada", "Su solicitud de acceso no fue aprobada. Si cree que es un error, hable con quien administra el sistema."
+        elif acceso == "aprobado":
+            titulo, texto = "Falta asignar su rol", "Su solicitud fue recibida y falta que le asignen un rol. Cuando lo hagan, inicie sesión de nuevo."
+        else:
+            titulo, texto = "Solicitud en revisión", "Recibimos su solicitud. Cuando la aprueben podrá entrar con la misma cuenta de Monday; no necesita volver a pedirla."
+
+        return _documento(titulo, _barra() + f"""
+<main id="contenido" tabindex="-1"><div class="tarjeta"><div class="caja" role="status">
+  <h1>{titulo}</h1>
+  <p style="color:var(--tinta-2);margin:0 0 14px">{texto}</p>
+  <dl class="datos"><div><dt>Cuenta de Monday</dt><dd>{escape(correo)}</dd></div><div><dt>Nombre registrado</dt><dd>{escape(persona['nombre'])}</dd></div></dl>
+</div></div></main>""")
+
+    aviso = f'<p class="error-firma" role="alert">{escape(error)}</p>' if error else ""
+
+    return _documento("Solicitar acceso", _barra() + f"""
+<main id="contenido" tabindex="-1"><div class="tarjeta"><div class="caja">
+  <h1>Solicite acceso</h1>
+  <p style="color:var(--tinta-2);margin:0 0 18px">Su cuenta de Monday aún no está registrada. Complete sus datos y quien administra el sistema los revisará; cuando los apruebe podrá entrar.</p>
+  {aviso}
+  <form method="post" action="/gerente/solicitar" id="solicitud">
+    <dl class="datos" style="margin-bottom:18px"><div><dt>Cuenta de Monday</dt><dd>{escape(correo)}</dd></div></dl>
+    <label for="nombre" style="display:block;font-weight:600;margin-bottom:6px">Nombre y apellido</label>
+    <input id="nombre" name="nombre" type="text" required minlength="5" maxlength="80" autocomplete="name" spellcheck="false"
+      value="{escape(nombre)}" placeholder="Como lo escribe en el formulario…"
+      style="width:100%;padding:12px;border:1px solid var(--regla);background:#141B23;color:var(--tinta);border-radius:6px;font:inherit">
+    <p style="color:var(--tinta-2);font-size:13px;margin:6px 0 18px">Escríbalo igual que en el formulario de Puntos de Acta, para reconocer sus actas.</p>
+    <fieldset style="border:0;padding:0;margin:0 0 18px">
+      <legend style="font-weight:600;margin-bottom:8px">¿Cuál es su rol?</legend>
+      <label class="confirma" style="margin:0 0 8px"><input type="radio" name="rol" value="lider" required><span><b>Líder de proyecto.</b> Ve el estado de sus actas.</span></label>
+      <label class="confirma" style="margin:0"><input type="radio" name="rol" value="gerente"><span><b>Gerente de proyecto.</b> Firma las actas. Esta solicitud se verifica con más cuidado.</span></label>
+    </fieldset>
+    <button class="btn-firmar" type="submit" style="width:100%;margin:0">Enviar solicitud</button>
+  </form>
+</div></div></main>""")
+
+
+# ------------------------------------------------------------------ administracion (actas sin lider reconocido)
+def pagina_admin(sesion, sin_asignar):
+    if sin_asignar:
+        filas = ""
+
+        for a in sin_asignar:
+            sug = a["sugerencia"]
+            accion = (
+                f'<form method="post" action="/gerente/admin/alias" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+                f'<input type="hidden" name="persona_id" value="{escape(sug["id"])}"><input type="hidden" name="alias" value="{escape(a["escrito"])}">'
+                f'<span style="color:var(--tinta-2);font-size:13px">¿Es {escape(sug["nombre"])}?</span>'
+                f'<button class="btn-sec" type="submit" style="min-height:36px;padding:6px 14px">Sí, guardar «{escape(a["escrito"])}» como su nombre</button></form>'
+                if sug and a["escrito"]
+                else '<span style="color:var(--tinta-2);font-size:13px">Sin sugerencia: agréguelo al directorio o escriba el alias en la columna de su fila.</span>'
+            )
+            filas += f"""
+    <article class="acta-estado" data-nivel="aviso">
+      <div class="ae-cab"><div><h2>{escape(a['rubro'])}</h2>
+        <p class="ae-sub">{escape(a['proyecto'])}. Acta del {escape(a['fecha'])}. Escribieron: «{escape(a['escrito']) or 'nada'}»</p></div></div>
+      <div class="ae-acciones">{accion}</div>
+    </article>"""
+
+        cuerpo = filas
+        resumen = f"{len(sin_asignar)} {'acta' if len(sin_asignar) == 1 else 'actas'} sin líder reconocido. Confirme a quién pertenecen y el sistema lo recordará."
+    else:
+        cuerpo = ""
+        resumen = "Todas las actas recientes tienen un líder reconocido."
+
+    return _documento("Administración", _barra(sesion) + f"""
+<main id="contenido" tabindex="-1">
+  <h1>Actas sin líder reconocido</h1>
+  <p class="resumen">{escape(resumen)}</p>
+  {cuerpo}
+  <p style="margin-top:24px"><a href="/gerente/estado">Volver a mis actas</a></p>
+</main>""")

@@ -33,13 +33,15 @@ from config import (
     LIDERES_BOARD_ID,
     LIDERES_EMAIL_COLUMN_ID,
     MONDAY_OAUTH_CLIENT_ID,
+    PORTAL_ADMIN_CORREOS,
     MONDAY_OAUTH_CLIENT_SECRET,
 )
 from firma_gerente import apply_gerente_signature
 from firma_gerente_routes import _rate_limited
 from gerente_link import make_token
-from estado_actas import actas_del_usuario
-from gerente_portal_ui import pagina_error, pagina_estado, pagina_pendientes, pagina_trabajo
+import directorio
+from estado_actas import actas_del_usuario, actas_sin_lider
+from gerente_portal_ui import pagina_admin, pagina_error, pagina_estado, pagina_pendientes, pagina_solicitud, pagina_trabajo
 from control_facturas import _monto_cotizacion
 from semanas import GUATEMALA_TZ, es_solicitud_tardia, parse_fecha
 from utils.acta_builder import display_date
@@ -49,6 +51,7 @@ gerente_portal_bp = Blueprint("gerente_portal_bp", __name__)
 
 SESION_COOKIE = "gerente_sesion"
 STATE_COOKIE = "gerente_state"
+SOLICITANTE_COOKIE = "gerente_solicitante"
 AUTH_URL = "https://auth.monday.com/oauth2/authorize"
 TOKEN_URL = "https://auth.monday.com/oauth2/token"
 API_URL = "https://api.monday.com/v2"
@@ -141,6 +144,35 @@ def _es_lider(correo):
             return it.get("name") or correo
 
     return None
+
+
+def _roles_portal(correo):
+    """(nombre como Gerente | None, nombre como Lider | None, estado). Con el
+    directorio unificado manda el estado de acceso (Pendiente/Aprobado/Rechazado);
+    sin el, se usan los boards separados de Gerentes y de Lideres."""
+
+    if directorio.activo():
+        r = directorio.roles_de(correo)
+
+        return r["gerente"], r["lider"], r["estado"]
+
+    return _es_gerente(correo), _es_lider(correo), "desconocido"
+
+
+def _solicitudes():
+    return URLSafeTimedSerializer(GERENTE_LINK_SECRET_KEY, salt="gerente-solicitud-v1")
+
+
+def _solicitante():
+    cookie = request.cookies.get(SOLICITANTE_COOKIE)
+
+    if not cookie or not GERENTE_LINK_SECRET_KEY:
+        return None
+
+    try:
+        return _solicitudes().loads(cookie, max_age=1200)
+    except BadSignature:
+        return None
 
 
 def _con_roles(sesion):
@@ -335,11 +367,20 @@ def callback():
     try:
         nombre, correo = _usuario_de_monday(_codigo_a_token(code))
         correo = (correo or "").strip().lower()
-        gerente = _es_gerente(correo)
-        lider = _es_lider(correo)
+        gerente, lider, estado_acceso = _roles_portal(correo)
     except Exception as e:
         print(f"GERENTE_PORTAL: error en el inicio de sesion: {e}", flush=True)
         return pagina_error("No se pudo iniciar sesion con Monday. Intente de nuevo."), 502
+
+    if not gerente and not lider and directorio.activo():
+        # Una cuenta de Monday que todavia no esta en el directorio (o esta pendiente):
+        # se le deja pedir acceso. Monday ya verifico quien es; no hace falta que el
+        # correo sea de la empresa, la decision es de quien aprueba.
+        resp = make_response(redirect("/gerente/solicitar"))
+        _poner_cookie(resp, SOLICITANTE_COOKIE, _solicitudes().dumps({"email": correo, "name": nombre}), 1200)
+        resp.delete_cookie(STATE_COOKIE)
+
+        return resp
 
     if not gerente and not lider:
         print(f"GERENTE_PORTAL: acceso denegado, el correo {correo!r} no esta en los boards de Gerentes ni de Lideres", flush=True)
@@ -511,3 +552,109 @@ def estado(sesion):
         return pagina_error("No se pudo cargar el estado de sus actas. Intente de nuevo."), 500
 
     return pagina_estado(sesion, actas, n_firmar=sum(1 for a in actas if a["pendiente_gerente"]))
+
+
+
+# --------------------------------------------------------------------- solicitud de acceso
+_NOMBRE_OK = __import__("re").compile(r"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ .'\\-]{2,79}$")
+
+
+@gerente_portal_bp.get("/gerente/solicitar")
+@_rate_limited
+def solicitar():
+    if not habilitado() or not directorio.activo():
+        return pagina_error("Esta funcion todavia no esta disponible."), 404
+
+    datos = _solicitante()
+
+    if not datos:
+        return redirect("/gerente/entrar")
+
+    persona = directorio.persona_por_correo(datos["email"], forzar=True)
+
+    return pagina_solicitud(datos["name"], datos["email"], persona)
+
+
+@gerente_portal_bp.post("/gerente/solicitar")
+@_rate_limited
+def solicitar_enviar():
+    if not habilitado() or not directorio.activo():
+        return pagina_error("Esta funcion todavia no esta disponible."), 404
+
+    datos = _solicitante()
+
+    if not datos:
+        return redirect("/gerente/entrar")
+
+    if not _mismo_origen():
+        return pagina_error("Solicitud no valida."), 403
+
+    persona = directorio.persona_por_correo(datos["email"], forzar=True)
+
+    if persona:
+        return pagina_solicitud(datos["name"], datos["email"], persona)
+
+    nombre = " ".join((request.form.get("nombre") or "").split())
+    rol = request.form.get("rol")
+
+    if not _NOMBRE_OK.match(nombre) or " " not in nombre:
+        return pagina_solicitud(datos["name"], datos["email"], None, error="Escriba su nombre y apellido, tal como lo escribe en el formulario de Puntos de Acta."), 400
+
+    if rol not in ("lider", "gerente"):
+        return pagina_solicitud(datos["name"], datos["email"], None, error="Elija si es Líder o Gerente de proyecto."), 400
+
+    try:
+        directorio.crear_solicitud(datos["email"], nombre, rol)
+    except Exception as e:
+        print(f"GERENTE_PORTAL: no se pudo crear la solicitud de {datos['email']}: {e}", flush=True)
+        return pagina_error("No se pudo registrar su solicitud. Intente de nuevo en un momento."), 502
+
+    print(f"GERENTE_PORTAL: solicitud de acceso de {datos['email']} ({nombre}) como {rol}", flush=True)
+
+    return pagina_solicitud(nombre, datos["email"], directorio.persona_por_correo(datos["email"], forzar=True))
+
+
+# --------------------------------------------------------------------- administracion
+def _es_admin(sesion):
+    return (sesion.get("email") or "").lower() in PORTAL_ADMIN_CORREOS
+
+
+@gerente_portal_bp.get("/gerente/admin")
+@_rate_limited
+@_requiere_sesion
+def admin(sesion):
+    if not _es_admin(sesion):
+        return pagina_error("Esta pagina es solo para administradores."), 403
+
+    try:
+        return pagina_admin(_con_roles(sesion), actas_sin_lider())
+    except Exception as e:
+        print(f"GERENTE_PORTAL: error en la administracion: {e}", flush=True)
+        return pagina_error("No se pudo cargar la lista. Intente de nuevo."), 500
+
+
+@gerente_portal_bp.post("/gerente/admin/alias")
+@_rate_limited
+@_requiere_sesion
+def admin_alias(sesion):
+    if not _es_admin(sesion):
+        return pagina_error("Esta pagina es solo para administradores."), 403
+
+    if not _mismo_origen():
+        return pagina_error("Solicitud no valida."), 403
+
+    persona_id = request.form.get("persona_id", "")
+    alias = " ".join((request.form.get("alias") or "").split())
+
+    if not persona_id or not alias:
+        return pagina_error("Faltan datos."), 400
+
+    try:
+        directorio.agregar_alias(persona_id, alias)
+    except Exception as e:
+        print(f"GERENTE_PORTAL: no se pudo guardar el alias: {e}", flush=True)
+        return pagina_error("No se pudo guardar el alias. Intente de nuevo."), 502
+
+    print(f"GERENTE_PORTAL: alias {alias!r} confirmado para la persona {persona_id} por {sesion['email']}", flush=True)
+
+    return redirect("/gerente/admin")

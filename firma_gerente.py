@@ -66,6 +66,21 @@ def _column_text(item, column_id):
     return ""
 
 
+def _buscar_persona(rol, nombre):
+    """(nombre, correo) del Gerente o PMO elegido en el formulario. Si existe el
+    directorio unificado se busca ahi (por rol); si no, en los boards de antes."""
+
+    import directorio
+
+    if directorio.activo():
+        return directorio.buscar_correo(nombre, rol)
+
+    if rol == "gerente":
+        return find_item_by_name(GERENTES_BOARD_ID, nombre, GERENTE_EMAIL_COLUMN_ID)
+
+    return find_item_by_name(PMO_BOARD_ID, nombre, PMO_EMAIL_COLUMN_ID)
+
+
 def start_gerente_signing(item_id, board_id):
     """Called right after a Punto de Acta is generated: resolve the real
     Gerente de Proyecto by looking up the name the Lider picked (a fixed
@@ -84,7 +99,7 @@ def start_gerente_signing(item_id, board_id):
 
     item = get_item(item_id)
     selected_name = _column_text(item, GERENTE_NOMBRE_COLUMN_ID)
-    name, email = find_item_by_name(GERENTES_BOARD_ID, selected_name, GERENTE_EMAIL_COLUMN_ID)
+    name, email = _buscar_persona("gerente", selected_name)
 
     if not email:
         print(f"GERENTE_FIRMA: item={item_id} sin Gerente de Proyecto asignado (o '{selected_name}' no encontrado), se omite")
@@ -266,7 +281,7 @@ def _send_to_procurement(item_id, item, signed_path, data_fields):
 
     if PMO_NOMBRE_COLUMN_ID and PMO_EMAIL_COLUMN_ID and PMO_EMAIL_APROBACION_COLUMN_ID:
         pmo_selected = _column_text(item, PMO_NOMBRE_COLUMN_ID)
-        pmo_name, pmo_email = find_item_by_name(PMO_BOARD_ID, pmo_selected, PMO_EMAIL_COLUMN_ID)
+        pmo_name, pmo_email = _buscar_persona("pmo", pmo_selected)
 
         correos = _correos_con_copia(pmo_email)
 
@@ -290,7 +305,7 @@ def _correos_con_copia(pmo_email):
     if not copias:
         for nombre in FIRMA_NOTIFICAR_NOMBRES:
             try:
-                _, correo = find_item_by_name(PMO_BOARD_ID, nombre, PMO_EMAIL_COLUMN_ID)
+                _, correo = _buscar_persona("pmo", nombre)
             except Exception as e:
                 print(f"PMO: no se pudo buscar el correo de '{nombre}': {e}")
                 continue
